@@ -27,11 +27,20 @@ main =
         }
 
 
+{-| Construct an RPC request. This should use Http.jsonBody but the
+"Content-type: application/json" header resulting from that seems to cause CORS
+problems for the Tezos server.
+-}
 getBlocks : Http.Request BlocksData
 getBlocks =
     let
+        constructBody value =
+            Encode.encode 0 value |> Http.stringBody "multipart/form-data"
+
         body =
-            [ ("operations", Encode.bool True) ] |> Encode.object |> Http.jsonBody
+            [ ( "operations", Encode.bool True ) ]
+                |> Encode.object
+                |> constructBody
     in
         Http.post "http://localhost:8732/blocks" body decodeBlocks
 
