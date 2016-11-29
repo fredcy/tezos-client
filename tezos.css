@@ -1,0 +1,12 @@
+.property {
+    margin: 0.5em 0;
+}
+
+.property label {
+    display: inline-block;
+    width: 8em;
+}
+
+#hash, #predecessor {
+    font-family: courier, monospace;
+}
