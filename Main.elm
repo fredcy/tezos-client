@@ -1,9 +1,10 @@
 module Main exposing (main)
 
-import Html
+import Html as H exposing (Html)
 import Html.Attributes as HA
 import Http
 import Json.Decode as Decode
+import Json.Encode as Encode
 
 
 type alias Model =
@@ -18,7 +19,7 @@ type Msg
 
 
 main =
-    Html.program
+    H.program
         { init = init
         , update = update
         , view = view
@@ -28,7 +29,11 @@ main =
 
 getBlocks : Http.Request BlocksData
 getBlocks =
-    Http.get "http://localhost:8732/blocks" decodeBlocks
+    let
+        body =
+            [ ("operations", Encode.bool True) ] |> Encode.object |> Http.jsonBody
+    in
+        Http.post "http://localhost:8732/blocks" body decodeBlocks
 
 
 type alias Fitness =
@@ -93,59 +98,59 @@ update msg model =
             ( model, Cmd.none )
 
 
-view : Model -> Html.Html Msg
+view : Model -> Html Msg
 view model =
-    Html.div []
+    H.div []
         [ viewBlocks model.blocks
         , viewError model.error
         , viewDebug model
         ]
 
 
-viewBlocks : List (List Block) -> Html.Html Msg
+viewBlocks : List (List Block) -> Html Msg
 viewBlocks branches =
     let
         viewBranch n branch =
-            Html.div [ HA.class "branch" ]
-                [ Html.h2 [] [ Html.text ("branch " ++ toString n) ]
-                , Html.div [] (List.indexedMap viewBlock branch)
+            H.div [ HA.class "branch" ]
+                [ H.h2 [] [ H.text ("branch " ++ toString n) ]
+                , H.div [] (List.indexedMap viewBlock branch)
                 ]
     in
-        Html.div [ HA.class "branches" ] (List.indexedMap viewBranch branches)
+        H.div [ HA.class "branches" ] (List.indexedMap viewBranch branches)
 
 
-viewBlock : Int -> Block -> Html.Html Msg
+viewBlock : Int -> Block -> Html Msg
 viewBlock n block =
     let
         viewProperty label value =
-            Html.div [ HA.class "property" ]
-                [ Html.label [ HA.for label ] [ Html.text label ]
-                , Html.span [ HA.id label ] [ Html.text value ]
+            H.div [ HA.class "property" ]
+                [ H.label [ HA.for label ] [ H.text label ]
+                , H.span [ HA.id label ] [ H.text value ]
                 ]
     in
-        Html.div [ HA.class "block" ]
-            [ Html.h3 [] [ Html.text ("block " ++ toString n) ]
+        H.div [ HA.class "block" ]
+            [ H.h3 [] [ H.text ("block " ++ toString n) ]
             , viewProperty "hash" block.hash
             , viewProperty "predecessor" block.predecessor
             , viewProperty "timestamp" block.timestamp
             ]
 
 
-viewError : Maybe Http.Error -> Html.Html Msg
+viewError : Maybe Http.Error -> Html Msg
 viewError errorMaybe =
     case errorMaybe of
         Just error ->
-            Html.div [ HA.class "error" ] [ Html.text (toString error) ]
+            H.div [ HA.class "error" ] [ H.text (toString error) ]
 
         Nothing ->
-            Html.text ""
+            H.text ""
 
 
-viewDebug : Model -> Html.Html Msg
+viewDebug : Model -> Html Msg
 viewDebug model =
-    Html.div [ HA.class "debug" ]
-        [ Html.h2 [] [ Html.text "Raw model" ]
-        , Html.text <| toString model
+    H.div [ HA.class "debug" ]
+        [ H.h2 [] [ H.text "Raw model" ]
+        , H.text <| toString model
         ]
 
 
