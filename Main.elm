@@ -9,6 +9,7 @@ import Json.Encode as Encode
 
 type alias Model =
     { blocks : List (List Block)
+    , schemaData : Maybe SchemaData
     , error : Maybe Http.Error
     }
 
@@ -16,6 +17,7 @@ type alias Model =
 type Msg
     = NoOp
     | LoadBlocks (Result Http.Error BlocksData)
+    | LoadSchema (Result Http.Error SchemaData)
 
 
 main =
@@ -40,7 +42,7 @@ getBlocks =
         body =
             [ ( "operations", Encode.bool True ) ]
                 |> Encode.object
-                |> constructBody
+                |> Http.jsonBody
     in
         Http.post "http://localhost:8732/blocks" body decodeBlocks
 
@@ -87,9 +89,42 @@ decodeTimestamp =
     Decode.string
 
 
+type SchemaData
+    = SchemaObject (List ( String, SchemaData ))
+    | SchemaList (List SchemaData)
+    | SchemaString String
+    | SchemaInt Int
+    | SchemaBool Bool
+
+
+getSchema : Http.Request SchemaData
+getSchema =
+    let
+        body =
+            [ ( "recursive", Encode.bool True ) ] |> Encode.object |> Http.jsonBody
+    in
+        Http.post "http://localhost:8732/describe/blocks" body decodeSchema
+
+
+decodeSchema : Decode.Decoder SchemaData
+decodeSchema =
+    Decode.oneOf
+        [ Decode.keyValuePairs (Decode.lazy (\_ -> decodeSchema)) |> Decode.map SchemaObject
+        , Decode.list (Decode.lazy (\_ -> decodeSchema)) |> Decode.map SchemaList
+        , Decode.string |> Decode.map SchemaString
+        , Decode.int |> Decode.map SchemaInt
+        , Decode.bool |> Decode.map SchemaBool
+        ]
+
+
 init : ( Model, Cmd Msg )
 init =
-    ( { blocks = [], error = Nothing }, Http.send LoadBlocks getBlocks )
+    ( { blocks = [], schemaData = Nothing, error = Nothing }
+    , Cmd.batch
+        [ Http.send LoadBlocks getBlocks
+        , Http.send LoadSchema getSchema
+        ]
+    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -103,6 +138,14 @@ update msg model =
                 Err error ->
                     ( { model | error = Just error }, Cmd.none )
 
+        LoadSchema schemaMaybe ->
+            case schemaMaybe of
+                Ok schemaData ->
+                    ( { model | schemaData = Just schemaData, error = Nothing }, Cmd.none )
+
+                Err error ->
+                    ( { model | error = Just error }, Cmd.none )
+
         _ ->
             ( model, Cmd.none )
 
@@ -112,7 +155,8 @@ view model =
     H.div []
         [ viewBlocks model.blocks
         , viewError model.error
-        , viewDebug model
+        , viewSchemaData model.schemaData
+          --, viewDebug model
         ]
 
 
@@ -153,6 +197,15 @@ viewError errorMaybe =
 
         Nothing ->
             H.text ""
+
+
+viewSchemaData schemaDataMaybe =
+    case schemaDataMaybe of
+        Just schemaData ->
+            H.pre [ HA.style [ ( "white-space", "pre-wrap" ) ] ] [ H.text (toString schemaData) ]
+
+        Nothing ->
+            H.text "[no schema data]"
 
 
 viewDebug : Model -> Html Msg
