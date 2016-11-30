@@ -19,8 +19,13 @@ type SchemaData
     | SchemaBool Bool
 
 
+type ContextItem
+    = FieldName String
+    | ListIndex Int
+
+
 type alias Context =
-    List String
+    List ContextItem
 
 
 decodeSchema : Decode.Decoder SchemaData
@@ -78,7 +83,7 @@ viewSchemaObject context properties =
         viewField ( name, ( visible, value ) ) =
             let
                 newContext =
-                    name :: context
+                    FieldName name :: context
             in
                 H.div [ margin, HA.classList [ ( "collapsed", not visible ) ] ]
                     [ H.span [ HE.onClick (ClickField newContext) ] [ H.text (name ++ ": ") ]
@@ -91,10 +96,10 @@ viewSchemaObject context properties =
 
 viewSchemaList context items =
     let
-        viewItem item =
-            H.li [] [ viewSchemaData context item ]
+        viewItem i item =
+            H.li [] [ viewSchemaData (ListIndex i :: context) item ]
     in
-        H.ul [ margin ] (List.map viewItem items)
+        H.ul [ margin ] (List.indexedMap viewItem items)
 
 
 margin : H.Attribute Msg
@@ -109,13 +114,16 @@ update msg schemaDataMaybe =
             Maybe.map (toggleVisible (List.reverse context)) schemaDataMaybe
 
 
+{-| Change the visibility flag for a particular field in the schema. The
+    `context` is a path of field names down from the root of the input schema.
+-}
 toggleVisible : Context -> SchemaData -> SchemaData
 toggleVisible context schemaData =
     case context of
         [] ->
             schemaData |> Debug.log "no match for context"
 
-        fieldName :: subContext ->
+        contextItem :: subContext ->
             case schemaData of
                 SchemaObject fields ->
                     let
@@ -126,15 +134,40 @@ toggleVisible context schemaData =
                             else
                                 ( visible, toggleVisible subContext value )
 
-                        newFields : Dict String ( Bool, SchemaData )
-                        newFields =
+                        newFields : String -> Dict String ( Bool, SchemaData )
+                        newFields fieldName =
                             Dict.update fieldName (Maybe.map toggle) fields
                     in
-                        SchemaObject newFields
+                        case contextItem of
+                            FieldName fieldName ->
+                                SchemaObject (newFields fieldName)
+
+                            _ ->
+                                schemaData |> schemaError ("no match for " ++ toString context)
+
+                SchemaList items ->
+                    let
+                        toggle i contextIndex item =
+                            if i == contextIndex then
+                                toggleVisible subContext item
+                            else
+                                item
+                    in
+                        case contextItem of 
+                            ListIndex contextIndex ->
+                                SchemaList (List.indexedMap (toggle contextIndex) items)
+
+                            _ ->
+                                schemaData |> schemaError ("no match for " ++ toString context)
 
                 _ ->
-                    let
-                        _ =
-                            Debug.log "no matching object for context" context
-                    in
-                        schemaData
+                    schemaData |> schemaError ("no match for " ++ toString context)
+
+
+schemaError : String -> SchemaData -> SchemaData
+schemaError msg data =
+    let
+        _ =
+            Debug.log "schema error" msg
+    in
+        data

@@ -19,3 +19,9 @@
     color: green;
     display: none;
 }
+
+/* prevent list bullets from displaying, which can happen even when the context is hidden */
+.collapsed li {
+    list-style: none;
+}
+
