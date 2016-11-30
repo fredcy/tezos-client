@@ -19,6 +19,7 @@ type Msg
     = NoOp
     | LoadBlocks (Result Http.Error BlocksData)
     | LoadSchema (Result Http.Error SchemaData)
+    | SchemaMsg Schema.Msg
 
 
 main =
@@ -128,6 +129,12 @@ update msg model =
                 Err error ->
                     ( { model | error = Just error }, Cmd.none )
 
+        SchemaMsg msg ->
+            let
+                newSchema = Schema.update msg model.schemaData
+            in
+                ( { model | schemaData = newSchema }, Cmd.none )
+
         _ ->
             ( model, Cmd.none )
 
@@ -139,11 +146,11 @@ view model =
         , viewError model.error
         , case model.schemaData of
             Just schemaData ->
-                viewSchemaData 0 schemaData
+                viewSchemaData [] schemaData |> H.map SchemaMsg
 
             Nothing ->
                 H.text ""
-        , viewSchemaDataRaw model.schemaData
+        , viewSchemaDataRaw model.schemaData |> H.map SchemaMsg
           --, viewDebug model
         ]
 
