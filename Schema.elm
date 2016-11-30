@@ -1,5 +1,6 @@
 module Schema exposing (..)
 
+import Char
 import Dict exposing (Dict)
 import Html as H exposing (Html)
 import Html.Attributes as HA
@@ -11,9 +12,13 @@ type Msg
     = ClickField Context
 
 
+type alias Visibility =
+    Bool
+
+
 type SchemaData
-    = SchemaObject (Dict String ( Bool, SchemaData ))
-    | SchemaList (List SchemaData)
+    = SchemaObject (Dict String ( Visibility, SchemaData ))
+    | SchemaList (List ( Visibility, SchemaData ))
     | SchemaString String
     | SchemaInt Int
     | SchemaBool Bool
@@ -32,11 +37,16 @@ decodeSchema : Decode.Decoder SchemaData
 decodeSchema =
     Decode.oneOf
         [ Decode.keyValuePairs (Decode.lazy (\_ -> decodeSchema)) |> Decode.map makeObject
-        , Decode.list (Decode.lazy (\_ -> decodeSchema)) |> Decode.map SchemaList
+        , Decode.list (Decode.lazy (\_ -> decodeSchema)) |> Decode.map makeList
         , Decode.string |> Decode.map SchemaString
         , Decode.int |> Decode.map SchemaInt
         , Decode.bool |> Decode.map SchemaBool
         ]
+
+
+makeList : List SchemaData -> SchemaData
+makeList items =
+    SchemaList (List.map (\item -> ( True, item )) items)
 
 
 makeObject : List ( String, SchemaData ) -> SchemaData
@@ -76,13 +86,13 @@ viewSchemaData context schemaData =
             viewSchemaList context items
 
         SchemaString s ->
-            H.text ("\"" ++ s ++ "\"")
+            H.span [ HA.class "string" ] [ H.text ("\"" ++ s ++ "\"") ]
 
         SchemaInt i ->
-            H.text (toString i)
+            H.span [ HA.class "int" ] [ H.text (toString i) ]
 
         SchemaBool b ->
-            H.text (toString b)
+            H.span [ HA.class "bool" ] [ H.text (toString b) ]
 
 
 viewSchemaObject : Context -> Dict String ( Bool, SchemaData ) -> Html Msg
@@ -94,7 +104,7 @@ viewSchemaObject context properties =
                     FieldName name :: context
             in
                 H.div [ margin, HA.classList [ ( "collapsed", not visible ) ] ]
-                    [ H.span [ HE.onClick (ClickField newContext) ] [ H.text (name ++ ": ") ]
+                    [ H.span [ HA.class "fieldlabel", HE.onClick (ClickField newContext) ] [ H.text (name ++ ": ") ]
                     , viewSchemaData newContext value
                     ]
     in
@@ -102,15 +112,23 @@ viewSchemaObject context properties =
             (Dict.toList properties |> List.map viewField)
 
 
+listGlyph =
+    let
+        bulletString =
+            Char.fromCode 9679 |> String.fromChar
+    in
+        H.span [ HA.class "bullet" ] [ H.text bulletString ]
+
+
 viewSchemaList context items =
     let
-        viewItem i item =
+        viewItem i ( visible, item ) =
             let
                 newContext =
                     ListIndex i :: context
             in
-                H.li []
-                    [ H.div [ HA.class "listmark", HE.onClick (ClickField newContext) ] [ H.text "X" ]
+                H.li [ HA.classList [ ( "collapsed", not visible ) ] ]
+                    [ H.div [ HA.class "listmark", HE.onClick (ClickField newContext) ] [ listGlyph ]
                     , viewSchemaData (ListIndex i :: context) item
                     ]
     in
@@ -119,7 +137,7 @@ viewSchemaList context items =
 
 margin : H.Attribute Msg
 margin =
-    HA.style [ ( "margin-left", "15px" ) ]
+    HA.style [ ( "margin-left", "1.5em" ) ]
 
 
 update : Msg -> Maybe SchemaData -> Maybe SchemaData
@@ -136,7 +154,7 @@ toggleVisible : Context -> SchemaData -> SchemaData
 toggleVisible context schemaData =
     case context of
         [] ->
-            schemaData |> Debug.log "no match for context"
+            schemaData |> schemaError "ran out of context"
 
         contextItem :: subContext ->
             case schemaData of
@@ -162,11 +180,14 @@ toggleVisible context schemaData =
 
                 SchemaList items ->
                     let
-                        toggle i contextIndex item =
+                        toggle i contextIndex ( visible, subSchema ) =
                             if i == contextIndex then
-                                toggleVisible subContext item
+                                if subContext == [] then
+                                    ( not visible, subSchema )
+                                else
+                                    ( visible, toggleVisible subContext subSchema )
                             else
-                                item
+                                ( visible, subSchema )
                     in
                         case contextItem of
                             ListIndex contextIndex ->

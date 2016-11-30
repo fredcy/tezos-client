@@ -15,7 +15,7 @@
     color: red;
 }
 
-.collapsed > .object, .collapsed > .list {
+.collapsed > .object, .collapsed > .list, .collapsed > .string {
     color: green;
     display: none;
 }
@@ -34,4 +34,17 @@
 .listmark {
     float: left;
     margin-right: 0.5em;
+}
+
+.collapsed .listmark{
+    /* Without this, content following a collapsed list item starts on same line as the list mark. */
+    float: none;
+}
+
+.bullet, .fieldlabel {
+    cursor: pointer;
+}
+
+.bullet:hover, .fieldlabel:hover {
+    background-color: yellow;
 }
