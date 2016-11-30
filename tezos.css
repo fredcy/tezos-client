@@ -15,3 +15,7 @@
     color: red;
 }
 
+.collapsed .object {
+    color: green;
+    display: none;
+}

@@ -12,7 +12,7 @@ type Msg
 
 
 type SchemaData
-    = SchemaObject Bool (Dict String SchemaData)
+    = SchemaObject (Dict String ( Bool, SchemaData ))
     | SchemaList (List SchemaData)
     | SchemaString String
     | SchemaInt Int
@@ -36,7 +36,11 @@ decodeSchema =
 
 makeObject : List ( String, SchemaData ) -> SchemaData
 makeObject fields =
-    SchemaObject True (Dict.fromList fields)
+    let
+        fieldsWithVisible =
+            List.map (\( k, v ) -> ( k, ( True, v ) )) fields
+    in
+        SchemaObject (Dict.fromList fieldsWithVisible)
 
 
 viewSchemaDataRaw : Maybe SchemaData -> Html Msg
@@ -52,8 +56,8 @@ viewSchemaDataRaw schemaDataMaybe =
 viewSchemaData : Context -> SchemaData -> Html Msg
 viewSchemaData context schemaData =
     case schemaData of
-        SchemaObject visible properties ->
-            viewSchemaObject context visible properties
+        SchemaObject properties ->
+            viewSchemaObject context properties
 
         SchemaList items ->
             viewSchemaList context items
@@ -68,20 +72,20 @@ viewSchemaData context schemaData =
             H.text (toString b)
 
 
-viewSchemaObject : Context -> Bool -> Dict String SchemaData -> Html Msg
-viewSchemaObject context visible properties =
+viewSchemaObject : Context -> Dict String ( Bool, SchemaData ) -> Html Msg
+viewSchemaObject context properties =
     let
-        viewField ( name, value ) =
+        viewField ( name, ( visible, value ) ) =
             let
                 newContext =
                     name :: context
             in
-                H.div [ margin ]
+                H.div [ margin, HA.classList [ ( "collapsed", not visible ) ] ]
                     [ H.span [ HE.onClick (ClickField newContext) ] [ H.text (name ++ ": ") ]
                     , viewSchemaData newContext value
                     ]
     in
-        H.div [ HA.classList [ ( "collapsed", not visible ) ] ]
+        H.div [ HA.class "object" ]
             (Dict.toList properties |> List.map viewField)
 
 
@@ -107,38 +111,26 @@ update msg schemaDataMaybe =
 
 toggleVisible : Context -> SchemaData -> SchemaData
 toggleVisible context schemaData =
-    case context |> Debug.log "context" of
+    case context of
         [] ->
             schemaData |> Debug.log "no match for context"
 
-        fieldName :: [] ->
+        fieldName :: subContext ->
             case schemaData of
-                SchemaObject visible fields ->
+                SchemaObject fields ->
                     let
-                        toggle value =
-                            case value of
-                                SchemaObject visible subfields ->
-                                    SchemaObject (not visible) subfields
+                        toggle : ( Bool, SchemaData ) -> ( Bool, SchemaData )
+                        toggle ( visible, value ) =
+                            if subContext == [] then
+                                ( not visible, value )
+                            else
+                                ( visible, toggleVisible subContext value )
 
-                                _ ->
-                                    value
-
+                        newFields : Dict String ( Bool, SchemaData )
                         newFields =
                             Dict.update fieldName (Maybe.map toggle) fields
                     in
-                        SchemaObject visible newFields
-
-                _ ->
-                    schemaData |> Debug.log "expected object context"
-
-        fieldName :: subContext ->
-            case schemaData of
-                SchemaObject visible fields ->
-                    let
-                        newFields =
-                            Dict.update fieldName (Maybe.map (toggleVisible subContext)) fields
-                    in
-                        SchemaObject visible newFields
+                        SchemaObject newFields
 
                 _ ->
                     let
