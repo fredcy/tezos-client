@@ -97,7 +97,7 @@ getSchema =
         body =
             [ ( "recursive", Encode.bool True ) ] |> Encode.object |> Http.jsonBody
     in
-        Http.post "http://localhost:8732/describe/blocks" body decodeSchema
+        Http.post "http://localhost:8732/describe" body decodeSchema
 
 
 init : ( Model, Cmd Msg )
@@ -112,7 +112,7 @@ init =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg |> Debug.log "msg" of
+    case msg of
         LoadBlocks blocksMaybe ->
             case blocksMaybe of
                 Ok blocks ->

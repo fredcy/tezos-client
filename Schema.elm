@@ -22,6 +22,7 @@ type SchemaData
     | SchemaString String
     | SchemaInt Int
     | SchemaBool Bool
+    | SchemaNull
 
 
 type ContextItem
@@ -41,6 +42,7 @@ decodeSchema =
         , Decode.string |> Decode.map SchemaString
         , Decode.int |> Decode.map SchemaInt
         , Decode.bool |> Decode.map SchemaBool
+        , Decode.null SchemaNull
         ]
 
 
@@ -71,7 +73,8 @@ viewSchemaDataRaw schemaDataMaybe =
 viewSchemaDataTop : SchemaData -> Html Msg
 viewSchemaDataTop data =
     H.div [ HA.class "schemadata" ]
-        [ H.h2 [] [ H.text "Schema" ]
+        [ H.h2 [] [ H.text "Raw Schema" ]
+        , H.p [] [ H.text "Click labels and bullets to collapse and expand" ]
         , viewSchemaData [] data
         ]
 
@@ -93,6 +96,9 @@ viewSchemaData context schemaData =
 
         SchemaBool b ->
             H.span [ HA.class "bool" ] [ H.text (toString b) ]
+
+        SchemaNull ->
+            H.span [ HA.class "null" ] [ H.text "null" ]
 
 
 viewSchemaObject : Context -> Dict String ( Bool, SchemaData ) -> Html Msg
@@ -148,7 +154,8 @@ update msg schemaDataMaybe =
 
 
 {-| Change the visibility flag for a particular field in the schema. The
-    `context` is a path of field names down from the root of the input schema.
+    `context` is a path of field names and list indexes down from the root of
+    the input schema.
 -}
 toggleVisible : Context -> SchemaData -> SchemaData
 toggleVisible context schemaData =
@@ -204,6 +211,21 @@ schemaError : String -> SchemaData -> SchemaData
 schemaError msg data =
     let
         _ =
-            Debug.log "schema error" msg
+            Debug.log "schema error:" msg
     in
         data
+
+
+mapSchemaData : (( Visibility, SchemaData ) -> ( Visibility, SchemaData )) -> SchemaData -> SchemaData
+mapSchemaData fn schemaData =
+    case schemaData of
+        SchemaObject items ->
+            let
+                mapFn _ v =
+                    fn v
+            in
+                SchemaObject (Dict.map (\_ v -> fn v) items)
+
+        -- TODO: continue here
+        _ ->
+            schemaData

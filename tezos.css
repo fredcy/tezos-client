@@ -41,6 +41,14 @@
     float: none;
 }
 
+.fieldlabel {
+    color: blue;
+}
+
+.collapsed .fieldlabel {
+    color: red;
+}
+
 .bullet, .fieldlabel {
     cursor: pointer;
 }
