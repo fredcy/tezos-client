@@ -5,6 +5,7 @@ import Html.Attributes as HA
 import Http
 import Json.Decode as Decode
 import Json.Encode as Encode
+import Schema exposing (..)
 
 
 type alias Model =
@@ -89,14 +90,6 @@ decodeTimestamp =
     Decode.string
 
 
-type SchemaData
-    = SchemaObject (List ( String, SchemaData ))
-    | SchemaList (List SchemaData)
-    | SchemaString String
-    | SchemaInt Int
-    | SchemaBool Bool
-
-
 getSchema : Http.Request SchemaData
 getSchema =
     let
@@ -104,17 +97,6 @@ getSchema =
             [ ( "recursive", Encode.bool True ) ] |> Encode.object |> Http.jsonBody
     in
         Http.post "http://localhost:8732/describe/blocks" body decodeSchema
-
-
-decodeSchema : Decode.Decoder SchemaData
-decodeSchema =
-    Decode.oneOf
-        [ Decode.keyValuePairs (Decode.lazy (\_ -> decodeSchema)) |> Decode.map SchemaObject
-        , Decode.list (Decode.lazy (\_ -> decodeSchema)) |> Decode.map SchemaList
-        , Decode.string |> Decode.map SchemaString
-        , Decode.int |> Decode.map SchemaInt
-        , Decode.bool |> Decode.map SchemaBool
-        ]
 
 
 init : ( Model, Cmd Msg )
@@ -155,7 +137,13 @@ view model =
     H.div []
         [ viewBlocks model.blocks
         , viewError model.error
-        , viewSchemaData model.schemaData
+        , case model.schemaData of
+            Just schemaData ->
+                viewSchemaData 0 schemaData
+
+            Nothing ->
+                H.text ""
+        , viewSchemaDataRaw model.schemaData
           --, viewDebug model
         ]
 
@@ -193,19 +181,19 @@ viewError : Maybe Http.Error -> Html Msg
 viewError errorMaybe =
     case errorMaybe of
         Just error ->
-            H.div [ HA.class "error" ] [ H.text (toString error) ]
+            case error of
+                Http.BadPayload message response ->
+                    H.div [ HA.class "error" ]
+                        [ H.h1 [] [ H.text "Error" ]
+                        , H.h2 [] [ H.text "Bad Payload (JSON parsing problem)" ]
+                        , H.div [ HA.style [ ( "white-space", "pre" ) ] ] [ H.text message ]
+                        ]
+
+                _ ->
+                    H.div [ HA.class "error" ] [ H.text (toString error) ]
 
         Nothing ->
             H.text ""
-
-
-viewSchemaData schemaDataMaybe =
-    case schemaDataMaybe of
-        Just schemaData ->
-            H.pre [ HA.style [ ( "white-space", "pre-wrap" ) ] ] [ H.text (toString schemaData) ]
-
-        Nothing ->
-            H.text "[no schema data]"
 
 
 viewDebug : Model -> Html Msg
