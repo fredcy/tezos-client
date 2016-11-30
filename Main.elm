@@ -131,7 +131,8 @@ update msg model =
 
         SchemaMsg msg ->
             let
-                newSchema = Schema.update msg model.schemaData
+                newSchema =
+                    Schema.update msg model.schemaData
             in
                 ( { model | schemaData = newSchema }, Cmd.none )
 
@@ -150,7 +151,7 @@ view model =
 
             Nothing ->
                 H.text ""
-        , viewSchemaDataRaw model.schemaData |> H.map SchemaMsg
+          --, viewSchemaDataRaw model.schemaData |> H.map SchemaMsg
           --, viewDebug model
         ]
 

@@ -10,3 +10,8 @@
 #hash, #predecessor {
     font-family: courier, monospace;
 }
+
+.collapsed {
+    color: red;
+}
+
