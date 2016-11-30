@@ -58,6 +58,14 @@ viewSchemaDataRaw schemaDataMaybe =
             H.text "[no schema data]"
 
 
+viewSchemaDataTop : SchemaData -> Html Msg
+viewSchemaDataTop data =
+    H.div [ HA.class "schemadata" ]
+        [ H.h2 [] [ H.text "Schema" ]
+        , viewSchemaData [] data
+        ]
+
+
 viewSchemaData : Context -> SchemaData -> Html Msg
 viewSchemaData context schemaData =
     case schemaData of
@@ -97,9 +105,16 @@ viewSchemaObject context properties =
 viewSchemaList context items =
     let
         viewItem i item =
-            H.li [] [ viewSchemaData (ListIndex i :: context) item ]
+            let
+                newContext =
+                    ListIndex i :: context
+            in
+                H.li []
+                    [ H.div [ HA.class "listmark", HE.onClick (ClickField newContext) ] [ H.text "X" ]
+                    , viewSchemaData (ListIndex i :: context) item
+                    ]
     in
-        H.ul [ margin ] (List.indexedMap viewItem items)
+        H.ul [ margin, HA.class "list" ] (List.indexedMap viewItem items)
 
 
 margin : H.Attribute Msg
@@ -153,7 +168,7 @@ toggleVisible context schemaData =
                             else
                                 item
                     in
-                        case contextItem of 
+                        case contextItem of
                             ListIndex contextIndex ->
                                 SchemaList (List.indexedMap (toggle contextIndex) items)
 

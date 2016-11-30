@@ -15,7 +15,7 @@
     color: red;
 }
 
-.collapsed .object {
+.collapsed > .object, .collapsed > .list {
     color: green;
     display: none;
 }
@@ -25,3 +25,13 @@
     list-style: none;
 }
 
+.schemadata ul {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+}
+
+.listmark {
+    float: left;
+    margin-right: 0.5em;
+}

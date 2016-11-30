@@ -147,7 +147,7 @@ view model =
         , viewError model.error
         , case model.schemaData of
             Just schemaData ->
-                viewSchemaData [] schemaData |> H.map SchemaMsg
+                viewSchemaDataTop schemaData |> H.map SchemaMsg
 
             Nothing ->
                 H.text ""
