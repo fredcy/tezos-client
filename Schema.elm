@@ -1,4 +1,4 @@
-module Schema exposing (..)
+module Schema exposing (Msg, SchemaData, decodeSchema, update, viewSchemaDataTop)
 
 import Char
 import Dict exposing (Dict)
@@ -74,7 +74,7 @@ viewSchemaDataTop : SchemaData -> Html Msg
 viewSchemaDataTop data =
     H.div [ HA.class "schemadata" ]
         [ H.h2 [] [ H.text "Raw Schema" ]
-        , H.p [] [ H.text "Click labels and bullets to collapse and expand" ]
+        , H.p [] [ H.text "Here is a view of the JSON Schema for the Tezos RPC API. Click labels and bullets to collapse and expand" ]
         , viewSchemaData [] data
         ]
 
@@ -141,6 +141,8 @@ viewSchemaList context items =
         H.ul [ margin, HA.class "list" ] (List.indexedMap viewItem items)
 
 
+{-| The schema view adds a margin to each object/list to give the indented layout.
+-}
 margin : H.Attribute Msg
 margin =
     HA.style [ ( "margin-left", "1.5em" ) ]
@@ -155,7 +157,8 @@ update msg schemaDataMaybe =
 
 {-| Change the visibility flag for a particular field in the schema. The
     `context` is a path of field names and list indexes down from the root of
-    the input schema.
+    the input schema, the list head being the root (the reverse of how the path
+    info is collected).
 -}
 toggleVisible : Context -> SchemaData -> SchemaData
 toggleVisible context schemaData =
@@ -169,7 +172,10 @@ toggleVisible context schemaData =
                     let
                         toggle : ( Bool, SchemaData ) -> ( Bool, SchemaData )
                         toggle ( visible, value ) =
+                            -- Update the Dict entry; note that an unmatched fieldName will never
+                            -- call this and hence be silently ignored by the Dict.update
                             if subContext == [] then
+                                -- found the matching object field; toggle its visibility
                                 ( not visible, value )
                             else
                                 ( visible, toggleVisible subContext value )
@@ -189,15 +195,20 @@ toggleVisible context schemaData =
                     let
                         toggle i contextIndex ( visible, subSchema ) =
                             if i == contextIndex then
+                                -- matches context path so far
                                 if subContext == [] then
+                                    -- end of path, so update
                                     ( not visible, subSchema )
                                 else
+                                    -- not end of path, so recurse
                                     ( visible, toggleVisible subContext subSchema )
                             else
                                 ( visible, subSchema )
                     in
                         case contextItem of
                             ListIndex contextIndex ->
+                                -- Update list item referenced by the contextIndex; if none match
+                                -- this will silently fail to modify anything
                                 SchemaList (List.indexedMap (toggle contextIndex) items)
 
                             _ ->
@@ -219,13 +230,16 @@ schemaError msg data =
 mapSchemaData : (( Visibility, SchemaData ) -> ( Visibility, SchemaData )) -> SchemaData -> SchemaData
 mapSchemaData fn schemaData =
     case schemaData of
-        SchemaObject items ->
-            let
-                mapFn _ v =
-                    fn v
-            in
-                SchemaObject (Dict.map (\_ v -> fn v) items)
+        SchemaObject itemDict ->
+            SchemaObject (Dict.map (\_ ( v, s ) -> fn ( v, (mapSchemaData fn s) )) itemDict)
 
-        -- TODO: continue here
+        SchemaList itemList ->
+            SchemaList (List.map (\( v, s ) -> fn ( v, (mapSchemaData fn s) )) itemList)
+
         _ ->
             schemaData
+
+
+collapseAll : SchemaData -> SchemaData
+collapseAll schemaData =
+    mapSchemaData (\( _, s ) -> ( False, s )) schemaData

@@ -12,6 +12,7 @@ type alias Model =
     { blocks : List (List Block)
     , schemaData : Maybe SchemaData
     , error : Maybe Http.Error
+    , nodeUrl : String
     }
 
 
@@ -23,7 +24,7 @@ type Msg
 
 
 main =
-    H.program
+    H.programWithFlags
         { init = init
         , update = update
         , view = view
@@ -35,8 +36,8 @@ main =
 "Content-type: application/json" header resulting from that seems to cause CORS
 problems for the Tezos server.
 -}
-getBlocks : Http.Request BlocksData
-getBlocks =
+getBlocks : String -> Http.Request BlocksData
+getBlocks nodeUrl =
     let
         constructBody value =
             Encode.encode 0 value |> Http.stringBody "multipart/form-data"
@@ -45,8 +46,11 @@ getBlocks =
             [ ( "operations", Encode.bool True ) ]
                 |> Encode.object
                 |> Http.jsonBody
+
+        url =
+            nodeUrl ++ "/blocks"
     in
-        Http.post "http://localhost:8732/blocks" body decodeBlocks
+        Http.post url body decodeBlocks
 
 
 type alias Fitness =
@@ -91,21 +95,28 @@ decodeTimestamp =
     Decode.string
 
 
-getSchema : Http.Request SchemaData
-getSchema =
+getSchema : String -> Http.Request SchemaData
+getSchema nodeUrl =
     let
         body =
             [ ( "recursive", Encode.bool True ) ] |> Encode.object |> Http.jsonBody
+
+        url =
+            nodeUrl ++ "/describe"
     in
-        Http.post "http://localhost:8732/describe" body decodeSchema
+        Http.post url body decodeSchema
 
 
-init : ( Model, Cmd Msg )
-init =
-    ( { blocks = [], schemaData = Nothing, error = Nothing }
+type alias Flags =
+    { nodeUrl : String }
+
+
+init : Flags -> ( Model, Cmd Msg )
+init flags =
+    ( { blocks = [], schemaData = Nothing, error = Nothing, nodeUrl = flags.nodeUrl }
     , Cmd.batch
-        [ Http.send LoadBlocks getBlocks
-        , Http.send LoadSchema getSchema
+        [ Http.send LoadBlocks (getBlocks flags.nodeUrl)
+        , Http.send LoadSchema (getSchema flags.nodeUrl)
         ]
     )
 
@@ -144,7 +155,7 @@ view : Model -> Html Msg
 view model =
     H.div []
         [ viewBlocks model.blocks
-        , viewError model.error
+        , viewError model.nodeUrl model.error
         , case model.schemaData of
             Just schemaData ->
                 viewSchemaDataTop schemaData |> H.map SchemaMsg
@@ -161,11 +172,14 @@ viewBlocks branches =
     let
         viewBranch n branch =
             H.div [ HA.class "branch" ]
-                [ H.h2 [] [ H.text ("branch " ++ toString n) ]
+                [ H.h3 [] [ H.text ("branch " ++ toString n) ]
                 , H.div [] (List.indexedMap viewBlock branch)
                 ]
+
+        header =
+            [ H.h2 [] [ H.text "Block chain" ] ]
     in
-        H.div [ HA.class "branches" ] (List.indexedMap viewBranch branches)
+        H.div [ HA.class "branches" ] (header ++ List.indexedMap viewBranch branches)
 
 
 viewBlock : Int -> Block -> Html Msg
@@ -178,30 +192,50 @@ viewBlock n block =
                 ]
     in
         H.div [ HA.class "block" ]
-            [ H.h3 [] [ H.text ("block " ++ toString n) ]
+            [ H.h4 [] [ H.text ("block " ++ toString n) ]
             , viewProperty "hash" block.hash
             , viewProperty "predecessor" block.predecessor
             , viewProperty "timestamp" block.timestamp
             ]
 
 
-viewError : Maybe Http.Error -> Html Msg
-viewError errorMaybe =
+viewError : String -> Maybe Http.Error -> Html Msg
+viewError nodeUrl errorMaybe =
     case errorMaybe of
         Just error ->
-            case error of
-                Http.BadPayload message response ->
-                    H.div [ HA.class "error" ]
-                        [ H.h1 [] [ H.text "Error" ]
-                        , H.h2 [] [ H.text "Bad Payload (JSON parsing problem)" ]
-                        , H.div [ HA.style [ ( "white-space", "pre" ) ] ] [ H.text message ]
-                        ]
-
-                _ ->
-                    H.div [ HA.class "error" ] [ H.text (toString error) ]
+            H.div [ HA.class "error" ]
+                [ H.h1 [] [ H.text "Error" ]
+                , viewErrorInfo nodeUrl error
+                ]
 
         Nothing ->
             H.text ""
+
+
+viewErrorInfo nodeUrl error =
+    case error of
+        Http.BadPayload message response ->
+            H.div []
+                [ H.h2 [] [ H.text "Bad Payload (JSON parsing problem)" ]
+                , H.div [ HA.style [ ( "white-space", "pre" ) ] ] [ H.text message ]
+                ]
+
+        Http.BadStatus response ->
+            H.div []
+                [ H.h2 [] [ H.text "Bad response status from node" ]
+                , H.div [] [ H.text (toString response.status) ]
+                , H.div [] [ H.text response.url ]
+                  --, H.div [ HA.style [ ( "white-space", "pre" ) ] ] [ H.text (toString response) ]
+                ]
+
+        Http.NetworkError ->
+            H.div []
+                [ H.h2 [] [ H.text "Network Error" ]
+                , H.div [] [ H.text ("Unable to access Tezos node at " ++ nodeUrl) ]
+                ]
+
+        _ ->
+            H.text (toString error)
 
 
 viewDebug : Model -> Html Msg

@@ -8,6 +8,11 @@
     </head>
     <body>
         <script src="elm.js"></script>
-        <script type="text/javascript">Elm.Main.fullscreen()</script>
+        <script type="text/javascript">
+         var flags = {
+             nodeUrl: "http://localhost:8732"
+         };
+         Elm.Main.fullscreen(flags)
+        </script>
     </body>
 </html>
