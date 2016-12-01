@@ -1,0 +1,58 @@
+.property {
+    margin: 0.5em 0;
+}
+
+.property label {
+    display: inline-block;
+    width: 8em;
+}
+
+#hash, #predecessor {
+    font-family: courier, monospace;
+}
+
+.collapsed {
+    color: red;
+}
+
+.collapsed > .object, .collapsed > .list, .collapsed > .string {
+    color: green;
+    display: none;
+}
+
+/* prevent list bullets from displaying, which can happen even when the context is hidden */
+.collapsed li {
+    list-style: none;
+}
+
+.schemadata ul {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+}
+
+.listmark {
+    float: left;
+    margin-right: 0.5em;
+}
+
+.collapsed .listmark{
+    /* Without this, content following a collapsed list item starts on same line as the list mark. */
+    float: none;
+}
+
+.fieldlabel {
+    color: blue;
+}
+
+.collapsed .fieldlabel {
+    color: red;
+}
+
+.bullet, .fieldlabel {
+    cursor: pointer;
+}
+
+.bullet:hover, .fieldlabel:hover {
+    background-color: yellow;
+}
