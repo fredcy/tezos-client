@@ -5,7 +5,7 @@ elm.js: Main.elm Schema.elm
 
 ###
 
-NODE_URL = http://fred.yankowski.com:8732
+NODE_URL = https://fred.yankowski.com:8733
 
 dist: site site/elm.js site/index.html site/tezos.css
 
