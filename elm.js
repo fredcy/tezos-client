@@ -9313,10 +9313,22 @@ var _user$project$Schema$viewSchemaObject = F2(
 	function (context, properties) {
 		var viewField = function (_p29) {
 			var _p30 = _p29;
-			var _p31 = _p30._0;
+			var _p33 = _p30._1._1;
+			var _p32 = _p30._0;
+			var labelSuffix = function () {
+				var _p31 = _p33;
+				switch (_p31.ctor) {
+					case 'SchemaObject':
+						return '{';
+					case 'SchemaList':
+						return '[';
+					default:
+						return ':';
+				}
+			}();
 			var newContext = {
 				ctor: '::',
-				_0: _user$project$Schema$FieldName(_p31),
+				_0: _user$project$Schema$FieldName(_p32),
 				_1: context
 			};
 			return A2(
@@ -9351,14 +9363,32 @@ var _user$project$Schema$viewSchemaObject = F2(
 						},
 						{
 							ctor: '::',
-							_0: _elm_lang$html$Html$text(
-								A2(_elm_lang$core$Basics_ops['++'], _p31, ': ')),
+							_0: _elm_lang$html$Html$text(_p32),
 							_1: {ctor: '[]'}
 						}),
 					_1: {
 						ctor: '::',
-						_0: A2(_user$project$Schema$viewSchemaData, newContext, _p30._1._1),
-						_1: {ctor: '[]'}
+						_0: A2(
+							_elm_lang$html$Html$span,
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html_Attributes$class('suffix'),
+								_1: {ctor: '[]'}
+							},
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html$text(
+									A2(
+										_elm_lang$core$Basics_ops['++'],
+										' ',
+										A2(_elm_lang$core$Basics_ops['++'], labelSuffix, ' '))),
+								_1: {ctor: '[]'}
+							}),
+						_1: {
+							ctor: '::',
+							_0: A2(_user$project$Schema$viewSchemaData, newContext, _p33),
+							_1: {ctor: '[]'}
+						}
 					}
 				});
 		};
@@ -9376,12 +9406,12 @@ var _user$project$Schema$viewSchemaObject = F2(
 	});
 var _user$project$Schema$viewSchemaData = F2(
 	function (context, schemaData) {
-		var _p32 = schemaData;
-		switch (_p32.ctor) {
+		var _p34 = schemaData;
+		switch (_p34.ctor) {
 			case 'SchemaObject':
-				return A2(_user$project$Schema$viewSchemaObject, context, _p32._0);
+				return A2(_user$project$Schema$viewSchemaObject, context, _p34._0);
 			case 'SchemaList':
-				return A2(_user$project$Schema$viewSchemaList, context, _p32._0);
+				return A2(_user$project$Schema$viewSchemaList, context, _p34._0);
 			case 'SchemaString':
 				return A2(
 					_elm_lang$html$Html$span,
@@ -9396,7 +9426,7 @@ var _user$project$Schema$viewSchemaData = F2(
 							A2(
 								_elm_lang$core$Basics_ops['++'],
 								'\"',
-								A2(_elm_lang$core$Basics_ops['++'], _p32._0, '\"'))),
+								A2(_elm_lang$core$Basics_ops['++'], _p34._0, '\"'))),
 						_1: {ctor: '[]'}
 					});
 			case 'SchemaInt':
@@ -9410,7 +9440,7 @@ var _user$project$Schema$viewSchemaData = F2(
 					{
 						ctor: '::',
 						_0: _elm_lang$html$Html$text(
-							_elm_lang$core$Basics$toString(_p32._0)),
+							_elm_lang$core$Basics$toString(_p34._0)),
 						_1: {ctor: '[]'}
 					});
 			case 'SchemaBool':
@@ -9424,7 +9454,7 @@ var _user$project$Schema$viewSchemaData = F2(
 					{
 						ctor: '::',
 						_0: _elm_lang$html$Html$text(
-							_elm_lang$core$Basics$toString(_p32._0)),
+							_elm_lang$core$Basics$toString(_p34._0)),
 						_1: {ctor: '[]'}
 					});
 			default:
@@ -9445,8 +9475,8 @@ var _user$project$Schema$viewSchemaData = F2(
 var _user$project$Schema$viewSchemaList = F2(
 	function (context, items) {
 		var viewItem = F2(
-			function (i, _p33) {
-				var _p34 = _p33;
+			function (i, _p35) {
+				var _p36 = _p35;
 				var newContext = {
 					ctor: '::',
 					_0: _user$project$Schema$ListIndex(i),
@@ -9459,7 +9489,7 @@ var _user$project$Schema$viewSchemaList = F2(
 						_0: _elm_lang$html$Html_Attributes$classList(
 							{
 								ctor: '::',
-								_0: {ctor: '_Tuple2', _0: 'collapsed', _1: !_p34._0},
+								_0: {ctor: '_Tuple2', _0: 'collapsed', _1: !_p36._0},
 								_1: {ctor: '[]'}
 							}),
 						_1: {ctor: '[]'}
@@ -9492,7 +9522,7 @@ var _user$project$Schema$viewSchemaList = F2(
 									_0: _user$project$Schema$ListIndex(i),
 									_1: context
 								},
-								_p34._1),
+								_p36._1),
 							_1: {ctor: '[]'}
 						}
 					});
@@ -9974,12 +10004,6 @@ var _user$project$Main$getBlocks = function (nodeUrl) {
 				},
 				_1: {ctor: '[]'}
 			}));
-	var constructBody = function (value) {
-		return A2(
-			_elm_lang$http$Http$stringBody,
-			'multipart/form-data',
-			A2(_elm_lang$core$Json_Encode$encode, 0, value));
-	};
 	return A3(_elm_lang$http$Http$post, url, body, _user$project$Main$decodeBlocks);
 };
 var _user$project$Main$Flags = function (a) {
@@ -10023,27 +10047,28 @@ var _user$project$Main$LoadBlocks = function (a) {
 	return {ctor: 'LoadBlocks', _0: a};
 };
 var _user$project$Main$init = function (flags) {
+	var model = {
+		blocks: {ctor: '[]'},
+		schemaData: _elm_lang$core$Maybe$Nothing,
+		error: _elm_lang$core$Maybe$Nothing,
+		nodeUrl: flags.nodeUrl
+	};
 	return {
 		ctor: '_Tuple2',
-		_0: {
-			blocks: {ctor: '[]'},
-			schemaData: _elm_lang$core$Maybe$Nothing,
-			error: _elm_lang$core$Maybe$Nothing,
-			nodeUrl: flags.nodeUrl
-		},
+		_0: model,
 		_1: _elm_lang$core$Platform_Cmd$batch(
 			{
 				ctor: '::',
 				_0: A2(
 					_elm_lang$http$Http$send,
 					_user$project$Main$LoadBlocks,
-					_user$project$Main$getBlocks(flags.nodeUrl)),
+					_user$project$Main$getBlocks(model.nodeUrl)),
 				_1: {
 					ctor: '::',
 					_0: A2(
 						_elm_lang$http$Http$send,
 						_user$project$Main$LoadSchema,
-						_user$project$Main$getSchema(flags.nodeUrl)),
+						_user$project$Main$getSchema(model.nodeUrl)),
 					_1: {ctor: '[]'}
 				}
 			})
