@@ -101,16 +101,28 @@ viewSchemaData context schemaData =
             H.span [ HA.class "null" ] [ H.text "null" ]
 
 
-viewSchemaObject : Context -> Dict String ( Bool, SchemaData ) -> Html Msg
+viewSchemaObject : Context -> Dict String ( Visibility, SchemaData ) -> Html Msg
 viewSchemaObject context properties =
     let
         viewField ( name, ( visible, value ) ) =
             let
                 newContext =
                     FieldName name :: context
+
+                labelSuffix =
+                    case value of
+                        SchemaObject _ ->
+                            "{"
+
+                        SchemaList _ ->
+                            "["
+
+                        _ ->
+                            ":"
             in
                 H.div [ margin, HA.classList [ ( "collapsed", not visible ) ] ]
-                    [ H.span [ HA.class "fieldlabel", HE.onClick (ClickField newContext) ] [ H.text (name ++ ": ") ]
+                    [ H.span [ HA.class "fieldlabel", HE.onClick (ClickField newContext) ] [ H.text name ]
+                    , H.span [ HA.class "suffix" ] [ H.text (" " ++ labelSuffix ++ " ") ]
                     , viewSchemaData newContext value
                     ]
     in
@@ -170,7 +182,7 @@ toggleVisible context schemaData =
             case schemaData of
                 SchemaObject fields ->
                     let
-                        toggle : ( Bool, SchemaData ) -> ( Bool, SchemaData )
+                        toggle : ( Visibility, SchemaData ) -> ( Visibility, SchemaData )
                         toggle ( visible, value ) =
                             -- Update the Dict entry; note that an unmatched fieldName will never
                             -- call this and hence be silently ignored by the Dict.update
@@ -180,7 +192,7 @@ toggleVisible context schemaData =
                             else
                                 ( visible, toggleVisible subContext value )
 
-                        newFields : String -> Dict String ( Bool, SchemaData )
+                        newFields : String -> Dict String ( Visibility, SchemaData )
                         newFields fieldName =
                             Dict.update fieldName (Maybe.map toggle) fields
                     in

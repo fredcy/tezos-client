@@ -60,3 +60,7 @@ body {
 .bullet:hover, .fieldlabel:hover {
     background-color: yellow;
 }
+
+.suffix {
+    color: #CCC;
+}

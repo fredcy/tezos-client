@@ -32,16 +32,11 @@ main =
         }
 
 
-{-| Construct an RPC request. This should use Http.jsonBody but the
-"Content-type: application/json" header resulting from that seems to cause CORS
-problems for the Tezos server.
+{-| Construct an RPC request for the blockchain header data.
 -}
 getBlocks : String -> Http.Request BlocksData
 getBlocks nodeUrl =
     let
-        constructBody value =
-            Encode.encode 0 value |> Http.stringBody "multipart/form-data"
-
         body =
             [ ( "operations", Encode.bool True ) ]
                 |> Encode.object
@@ -113,12 +108,16 @@ type alias Flags =
 
 init : Flags -> ( Model, Cmd Msg )
 init flags =
-    ( { blocks = [], schemaData = Nothing, error = Nothing, nodeUrl = flags.nodeUrl }
-    , Cmd.batch
-        [ Http.send LoadBlocks (getBlocks flags.nodeUrl)
-        , Http.send LoadSchema (getSchema flags.nodeUrl)
-        ]
-    )
+    let
+        model =
+            { blocks = [], schemaData = Nothing, error = Nothing, nodeUrl = flags.nodeUrl }
+    in
+        ( model
+        , Cmd.batch
+            [ Http.send LoadBlocks (getBlocks model.nodeUrl)
+            , Http.send LoadSchema (getSchema model.nodeUrl)
+            ]
+        )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
