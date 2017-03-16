@@ -5,18 +5,18 @@ elm.js: Main.elm Schema.elm
 
 ###
 
-NODE_URL = https://fred.yankowski.com:8733
+NODE_URL = https://tezos.ostraca.org
 
-dist: site site/elm.js site/index.html site/tezos.css
+dist: docs docs/elm.js docs/index.html docs/tezos.css
 
-site:
-	mkdir site
+docs:
+	mkdir docs
 
-site/elm.js: elm.js
+docs/elm.js: elm.js
 	cp $< $@
 
-site/index.html: index.html Makefile
+docs/index.html: index.html Makefile
 	perl -pe 's#http://localhost:8732#$(NODE_URL)#' index.html >$@
 
-site/tezos.css: tezos.css
+docs/tezos.css: tezos.css
 	cp $< $@
