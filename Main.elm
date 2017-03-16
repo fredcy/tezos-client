@@ -2,9 +2,11 @@ module Main exposing (main)
 
 import Html as H exposing (Html)
 import Html.Attributes as HA
+import Html.Events as HE
 import Http
 import Json.Decode as Decode
 import Json.Encode as Encode
+import List.Extra as List
 import Schema exposing (..)
 
 
@@ -54,15 +56,6 @@ type RemoteData e a
     | Success a
 
 
-type alias Model =
-    { blocks : List (List Block)
-    , schemaData : Maybe SchemaData
-    , errors : List Http.Error
-    , nodeUrl : String
-    , operations : RemoteData Http.Error (List Operation)
-    }
-
-
 type alias Operation =
     { hash : OperationID
     , netID : NetID
@@ -70,12 +63,22 @@ type alias Operation =
     }
 
 
+type alias Model =
+    { blocks : List (List Block)
+    , schemaData : Maybe SchemaData
+    , errors : List Http.Error
+    , nodeUrl : String
+    , operations : RemoteData Http.Error (List Operation)
+    , showBlock : Maybe BlockID
+    }
+
+
 type Msg
-    = NoOp
-    | LoadBlocks (Result Http.Error BlocksData)
+    = LoadBlocks (Result Http.Error BlocksData)
     | LoadSchema (Result Http.Error SchemaData)
     | LoadOperations (Result Http.Error (List Operation))
     | SchemaMsg Schema.Msg
+    | ShowBlock BlockID
 
 
 main =
@@ -93,7 +96,7 @@ getBlocks : String -> Http.Request BlocksData
 getBlocks nodeUrl =
     let
         maxBlocksToGet =
-            5
+            10
 
         body =
             [ ( "operations", Encode.bool True )
@@ -176,6 +179,7 @@ init flags =
             , errors = []
             , nodeUrl = flags.nodeUrl
             , operations = Loading
+            , showBlock = Nothing
             }
     in
         ( model
@@ -221,8 +225,8 @@ update msg model =
                 Err error ->
                     ( { model | operations = Failure error }, Cmd.none )
 
-        _ ->
-            ( model, Cmd.none )
+        ShowBlock blockhash ->
+            ( { model | showBlock = Just blockhash }, Cmd.none )
 
 
 view : Model -> Html Msg
@@ -231,6 +235,7 @@ view model =
         [ viewHeader model.nodeUrl
         , viewError model.nodeUrl model.errors
         , viewBlocks model.blocks
+        , viewShowBlock model.blocks model.showBlock
         , viewOperations model.operations
         , case model.schemaData of
             Just schemaData ->
@@ -247,17 +252,25 @@ viewHeader : String -> Html Msg
 viewHeader nodeUrl =
     H.div []
         [ H.h1 [] [ H.text "Tezos client" ]
-        , H.div [] [ H.text ("Connecting to server " ++ nodeUrl) ]
+        , H.div [] [ H.text ("Connecting to Tezos RPC server " ++ nodeUrl) ]
         ]
 
 
 viewBlocks : List (List Block) -> Html Msg
 viewBlocks branches =
     let
+        tableHeader =
+            H.tr []
+                [ H.th [] [ H.text "hash" ]
+                , H.th [] [ H.text "timestamp" ]
+                , H.th [] [ H.text "operations" ]
+                ]
+
         viewBranch n branch =
             H.div [ HA.class "branch" ]
                 [ H.h3 [] [ H.text ("branch " ++ toString n) ]
-                , H.div [] (List.indexedMap viewBlock branch)
+                  --, H.div [] (List.indexedMap viewBlock branch)
+                , H.table [ HA.class "blockchain" ] ([ tableHeader ] ++ List.indexedMap viewBlock2 branch)
                 ]
 
         header =
@@ -293,13 +306,62 @@ viewBlock n block =
                     ]
     in
         H.div [ HA.class "block" ]
-            [ H.h4 [] [ H.text ("block " ++ toString n) ]
+            [ H.h3 [] [ H.text "Block" ]
             , viewProperty "hash" block.hash
             , viewProperty "predecessor" block.predecessor
             , viewProperty "timestamp" block.timestamp
             , viewPropertyList "fitness" block.fitness
             , viewPropertyList "operations" block.operations
             ]
+
+
+viewBlock2 : Int -> Block -> Html Msg
+viewBlock2 n block =
+    H.tr [ HA.class "block" ]
+        [ H.td
+            [ HA.class "hash"
+            , HA.title "click to view block details"
+            , HE.onClick (ShowBlock block.hash)
+            ]
+            [ H.text block.hash ]
+        , H.td [] [ H.text block.timestamp ]
+        , H.td [] [ H.text <| toString <| List.length block.operations ]
+        ]
+
+
+viewShowBlock : List (List Block) -> Maybe BlockID -> Html Msg
+viewShowBlock blocks blockhashMaybe =
+    case blockhashMaybe of
+        Just blockhash ->
+            case findBlock blocks blockhash of
+                Just block ->
+                    viewBlock 99 block
+
+                Nothing ->
+                    H.div [] [ H.text ("Cannot find block " ++ blockhash) ]
+
+        Nothing ->
+            H.text ""
+
+
+findInChain : List Block -> BlockID -> Maybe Block
+findInChain blocks hash =
+    List.find (\block -> block.hash == hash) blocks
+
+
+findBlock : List (List Block) -> BlockID -> Maybe Block
+findBlock blockchains hash =
+    case blockchains of
+        [] ->
+            Nothing
+
+        hd :: tl ->
+            case findInChain hd hash of
+                Just block ->
+                    Just block
+
+                Nothing ->
+                    findBlock tl hash
 
 
 viewOperations : RemoteData Http.Error (List Operation) -> Html Msg

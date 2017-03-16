@@ -68,3 +68,18 @@ body {
 .operation-data {
     word-wrap: break-word;
 }
+
+table.blockchain td {
+    padding: .5em;
+}
+
+/* make block hash values look like link */
+
+table.blockchain tr.block td.hash {
+    color: blue;
+}
+
+table.blockchain tr.block td.hash:hover {
+    color: red;
+    text-decoration: underline;
+}
