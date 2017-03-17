@@ -96,7 +96,7 @@ getBlocks : String -> Http.Request BlocksData
 getBlocks nodeUrl =
     let
         maxBlocksToGet =
-            10
+            100
 
         body =
             [ ( "operations", Encode.bool True )
@@ -269,7 +269,6 @@ viewBlocks branches =
         viewBranch n branch =
             H.div [ HA.class "branch" ]
                 [ H.h3 [] [ H.text ("branch " ++ toString n) ]
-                  --, H.div [] (List.indexedMap viewBlock branch)
                 , H.table [ HA.class "blockchain" ] ([ tableHeader ] ++ List.indexedMap viewBlock2 branch)
                 ]
 

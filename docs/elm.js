@@ -11433,7 +11433,7 @@ var _user$project$Main$decodeBlocks = A2(
 		_elm_lang$core$Json_Decode$list(_user$project$Main$decodeBlock)));
 var _user$project$Main$getBlocks = function (nodeUrl) {
 	var url = A2(_elm_lang$core$Basics_ops['++'], nodeUrl, '/blocks');
-	var maxBlocksToGet = 10;
+	var maxBlocksToGet = 100;
 	var body = _elm_lang$http$Http$jsonBody(
 		_elm_lang$core$Json_Encode$object(
 			{
