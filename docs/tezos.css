@@ -2,13 +2,26 @@ body {
     margin: 1em;
 }
 
-.property {
-    margin: 0.5em 0;
+.property-list {
+    display: table;
 }
 
-.property label {
-    display: inline-block;
-    width: 8em;
+.property {
+    display: table-row;
+}
+
+.property > div {
+    display: table-cell;
+    padding: .5em;
+}
+
+.property .label {
+    font-style: italic;
+}
+
+.operation-data {
+    word-wrap: break-word;
+    word-break: break-all;
 }
 
 #hash, #predecessor {
@@ -63,10 +76,6 @@ body {
 
 .suffix {
     color: #CCC;
-}
-
-.operation-data {
-    word-wrap: break-word;
 }
 
 table.blockchain td {

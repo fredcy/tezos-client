@@ -284,34 +284,24 @@ viewBlock n block =
     let
         viewProperty : String -> String -> Html Msg
         viewProperty label value =
-            let
-                id =
-                    label ++ toString n
-            in
-                H.div [ HA.class "property" ]
-                    [ H.label [ HA.for id ] [ H.text label ]
-                    , H.span [ HA.id id ] [ H.text value ]
-                    ]
+            H.div [ HA.class "property" ]
+                [ H.div [ HA.class "label" ] [ H.text label ]
+                , H.div [] [ H.text value ]
+                ]
 
         viewPropertyList : String -> List String -> Html Msg
         viewPropertyList label values =
-            let
-                id =
-                    label ++ toString n
-            in
-                H.div [ HA.class "property" ]
-                    [ H.label [ HA.for id ] [ H.text label ]
-                    , H.span [ HA.id id ]
-                        [ (List.intersperse ", " values |> String.concat |> H.text) ]
-                    ]
+            viewProperty label (List.intersperse ", " values |> String.concat)
     in
         H.div [ HA.class "block" ]
             [ H.h3 [] [ H.text "Block" ]
-            , viewProperty "hash" block.hash
-            , viewProperty "predecessor" block.predecessor
-            , viewProperty "timestamp" block.timestamp
-            , viewPropertyList "fitness" block.fitness
-            , viewPropertyList "operations" block.operations
+            , H.div [ HA.class "property-list" ]
+                [ viewProperty "hash" block.hash
+                , viewProperty "predecessor" block.predecessor
+                , viewProperty "timestamp" block.timestamp
+                , viewPropertyList "fitness" block.fitness
+                , viewPropertyList "operations" block.operations
+                ]
             ]
 
 
@@ -370,7 +360,7 @@ viewOperations operationsStatus =
         [ H.h2 [] [ H.text "Operations" ]
         , case operationsStatus of
             Success operations ->
-                H.div [] (List.map viewOperation operations)
+                H.div [ HA.class "property-list" ] (List.map viewOperation operations)
 
             Failure error ->
                 H.div [] [ H.text ("Error: " ++ toString operationsStatus) ]
@@ -393,8 +383,8 @@ viewOperation operation =
         H.div []
             [ H.h4 [] [ H.text operation.hash ]
             , H.div [ HA.class "property" ]
-                [ H.label [ HA.for id ] [ H.text "data" ]
-                , H.span [ HA.id id, HA.class "operation-data" ] [ H.text operation.data ]
+                [ H.div [ HA.class "label" ] [ H.text "data" ]
+                , H.div [ HA.class "operation-data" ] [ H.text operation.data ]
                 ]
             ]
 

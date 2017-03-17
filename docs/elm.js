@@ -11120,10 +11120,10 @@ var _user$project$Main$viewOperation = function (operation) {
 					{
 						ctor: '::',
 						_0: A2(
-							_elm_lang$html$Html$label,
+							_elm_lang$html$Html$div,
 							{
 								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$for(id),
+								_0: _elm_lang$html$Html_Attributes$class('label'),
 								_1: {ctor: '[]'}
 							},
 							{
@@ -11134,15 +11134,11 @@ var _user$project$Main$viewOperation = function (operation) {
 						_1: {
 							ctor: '::',
 							_0: A2(
-								_elm_lang$html$Html$span,
+								_elm_lang$html$Html$div,
 								{
 									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$id(id),
-									_1: {
-										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$class('operation-data'),
-										_1: {ctor: '[]'}
-									}
+									_0: _elm_lang$html$Html_Attributes$class('operation-data'),
+									_1: {ctor: '[]'}
 								},
 								{
 									ctor: '::',
@@ -11181,7 +11177,11 @@ var _user$project$Main$viewOperations = function (operationsStatus) {
 						case 'Success':
 							return A2(
 								_elm_lang$html$Html$div,
-								{ctor: '[]'},
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html_Attributes$class('property-list'),
+									_1: {ctor: '[]'}
+								},
 								A2(_elm_lang$core$List$map, _user$project$Main$viewOperation, _p3._0));
 						case 'Failure':
 							return A2(
@@ -11244,59 +11244,8 @@ var _user$project$Main$findBlock = F2(
 	});
 var _user$project$Main$viewBlock = F2(
 	function (n, block) {
-		var viewPropertyList = F2(
-			function (label, values) {
-				var id = A2(
-					_elm_lang$core$Basics_ops['++'],
-					label,
-					_elm_lang$core$Basics$toString(n));
-				return A2(
-					_elm_lang$html$Html$div,
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html_Attributes$class('property'),
-						_1: {ctor: '[]'}
-					},
-					{
-						ctor: '::',
-						_0: A2(
-							_elm_lang$html$Html$label,
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$for(id),
-								_1: {ctor: '[]'}
-							},
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html$text(label),
-								_1: {ctor: '[]'}
-							}),
-						_1: {
-							ctor: '::',
-							_0: A2(
-								_elm_lang$html$Html$span,
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$id(id),
-									_1: {ctor: '[]'}
-								},
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html$text(
-										_elm_lang$core$String$concat(
-											A2(_elm_lang$core$List$intersperse, ', ', values))),
-									_1: {ctor: '[]'}
-								}),
-							_1: {ctor: '[]'}
-						}
-					});
-			});
 		var viewProperty = F2(
 			function (label, value) {
-				var id = A2(
-					_elm_lang$core$Basics_ops['++'],
-					label,
-					_elm_lang$core$Basics$toString(n));
 				return A2(
 					_elm_lang$html$Html$div,
 					{
@@ -11307,10 +11256,10 @@ var _user$project$Main$viewBlock = F2(
 					{
 						ctor: '::',
 						_0: A2(
-							_elm_lang$html$Html$label,
+							_elm_lang$html$Html$div,
 							{
 								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$for(id),
+								_0: _elm_lang$html$Html_Attributes$class('label'),
 								_1: {ctor: '[]'}
 							},
 							{
@@ -11321,12 +11270,8 @@ var _user$project$Main$viewBlock = F2(
 						_1: {
 							ctor: '::',
 							_0: A2(
-								_elm_lang$html$Html$span,
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$id(id),
-									_1: {ctor: '[]'}
-								},
+								_elm_lang$html$Html$div,
+								{ctor: '[]'},
 								{
 									ctor: '::',
 									_0: _elm_lang$html$Html$text(value),
@@ -11335,6 +11280,14 @@ var _user$project$Main$viewBlock = F2(
 							_1: {ctor: '[]'}
 						}
 					});
+			});
+		var viewPropertyList = F2(
+			function (label, values) {
+				return A2(
+					viewProperty,
+					label,
+					_elm_lang$core$String$concat(
+						A2(_elm_lang$core$List$intersperse, ', ', values)));
 			});
 		return A2(
 			_elm_lang$html$Html$div,
@@ -11355,24 +11308,35 @@ var _user$project$Main$viewBlock = F2(
 					}),
 				_1: {
 					ctor: '::',
-					_0: A2(viewProperty, 'hash', block.hash),
-					_1: {
-						ctor: '::',
-						_0: A2(viewProperty, 'predecessor', block.predecessor),
-						_1: {
+					_0: A2(
+						_elm_lang$html$Html$div,
+						{
 							ctor: '::',
-							_0: A2(viewProperty, 'timestamp', block.timestamp),
+							_0: _elm_lang$html$Html_Attributes$class('property-list'),
+							_1: {ctor: '[]'}
+						},
+						{
+							ctor: '::',
+							_0: A2(viewProperty, 'hash', block.hash),
 							_1: {
 								ctor: '::',
-								_0: A2(viewPropertyList, 'fitness', block.fitness),
+								_0: A2(viewProperty, 'predecessor', block.predecessor),
 								_1: {
 									ctor: '::',
-									_0: A2(viewPropertyList, 'operations', block.operations),
-									_1: {ctor: '[]'}
+									_0: A2(viewProperty, 'timestamp', block.timestamp),
+									_1: {
+										ctor: '::',
+										_0: A2(viewPropertyList, 'fitness', block.fitness),
+										_1: {
+											ctor: '::',
+											_0: A2(viewPropertyList, 'operations', block.operations),
+											_1: {ctor: '[]'}
+										}
+									}
 								}
 							}
-						}
-					}
+						}),
+					_1: {ctor: '[]'}
 				}
 			});
 	});
