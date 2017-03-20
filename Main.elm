@@ -7,6 +7,7 @@ import Http
 import Json.Decode as Decode
 import Json.Encode as Encode
 import List.Extra as List
+import ParseInt
 import Schema exposing (..)
 
 
@@ -70,6 +71,7 @@ type alias Model =
     , nodeUrl : String
     , operations : RemoteData Http.Error (List Operation)
     , showBlock : Maybe BlockID
+    , showBranch : Maybe BlockID
     }
 
 
@@ -180,6 +182,7 @@ init flags =
             , nodeUrl = flags.nodeUrl
             , operations = Loading
             , showBlock = Nothing
+            , showBranch = Nothing
             }
     in
         ( model
@@ -234,7 +237,8 @@ view model =
     H.div []
         [ viewHeader model.nodeUrl
         , viewError model.nodeUrl model.errors
-        , viewBlocks model.blocks
+        , viewHeads model.blocks
+        , viewShowBranch model.blocks model.showBranch
         , viewShowBlock model.blocks model.showBlock
         , viewOperations model.operations
         , case model.schemaData of
@@ -256,28 +260,110 @@ viewHeader nodeUrl =
         ]
 
 
-viewBlocks : List (List Block) -> Html Msg
-viewBlocks branches =
+canonFitness : List String -> List Int
+canonFitness strings =
+    List.map (ParseInt.parseIntHex >> Result.withDefault 0) strings
+        |> List.dropWhile ((==) 0)
+
+
+viewHeads : List (List Block) -> Html Msg
+viewHeads branches =
     let
-        tableHeader =
+        header =
             H.tr []
                 [ H.th [] [ H.text "hash" ]
                 , H.th [] [ H.text "timestamp" ]
+                , H.th [] [ H.text "fitness" ]
+                ]
+
+        viewBlockSummary : Block -> Html Msg
+        viewBlockSummary block =
+            H.tr [ HA.class "head" ]
+                [ H.td [] [ H.text block.hash ]
+                , H.td [] [ H.text block.timestamp ]
+                , H.td [] [ H.text (toString (canonFitness block.fitness)) ]
+                ]
+
+        viewHead : List Block -> Html Msg
+        viewHead blocks =
+            case blocks of
+                head :: _ ->
+                    viewBlockSummary head
+
+                _ ->
+                    H.text ""
+    in
+        H.div []
+            [ H.h2 [] [ H.text "Blockchain heads" ]
+            , H.table [ HA.class "heads" ]
+                [ H.thead [] [ header ]
+                , H.tbody [] (List.map viewHead branches)
+                ]
+            ]
+
+
+findBranchByHead : List (List Block) -> BlockID -> Maybe (List Block)
+findBranchByHead branches headid =
+    let
+        match branch =
+            case branch of
+                head :: tail ->
+                    head.hash == headid
+
+                _ ->
+                    False
+    in
+        List.find match branches
+
+
+viewShowBranch : List (List Block) -> Maybe BlockID -> Html Msg
+viewShowBranch branches headidMaybe =
+    let
+        branchMaybe =
+            case headidMaybe of
+                Just headid ->
+                    findBranchByHead branches headid
+
+                Nothing ->
+                    case branches of
+                        head :: _ ->
+                            Just head
+
+                        _ ->
+                            Nothing
+    in
+        Maybe.map (viewBranch 99) branchMaybe |> Maybe.withDefault (H.text "")
+
+
+viewBranch n branch =
+    let
+        tableHeader =
+            H.tr []
+                [ H.th [ HA.class "hash" ] [ H.text "hash" ]
+                , H.th [] [ H.text "timestamp" ]
                 , H.th [] [ H.text "operations" ]
                 ]
-
-        viewBranch n branch =
-            H.div [ HA.class "branch" ]
-                [ H.h3 [] [ H.text ("branch " ++ toString n) ]
-                , H.table [ HA.class "blockchain" ] ([ tableHeader ] ++ List.indexedMap viewBlock2 branch)
+    in
+        H.div [ HA.class "branch" ]
+            [ H.h3 [] [ H.text ("branch " ++ toString n) ]
+            , H.table [ HA.class "blockchain" ]
+                [ H.thead [] [ tableHeader ]
+                , H.tbody [] (List.indexedMap viewBlock2 branch)
                 ]
+            ]
 
+
+viewBlocks : List (List Block) -> Html Msg
+viewBlocks branches =
+    let
         header =
             [ H.h2 [] [ H.text "Block chains" ] ]
     in
         H.div [ HA.class "branches" ] (header ++ List.indexedMap viewBranch branches)
 
 
+{-| View details of a single block.
+-}
 viewBlock : Int -> Block -> Html Msg
 viewBlock n block =
     let

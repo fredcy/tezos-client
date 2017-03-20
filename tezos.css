@@ -2,13 +2,9 @@ body {
     margin: 1em;
 }
 
-.branch {
-    height: 500px;
-    overflow: auto;
-}
-
 .property-list {
     display: table;
+    width: 80%;
 }
 
 .property {
@@ -22,6 +18,10 @@ body {
 
 .property .label {
     font-style: italic;
+}
+
+TR.head TD {
+    padding: .5em;
 }
 
 .operation-data {
@@ -81,6 +81,46 @@ body {
 
 .suffix {
     color: #CCC;
+}
+
+/* scrollable branch table */
+
+.branch {
+    height: 300px;
+    width: 60em;
+    padding-bottom: 1.5em;
+}
+
+.branch table {
+    display: flex;
+    flex-flow: column;
+    height: 100%;
+    width: 100%;
+} 
+
+.branch table thead {
+    flex: 0 0 auto;
+    width: 100%;
+    /* width: calc(100% - 1em); */
+}
+
+.branch table tbody {
+    flex: 1 1 auto;
+    display: block;
+    overflow-y: scroll;
+}
+
+.branch tbody tr {
+    width: 100%;
+}
+
+.branch thead, .branch tbody tr {
+    display: table;
+    table-layout: fixed;
+}
+
+.branch td.hash, .branch th.hash {
+    width: 32em;
 }
 
 table.blockchain td {
