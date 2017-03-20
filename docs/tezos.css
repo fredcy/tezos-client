@@ -119,8 +119,20 @@ TR.head TD {
     table-layout: fixed;
 }
 
-.branch td.hash, .branch th.hash {
-    width: 32em;
+.branch td.hash,
+.branch th.hash {
+    width: 15em;                /* give more room to hash column */
+}
+
+.branch td.timestamp,
+.branch th.timestamp {
+    width: 5em;
+}
+
+.branch td.operations,
+.branch th.operations {
+    width: 2em;
+    text-align: right;
 }
 
 table.blockchain td {
@@ -129,11 +141,13 @@ table.blockchain td {
 
 /* make block hash values look like link */
 
-table.blockchain tr.block td.hash {
+table.blockchain tr.block td.hash,
+table.heads td.hash {
     color: blue;
 }
 
-table.blockchain tr.block td.hash:hover {
+table.blockchain tr.block td.hash:hover,
+table.heads td.hash:hover {
     color: red;
     text-decoration: underline;
 }

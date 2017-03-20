@@ -6,6 +6,7 @@ import Html.Events as HE
 import Http
 import Json.Decode as Decode
 import Json.Encode as Encode
+import Dict exposing (Dict)
 import List.Extra as List
 import ParseInt
 import Schema exposing (..)
@@ -71,16 +72,19 @@ type alias Model =
     , nodeUrl : String
     , operations : RemoteData Http.Error (List Operation)
     , showBlock : Maybe BlockID
-    , showBranch : Maybe BlockID
+    , showBranch : Maybe Int
+    , levels : Dict BlockID Int
     }
 
 
 type Msg
     = LoadBlocks (Result Http.Error BlocksData)
+    | LoadLevel (Result Http.Error ( BlockID, Int ))
     | LoadSchema (Result Http.Error SchemaData)
     | LoadOperations (Result Http.Error (List Operation))
     | SchemaMsg Schema.Msg
     | ShowBlock BlockID
+    | ShowBranch Int
 
 
 main =
@@ -168,6 +172,41 @@ getSchema nodeUrl =
         Http.post url body decodeSchema
 
 
+getLevelCommand : String -> BlockID -> Cmd Msg
+getLevelCommand nodeUrl blockid =
+    let
+        url =
+            nodeUrl ++ "/blocks/" ++ blockid ++ "/proto/context/level"
+
+        body =
+            Encode.object [] |> Http.jsonBody
+
+        request : Http.Request ( BlockID, Int )
+        request =
+            -- TODO Add blockid to msg without passing thru decoder
+            Http.post url body (decodeLevel blockid)
+    in
+        Http.send LoadLevel request
+
+
+getLevelCommands : String -> List (List Block) -> Cmd Msg
+getLevelCommands nodeUrl branches =
+    List.filterMap getHeadId branches
+        |> List.map (getLevelCommand nodeUrl)
+        |> Cmd.batch
+
+
+getHeadId : List Block -> Maybe BlockID
+getHeadId blocks =
+    List.head blocks |> Maybe.map .hash
+
+
+decodeLevel : BlockID -> Decode.Decoder ( BlockID, Int )
+decodeLevel blockid =
+    Decode.at [ "ok", "level" ] Decode.int
+        |> Decode.map (\level -> ( blockid, level ))
+
+
 type alias Flags =
     { nodeUrl : String }
 
@@ -183,13 +222,14 @@ init flags =
             , operations = Loading
             , showBlock = Nothing
             , showBranch = Nothing
+            , levels = Dict.empty
             }
     in
         ( model
         , Cmd.batch
             [ Http.send LoadBlocks (getBlocks model.nodeUrl)
               --, Http.send LoadSchema (getSchema model.nodeUrl)
-            , Http.send LoadOperations (getOperations model.nodeUrl)
+              --, Http.send LoadOperations (getOperations model.nodeUrl)
             ]
         )
 
@@ -200,7 +240,21 @@ update msg model =
         LoadBlocks blocksMaybe ->
             case blocksMaybe of
                 Ok blocks ->
-                    ( { model | blocks = blocks }, Cmd.none )
+                    ( { model | blocks = blocks }
+                    , getLevelCommands model.nodeUrl blocks
+                    )
+
+                Err error ->
+                    ( { model | errors = error :: model.errors }, Cmd.none )
+
+        LoadLevel result ->
+            case result of
+                Ok ( blockid, level ) ->
+                    let
+                        newLevels =
+                            Dict.insert blockid level model.levels
+                    in
+                        ( { model | levels = newLevels }, Cmd.none )
 
                 Err error ->
                     ( { model | errors = error :: model.errors }, Cmd.none )
@@ -231,16 +285,19 @@ update msg model =
         ShowBlock blockhash ->
             ( { model | showBlock = Just blockhash }, Cmd.none )
 
+        ShowBranch index ->
+            ( { model | showBranch = Just index }, Cmd.none )
+
 
 view : Model -> Html Msg
 view model =
     H.div []
         [ viewHeader model.nodeUrl
         , viewError model.nodeUrl model.errors
-        , viewHeads model.blocks
+        , viewHeads model.blocks model.levels
         , viewShowBranch model.blocks model.showBranch
         , viewShowBlock model.blocks model.showBlock
-        , viewOperations model.operations
+          --, viewOperations model.operations
         , case model.schemaData of
             Just schemaData ->
                 viewSchemaDataTop schemaData |> H.map SchemaMsg
@@ -266,29 +323,42 @@ canonFitness strings =
         |> List.dropWhile ((==) 0)
 
 
-viewHeads : List (List Block) -> Html Msg
-viewHeads branches =
+viewHeads : List (List Block) -> Dict BlockID Int -> Html Msg
+viewHeads branches levels =
     let
         header =
             H.tr []
-                [ H.th [] [ H.text "hash" ]
+                [ H.th [] [ H.text "index" ]
+                , H.th [] [ H.text "hash" ]
                 , H.th [] [ H.text "timestamp" ]
                 , H.th [] [ H.text "fitness" ]
+                , H.th [] [ H.text "level" ]
                 ]
 
-        viewBlockSummary : Block -> Html Msg
-        viewBlockSummary block =
+        viewBlockSummary : Int -> Block -> Html Msg
+        viewBlockSummary i block =
             H.tr [ HA.class "head" ]
-                [ H.td [] [ H.text block.hash ]
+                [ H.td [] [ H.text (toString i) ]
+                , H.td
+                    [ HA.class "hash"
+                    , HE.onClick (ShowBranch i)
+                    ]
+                    [ H.text block.hash ]
                 , H.td [] [ H.text block.timestamp ]
                 , H.td [] [ H.text (toString (canonFitness block.fitness)) ]
+                , H.td []
+                    [ Dict.get block.hash levels
+                        |> Maybe.map toString
+                        |> Maybe.withDefault ""
+                        |> H.text
+                    ]
                 ]
 
-        viewHead : List Block -> Html Msg
-        viewHead blocks =
+        viewHead : Int -> List Block -> Html Msg
+        viewHead i blocks =
             case blocks of
                 head :: _ ->
-                    viewBlockSummary head
+                    viewBlockSummary i head
 
                 _ ->
                     H.text ""
@@ -297,7 +367,7 @@ viewHeads branches =
             [ H.h2 [] [ H.text "Blockchain heads" ]
             , H.table [ HA.class "heads" ]
                 [ H.thead [] [ header ]
-                , H.tbody [] (List.map viewHead branches)
+                , H.tbody [] (List.indexedMap viewHead branches)
                 ]
             ]
 
@@ -316,23 +386,16 @@ findBranchByHead branches headid =
         List.find match branches
 
 
-viewShowBranch : List (List Block) -> Maybe BlockID -> Html Msg
-viewShowBranch branches headidMaybe =
+viewShowBranch : List (List Block) -> Maybe Int -> Html Msg
+viewShowBranch branches indexMaybe =
     let
+        index =
+            Maybe.withDefault 0 indexMaybe
+
         branchMaybe =
-            case headidMaybe of
-                Just headid ->
-                    findBranchByHead branches headid
-
-                Nothing ->
-                    case branches of
-                        head :: _ ->
-                            Just head
-
-                        _ ->
-                            Nothing
+            List.getAt index branches
     in
-        Maybe.map (viewBranch 99) branchMaybe |> Maybe.withDefault (H.text "")
+        Maybe.map (viewBranch index) branchMaybe |> Maybe.withDefault (H.text "")
 
 
 viewBranch n branch =
@@ -340,8 +403,8 @@ viewBranch n branch =
         tableHeader =
             H.tr []
                 [ H.th [ HA.class "hash" ] [ H.text "hash" ]
-                , H.th [] [ H.text "timestamp" ]
-                , H.th [] [ H.text "operations" ]
+                , H.th [ HA.class "timestamp" ] [ H.text "timestamp" ]
+                , H.th [ HA.class "operations" ] [ H.text "operations" ]
                 ]
     in
         H.div [ HA.class "branch" ]
@@ -351,6 +414,20 @@ viewBranch n branch =
                 , H.tbody [] (List.indexedMap viewBlock2 branch)
                 ]
             ]
+
+
+viewBlock2 : Int -> Block -> Html Msg
+viewBlock2 n block =
+    H.tr [ HA.class "block" ]
+        [ H.td
+            [ HA.class "hash"
+            , HA.title "click to view block details"
+            , HE.onClick (ShowBlock block.hash)
+            ]
+            [ H.text block.hash ]
+        , H.td [ HA.class "timestamp" ] [ H.text block.timestamp ]
+        , H.td [ HA.class "operations" ] [ H.text <| toString <| List.length block.operations ]
+        ]
 
 
 viewBlocks : List (List Block) -> Html Msg
@@ -388,20 +465,6 @@ viewBlock n block =
                 , viewPropertyList "operations" block.operations
                 ]
             ]
-
-
-viewBlock2 : Int -> Block -> Html Msg
-viewBlock2 n block =
-    H.tr [ HA.class "block" ]
-        [ H.td
-            [ HA.class "hash"
-            , HA.title "click to view block details"
-            , HE.onClick (ShowBlock block.hash)
-            ]
-            [ H.text block.hash ]
-        , H.td [] [ H.text block.timestamp ]
-        , H.td [] [ H.text <| toString <| List.length block.operations ]
-        ]
 
 
 viewShowBlock : List (List Block) -> Maybe BlockID -> Html Msg
