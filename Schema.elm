@@ -70,10 +70,10 @@ viewSchemaDataRaw schemaDataMaybe =
             H.text "[no schema data]"
 
 
-viewSchemaDataTop : SchemaData -> Html Msg
-viewSchemaDataTop data =
+viewSchemaDataTop : String -> SchemaData -> Html Msg
+viewSchemaDataTop schemaQuery data =
     H.div [ HA.class "schemadata" ]
-        [ H.h2 [] [ H.text "Raw Schema" ]
+        [ H.h2 [] [ H.text ("Raw Schema for " ++ schemaQuery) ]
         , H.p [] [ H.text "Here is a view of the JSON Schema for the Tezos RPC API. Click labels and bullets to collapse and expand" ]
         , viewSchemaData [] data
         ]

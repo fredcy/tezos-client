@@ -10996,45 +10996,47 @@ var _user$project$Schema$viewSchemaList = F2(
 			},
 			A2(_elm_lang$core$List$indexedMap, viewItem, items));
 	});
-var _user$project$Schema$viewSchemaDataTop = function (data) {
-	return A2(
-		_elm_lang$html$Html$div,
-		{
-			ctor: '::',
-			_0: _elm_lang$html$Html_Attributes$class('schemadata'),
-			_1: {ctor: '[]'}
-		},
-		{
-			ctor: '::',
-			_0: A2(
-				_elm_lang$html$Html$h2,
-				{ctor: '[]'},
-				{
-					ctor: '::',
-					_0: _elm_lang$html$Html$text('Raw Schema'),
-					_1: {ctor: '[]'}
-				}),
-			_1: {
+var _user$project$Schema$viewSchemaDataTop = F2(
+	function (schemaQuery, data) {
+		return A2(
+			_elm_lang$html$Html$div,
+			{
+				ctor: '::',
+				_0: _elm_lang$html$Html_Attributes$class('schemadata'),
+				_1: {ctor: '[]'}
+			},
+			{
 				ctor: '::',
 				_0: A2(
-					_elm_lang$html$Html$p,
+					_elm_lang$html$Html$h2,
 					{ctor: '[]'},
 					{
 						ctor: '::',
-						_0: _elm_lang$html$Html$text('Here is a view of the JSON Schema for the Tezos RPC API. Click labels and bullets to collapse and expand'),
+						_0: _elm_lang$html$Html$text(
+							A2(_elm_lang$core$Basics_ops['++'], 'Raw Schema for ', schemaQuery)),
 						_1: {ctor: '[]'}
 					}),
 				_1: {
 					ctor: '::',
 					_0: A2(
-						_user$project$Schema$viewSchemaData,
+						_elm_lang$html$Html$p,
 						{ctor: '[]'},
-						data),
-					_1: {ctor: '[]'}
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html$text('Here is a view of the JSON Schema for the Tezos RPC API. Click labels and bullets to collapse and expand'),
+							_1: {ctor: '[]'}
+						}),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_user$project$Schema$viewSchemaData,
+							{ctor: '[]'},
+							data),
+						_1: {ctor: '[]'}
+					}
 				}
-			}
-		});
-};
+			});
+	});
 
 var _user$project$Main$subscriptions = function (model) {
 	return _elm_lang$core$Platform_Sub$none;
@@ -11543,25 +11545,18 @@ var _user$project$Main$viewHeader = function (nodeUrl) {
 			}
 		});
 };
-var _user$project$Main$decodeLevel = function (blockid) {
-	return A2(
-		_elm_lang$core$Json_Decode$map,
-		function (level) {
-			return {ctor: '_Tuple2', _0: blockid, _1: level};
-		},
-		A2(
-			_elm_lang$core$Json_Decode$at,
-			{
-				ctor: '::',
-				_0: 'ok',
-				_1: {
-					ctor: '::',
-					_0: 'level',
-					_1: {ctor: '[]'}
-				}
-			},
-			_elm_lang$core$Json_Decode$int));
-};
+var _user$project$Main$decodeLevel = A2(
+	_elm_lang$core$Json_Decode$at,
+	{
+		ctor: '::',
+		_0: 'ok',
+		_1: {
+			ctor: '::',
+			_0: 'level',
+			_1: {ctor: '[]'}
+		}
+	},
+	_elm_lang$core$Json_Decode$int);
 var _user$project$Main$getHeadId = function (blocks) {
 	return A2(
 		_elm_lang$core$Maybe$map,
@@ -11570,21 +11565,22 @@ var _user$project$Main$getHeadId = function (blocks) {
 		},
 		_elm_lang$core$List$head(blocks));
 };
-var _user$project$Main$getSchema = function (nodeUrl) {
-	var url = A2(_elm_lang$core$Basics_ops['++'], nodeUrl, '/describe');
-	var body = _elm_lang$http$Http$jsonBody(
-		_elm_lang$core$Json_Encode$object(
-			{
-				ctor: '::',
-				_0: {
-					ctor: '_Tuple2',
-					_0: 'recursive',
-					_1: _elm_lang$core$Json_Encode$bool(true)
-				},
-				_1: {ctor: '[]'}
-			}));
-	return A3(_elm_lang$http$Http$post, url, body, _user$project$Schema$decodeSchema);
-};
+var _user$project$Main$getSchema = F2(
+	function (nodeUrl, schemaQuery) {
+		var url = A2(_elm_lang$core$Basics_ops['++'], nodeUrl, schemaQuery);
+		var body = _elm_lang$http$Http$jsonBody(
+			_elm_lang$core$Json_Encode$object(
+				{
+					ctor: '::',
+					_0: {
+						ctor: '_Tuple2',
+						_0: 'recursive',
+						_1: _elm_lang$core$Json_Encode$bool(true)
+					},
+					_1: {ctor: '[]'}
+				}));
+		return A3(_elm_lang$http$Http$post, url, body, _user$project$Schema$decodeSchema);
+	});
 var _user$project$Main$decodeTimestamp = _elm_lang$core$Json_Decode$string;
 var _user$project$Main$Block = F5(
 	function (a, b, c, d, e) {
@@ -11687,9 +11683,9 @@ var _user$project$Main$getOperations = function (nodeUrl) {
 		body,
 		_user$project$Main$decodeOperations);
 };
-var _user$project$Main$Model = F8(
-	function (a, b, c, d, e, f, g, h) {
-		return {blocks: a, schemaData: b, errors: c, nodeUrl: d, operations: e, showBlock: f, showBranch: g, levels: h};
+var _user$project$Main$Model = F9(
+	function (a, b, c, d, e, f, g, h, i) {
+		return {blocks: a, schemaData: b, errors: c, nodeUrl: d, operations: e, showBlock: f, showBranch: g, levels: h, schemaQuery: i};
 	});
 var _user$project$Main$Flags = function (a) {
 	return {nodeUrl: a};
@@ -12146,7 +12142,7 @@ var _user$project$Main$view = function (model) {
 										return A2(
 											_elm_lang$html$Html$map,
 											_user$project$Main$SchemaMsg,
-											_user$project$Schema$viewSchemaDataTop(_p12._0));
+											A2(_user$project$Schema$viewSchemaDataTop, model.schemaQuery, _p12._0));
 									} else {
 										return _elm_lang$html$Html$text('');
 									}
@@ -12165,9 +12161,10 @@ var _user$project$Main$LoadOperations = function (a) {
 var _user$project$Main$LoadSchema = function (a) {
 	return {ctor: 'LoadSchema', _0: a};
 };
-var _user$project$Main$LoadLevel = function (a) {
-	return {ctor: 'LoadLevel', _0: a};
-};
+var _user$project$Main$LoadLevel = F2(
+	function (a, b) {
+		return {ctor: 'LoadLevel', _0: a, _1: b};
+	});
 var _user$project$Main$getLevelCommand = F2(
 	function (nodeUrl, blockid) {
 		var body = _elm_lang$http$Http$jsonBody(
@@ -12180,12 +12177,11 @@ var _user$project$Main$getLevelCommand = F2(
 				_elm_lang$core$Basics_ops['++'],
 				'/blocks/',
 				A2(_elm_lang$core$Basics_ops['++'], blockid, '/proto/context/level')));
-		var request = A3(
-			_elm_lang$http$Http$post,
-			url,
-			body,
-			_user$project$Main$decodeLevel(blockid));
-		return A2(_elm_lang$http$Http$send, _user$project$Main$LoadLevel, request);
+		var request = A3(_elm_lang$http$Http$post, url, body, _user$project$Main$decodeLevel);
+		return A2(
+			_elm_lang$http$Http$send,
+			_user$project$Main$LoadLevel(blockid),
+			request);
 	});
 var _user$project$Main$getLevelCommands = F2(
 	function (nodeUrl, branches) {
@@ -12222,9 +12218,9 @@ var _user$project$Main$update = F2(
 					};
 				}
 			case 'LoadLevel':
-				var _p16 = _p13._0;
+				var _p16 = _p13._1;
 				if (_p16.ctor === 'Ok') {
-					var newLevels = A3(_elm_lang$core$Dict$insert, _p16._0._0, _p16._0._1, model.levels);
+					var newLevels = A3(_elm_lang$core$Dict$insert, _p13._0, _p16._0, model.levels);
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
@@ -12332,7 +12328,8 @@ var _user$project$Main$init = function (flags) {
 		operations: _user$project$Main$Loading,
 		showBlock: _elm_lang$core$Maybe$Nothing,
 		showBranch: _elm_lang$core$Maybe$Nothing,
-		levels: _elm_lang$core$Dict$empty
+		levels: _elm_lang$core$Dict$empty,
+		schemaQuery: '/describe/blocks/head/proto'
 	};
 	return {
 		ctor: '_Tuple2',
@@ -12344,7 +12341,14 @@ var _user$project$Main$init = function (flags) {
 					_elm_lang$http$Http$send,
 					_user$project$Main$LoadBlocks,
 					_user$project$Main$getBlocks(model.nodeUrl)),
-				_1: {ctor: '[]'}
+				_1: {
+					ctor: '::',
+					_0: A2(
+						_elm_lang$http$Http$send,
+						_user$project$Main$LoadSchema,
+						A2(_user$project$Main$getSchema, model.nodeUrl, model.schemaQuery)),
+					_1: {ctor: '[]'}
+				}
 			})
 	};
 };

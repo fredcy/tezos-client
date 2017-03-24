@@ -74,12 +74,13 @@ type alias Model =
     , showBlock : Maybe BlockID
     , showBranch : Maybe Int
     , levels : Dict BlockID Int
+    , schemaQuery : String
     }
 
 
 type Msg
     = LoadBlocks (Result Http.Error BlocksData)
-    | LoadLevel (Result Http.Error ( BlockID, Int ))
+    | LoadLevel BlockID (Result Http.Error Int)
     | LoadSchema (Result Http.Error SchemaData)
     | LoadOperations (Result Http.Error (List Operation))
     | SchemaMsg Schema.Msg
@@ -160,14 +161,14 @@ decodeOperation =
         (Decode.at [ "contents", "data" ] Decode.string)
 
 
-getSchema : String -> Http.Request SchemaData
-getSchema nodeUrl =
+getSchema : String -> String -> Http.Request SchemaData
+getSchema nodeUrl schemaQuery =
     let
         body =
             [ ( "recursive", Encode.bool True ) ] |> Encode.object |> Http.jsonBody
 
         url =
-            nodeUrl ++ "/describe"
+            nodeUrl ++ schemaQuery
     in
         Http.post url body decodeSchema
 
@@ -181,12 +182,11 @@ getLevelCommand nodeUrl blockid =
         body =
             Encode.object [] |> Http.jsonBody
 
-        request : Http.Request ( BlockID, Int )
+        request : Http.Request Int
         request =
-            -- TODO Add blockid to msg without passing thru decoder
-            Http.post url body (decodeLevel blockid)
+            Http.post url body decodeLevel
     in
-        Http.send LoadLevel request
+        Http.send (LoadLevel blockid) request
 
 
 getLevelCommands : String -> List (List Block) -> Cmd Msg
@@ -201,10 +201,9 @@ getHeadId blocks =
     List.head blocks |> Maybe.map .hash
 
 
-decodeLevel : BlockID -> Decode.Decoder ( BlockID, Int )
-decodeLevel blockid =
+decodeLevel : Decode.Decoder Int
+decodeLevel =
     Decode.at [ "ok", "level" ] Decode.int
-        |> Decode.map (\level -> ( blockid, level ))
 
 
 type alias Flags =
@@ -223,12 +222,13 @@ init flags =
             , showBlock = Nothing
             , showBranch = Nothing
             , levels = Dict.empty
+            , schemaQuery = "/describe/blocks/head/proto"
             }
     in
         ( model
         , Cmd.batch
             [ Http.send LoadBlocks (getBlocks model.nodeUrl)
-              --, Http.send LoadSchema (getSchema model.nodeUrl)
+            , Http.send LoadSchema (getSchema model.nodeUrl model.schemaQuery)
               --, Http.send LoadOperations (getOperations model.nodeUrl)
             ]
         )
@@ -247,9 +247,9 @@ update msg model =
                 Err error ->
                     ( { model | errors = error :: model.errors }, Cmd.none )
 
-        LoadLevel result ->
+        LoadLevel blockid result ->
             case result of
-                Ok ( blockid, level ) ->
+                Ok level ->
                     let
                         newLevels =
                             Dict.insert blockid level model.levels
@@ -300,7 +300,7 @@ view model =
           --, viewOperations model.operations
         , case model.schemaData of
             Just schemaData ->
-                viewSchemaDataTop schemaData |> H.map SchemaMsg
+                viewSchemaDataTop model.schemaQuery schemaData |> H.map SchemaMsg
 
             Nothing ->
                 H.text ""
