@@ -20,6 +20,20 @@ body {
     font-style: italic;
 }
 
+.property ol {
+    list-style-type: none;
+    padding-left: 0;
+    margin: 0;
+}
+
+li.operation {
+    color: blue;
+}
+
+li.operation:hover {
+    text-decoration: underline;
+}
+
 TR.head TD {
     padding: .5em;
 }

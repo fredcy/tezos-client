@@ -1,4 +1,4 @@
-module Schema exposing (Msg, SchemaData, decodeSchema, update, viewSchemaDataTop)
+module Schema exposing (Msg, SchemaData, decodeSchema, update, viewSchemaDataTop, collapseTrees)
 
 import Char
 import Dict exposing (Dict)
@@ -255,3 +255,23 @@ mapSchemaData fn schemaData =
 collapseAll : SchemaData -> SchemaData
 collapseAll schemaData =
     mapSchemaData (\( _, s ) -> ( False, s )) schemaData
+
+
+objectMap : String -> ( Visibility, SchemaData ) -> ( Visibility, SchemaData )
+objectMap name ( visibility, value ) =
+    ( visibility && (name /= "tree"), collapseTrees value )
+
+
+{-| Mark every "tree" object element as collapsed (not visible)
+-}
+collapseTrees : SchemaData -> SchemaData
+collapseTrees schemaData =
+    case schemaData of
+        SchemaObject itemDict ->
+            SchemaObject (Dict.map objectMap itemDict)
+
+        SchemaList itemList ->
+            SchemaList (List.map (\( v, data ) -> ( v, collapseTrees data )) itemList)
+
+        _ ->
+            schemaData

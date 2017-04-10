@@ -10759,6 +10759,38 @@ var _user$project$Schema$collapseAll = function (schemaData) {
 		},
 		schemaData);
 };
+var _user$project$Schema$collapseTrees = function (schemaData) {
+	var _p29 = schemaData;
+	switch (_p29.ctor) {
+		case 'SchemaObject':
+			return _user$project$Schema$SchemaObject(
+				A2(_elm_lang$core$Dict$map, _user$project$Schema$objectMap, _p29._0));
+		case 'SchemaList':
+			return _user$project$Schema$SchemaList(
+				A2(
+					_elm_lang$core$List$map,
+					function (_p30) {
+						var _p31 = _p30;
+						return {
+							ctor: '_Tuple2',
+							_0: _p31._0,
+							_1: _user$project$Schema$collapseTrees(_p31._1)
+						};
+					},
+					_p29._0));
+		default:
+			return schemaData;
+	}
+};
+var _user$project$Schema$objectMap = F2(
+	function (name, _p32) {
+		var _p33 = _p32;
+		return {
+			ctor: '_Tuple2',
+			_0: _p33._0 && (!_elm_lang$core$Native_Utils.eq(name, 'tree')),
+			_1: _user$project$Schema$collapseTrees(_p33._1)
+		};
+	});
 var _user$project$Schema$ListIndex = function (a) {
 	return {ctor: 'ListIndex', _0: a};
 };
@@ -10767,13 +10799,13 @@ var _user$project$Schema$FieldName = function (a) {
 };
 var _user$project$Schema$viewSchemaObject = F2(
 	function (context, properties) {
-		var viewField = function (_p29) {
-			var _p30 = _p29;
-			var _p33 = _p30._1._1;
-			var _p32 = _p30._0;
+		var viewField = function (_p34) {
+			var _p35 = _p34;
+			var _p38 = _p35._1._1;
+			var _p37 = _p35._0;
 			var labelSuffix = function () {
-				var _p31 = _p33;
-				switch (_p31.ctor) {
+				var _p36 = _p38;
+				switch (_p36.ctor) {
 					case 'SchemaObject':
 						return '{';
 					case 'SchemaList':
@@ -10784,7 +10816,7 @@ var _user$project$Schema$viewSchemaObject = F2(
 			}();
 			var newContext = {
 				ctor: '::',
-				_0: _user$project$Schema$FieldName(_p32),
+				_0: _user$project$Schema$FieldName(_p37),
 				_1: context
 			};
 			return A2(
@@ -10797,7 +10829,7 @@ var _user$project$Schema$viewSchemaObject = F2(
 						_0: _elm_lang$html$Html_Attributes$classList(
 							{
 								ctor: '::',
-								_0: {ctor: '_Tuple2', _0: 'collapsed', _1: !_p30._1._0},
+								_0: {ctor: '_Tuple2', _0: 'collapsed', _1: !_p35._1._0},
 								_1: {ctor: '[]'}
 							}),
 						_1: {ctor: '[]'}
@@ -10819,7 +10851,7 @@ var _user$project$Schema$viewSchemaObject = F2(
 						},
 						{
 							ctor: '::',
-							_0: _elm_lang$html$Html$text(_p32),
+							_0: _elm_lang$html$Html$text(_p37),
 							_1: {ctor: '[]'}
 						}),
 					_1: {
@@ -10842,7 +10874,7 @@ var _user$project$Schema$viewSchemaObject = F2(
 							}),
 						_1: {
 							ctor: '::',
-							_0: A2(_user$project$Schema$viewSchemaData, newContext, _p33),
+							_0: A2(_user$project$Schema$viewSchemaData, newContext, _p38),
 							_1: {ctor: '[]'}
 						}
 					}
@@ -10862,12 +10894,12 @@ var _user$project$Schema$viewSchemaObject = F2(
 	});
 var _user$project$Schema$viewSchemaData = F2(
 	function (context, schemaData) {
-		var _p34 = schemaData;
-		switch (_p34.ctor) {
+		var _p39 = schemaData;
+		switch (_p39.ctor) {
 			case 'SchemaObject':
-				return A2(_user$project$Schema$viewSchemaObject, context, _p34._0);
+				return A2(_user$project$Schema$viewSchemaObject, context, _p39._0);
 			case 'SchemaList':
-				return A2(_user$project$Schema$viewSchemaList, context, _p34._0);
+				return A2(_user$project$Schema$viewSchemaList, context, _p39._0);
 			case 'SchemaString':
 				return A2(
 					_elm_lang$html$Html$span,
@@ -10882,7 +10914,7 @@ var _user$project$Schema$viewSchemaData = F2(
 							A2(
 								_elm_lang$core$Basics_ops['++'],
 								'\"',
-								A2(_elm_lang$core$Basics_ops['++'], _p34._0, '\"'))),
+								A2(_elm_lang$core$Basics_ops['++'], _p39._0, '\"'))),
 						_1: {ctor: '[]'}
 					});
 			case 'SchemaInt':
@@ -10896,7 +10928,7 @@ var _user$project$Schema$viewSchemaData = F2(
 					{
 						ctor: '::',
 						_0: _elm_lang$html$Html$text(
-							_elm_lang$core$Basics$toString(_p34._0)),
+							_elm_lang$core$Basics$toString(_p39._0)),
 						_1: {ctor: '[]'}
 					});
 			case 'SchemaBool':
@@ -10910,7 +10942,7 @@ var _user$project$Schema$viewSchemaData = F2(
 					{
 						ctor: '::',
 						_0: _elm_lang$html$Html$text(
-							_elm_lang$core$Basics$toString(_p34._0)),
+							_elm_lang$core$Basics$toString(_p39._0)),
 						_1: {ctor: '[]'}
 					});
 			default:
@@ -10931,8 +10963,8 @@ var _user$project$Schema$viewSchemaData = F2(
 var _user$project$Schema$viewSchemaList = F2(
 	function (context, items) {
 		var viewItem = F2(
-			function (i, _p35) {
-				var _p36 = _p35;
+			function (i, _p40) {
+				var _p41 = _p40;
 				var newContext = {
 					ctor: '::',
 					_0: _user$project$Schema$ListIndex(i),
@@ -10945,7 +10977,7 @@ var _user$project$Schema$viewSchemaList = F2(
 						_0: _elm_lang$html$Html_Attributes$classList(
 							{
 								ctor: '::',
-								_0: {ctor: '_Tuple2', _0: 'collapsed', _1: !_p36._0},
+								_0: {ctor: '_Tuple2', _0: 'collapsed', _1: !_p41._0},
 								_1: {ctor: '[]'}
 							}),
 						_1: {ctor: '[]'}
@@ -10978,7 +11010,7 @@ var _user$project$Schema$viewSchemaList = F2(
 									_0: _user$project$Schema$ListIndex(i),
 									_1: context
 								},
-								_p36._1),
+								_p41._1),
 							_1: {ctor: '[]'}
 						}
 					});
@@ -11040,6 +11072,28 @@ var _user$project$Schema$viewSchemaDataTop = F2(
 
 var _user$project$Main$subscriptions = function (model) {
 	return _elm_lang$core$Platform_Sub$none;
+};
+var _user$project$Main$viewParse = function (parseData) {
+	return A2(
+		_elm_lang$html$Html$div,
+		{ctor: '[]'},
+		{
+			ctor: '::',
+			_0: A2(
+				_elm_lang$html$Html$h2,
+				{ctor: '[]'},
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html$text('Parsed operation'),
+					_1: {ctor: '[]'}
+				}),
+			_1: {
+				ctor: '::',
+				_0: _elm_lang$html$Html$text(
+					_elm_lang$core$Basics$toString(parseData)),
+				_1: {ctor: '[]'}
+			}
+		});
 };
 var _user$project$Main$viewDebug = function (model) {
 	return A2(
@@ -11229,7 +11283,8 @@ var _user$project$Main$viewOperation = function (operation) {
 				{ctor: '[]'},
 				{
 					ctor: '::',
-					_0: _elm_lang$html$Html$text(operation.hash),
+					_0: _elm_lang$html$Html$text(
+						A2(_elm_lang$core$Basics_ops['++'], 'Operation ', operation.hash)),
 					_1: {ctor: '[]'}
 				}),
 			_1: {
@@ -11336,6 +11391,30 @@ var _user$project$Main$viewOperations = function (operationsStatus) {
 			}
 		});
 };
+var _user$project$Main$viewShowOperation = F2(
+	function (operationData, operationidMaybe) {
+		var _p4 = operationidMaybe;
+		if (_p4.ctor === 'Just') {
+			var _p5 = operationData;
+			if (_p5.ctor === 'Success') {
+				return _user$project$Main$viewOperation(_p5._0);
+			} else {
+				return _elm_lang$html$Html$text(
+					_elm_lang$core$Basics$toString(operationData));
+			}
+		} else {
+			return _elm_lang$html$Html$text('');
+		}
+	});
+var _user$project$Main$findOperation = F2(
+	function (operations, operationId) {
+		return A2(
+			_elm_community$list_extra$List_Extra$find,
+			function (operation) {
+				return _elm_lang$core$Native_Utils.eq(operation.hash, operationId);
+			},
+			operations);
+	});
 var _user$project$Main$findInChain = F2(
 	function (blocks, hash) {
 		return A2(
@@ -11349,150 +11428,29 @@ var _user$project$Main$findBlock = F2(
 	function (blockchains, hash) {
 		findBlock:
 		while (true) {
-			var _p4 = blockchains;
-			if (_p4.ctor === '[]') {
+			var _p6 = blockchains;
+			if (_p6.ctor === '[]') {
 				return _elm_lang$core$Maybe$Nothing;
 			} else {
-				var _p5 = A2(_user$project$Main$findInChain, _p4._0, hash);
-				if (_p5.ctor === 'Just') {
-					return _elm_lang$core$Maybe$Just(_p5._0);
+				var _p7 = A2(_user$project$Main$findInChain, _p6._0, hash);
+				if (_p7.ctor === 'Just') {
+					return _elm_lang$core$Maybe$Just(_p7._0);
 				} else {
-					var _v5 = _p4._1,
-						_v6 = hash;
-					blockchains = _v5;
-					hash = _v6;
+					var _v7 = _p6._1,
+						_v8 = hash;
+					blockchains = _v7;
+					hash = _v8;
 					continue findBlock;
 				}
 			}
 		}
 	});
-var _user$project$Main$viewBlock = F2(
-	function (n, block) {
-		var viewProperty = F2(
-			function (label, value) {
-				return A2(
-					_elm_lang$html$Html$div,
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html_Attributes$class('property'),
-						_1: {ctor: '[]'}
-					},
-					{
-						ctor: '::',
-						_0: A2(
-							_elm_lang$html$Html$div,
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$class('label'),
-								_1: {ctor: '[]'}
-							},
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html$text(label),
-								_1: {ctor: '[]'}
-							}),
-						_1: {
-							ctor: '::',
-							_0: A2(
-								_elm_lang$html$Html$div,
-								{ctor: '[]'},
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html$text(value),
-									_1: {ctor: '[]'}
-								}),
-							_1: {ctor: '[]'}
-						}
-					});
-			});
-		var viewPropertyList = F2(
-			function (label, values) {
-				return A2(
-					viewProperty,
-					label,
-					_elm_lang$core$String$concat(
-						A2(_elm_lang$core$List$intersperse, ', ', values)));
-			});
-		return A2(
-			_elm_lang$html$Html$div,
-			{
-				ctor: '::',
-				_0: _elm_lang$html$Html_Attributes$class('block'),
-				_1: {ctor: '[]'}
-			},
-			{
-				ctor: '::',
-				_0: A2(
-					_elm_lang$html$Html$h3,
-					{ctor: '[]'},
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html$text('Block'),
-						_1: {ctor: '[]'}
-					}),
-				_1: {
-					ctor: '::',
-					_0: A2(
-						_elm_lang$html$Html$div,
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$class('property-list'),
-							_1: {ctor: '[]'}
-						},
-						{
-							ctor: '::',
-							_0: A2(viewProperty, 'hash', block.hash),
-							_1: {
-								ctor: '::',
-								_0: A2(viewProperty, 'predecessor', block.predecessor),
-								_1: {
-									ctor: '::',
-									_0: A2(viewProperty, 'timestamp', block.timestamp),
-									_1: {
-										ctor: '::',
-										_0: A2(viewPropertyList, 'fitness', block.fitness),
-										_1: {
-											ctor: '::',
-											_0: A2(viewPropertyList, 'operations', block.operations),
-											_1: {ctor: '[]'}
-										}
-									}
-								}
-							}
-						}),
-					_1: {ctor: '[]'}
-				}
-			});
-	});
-var _user$project$Main$viewShowBlock = F2(
-	function (blocks, blockhashMaybe) {
-		var _p6 = blockhashMaybe;
-		if (_p6.ctor === 'Just') {
-			var _p8 = _p6._0;
-			var _p7 = A2(_user$project$Main$findBlock, blocks, _p8);
-			if (_p7.ctor === 'Just') {
-				return A2(_user$project$Main$viewBlock, 99, _p7._0);
-			} else {
-				return A2(
-					_elm_lang$html$Html$div,
-					{ctor: '[]'},
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html$text(
-							A2(_elm_lang$core$Basics_ops['++'], 'Cannot find block ', _p8)),
-						_1: {ctor: '[]'}
-					});
-			}
-		} else {
-			return _elm_lang$html$Html$text('');
-		}
-	});
 var _user$project$Main$findBranchByHead = F2(
 	function (branches, headid) {
 		var match = function (branch) {
-			var _p9 = branch;
-			if (_p9.ctor === '::') {
-				return _elm_lang$core$Native_Utils.eq(_p9._0.hash, headid);
+			var _p8 = branch;
+			if (_p8.ctor === '::') {
+				return _elm_lang$core$Native_Utils.eq(_p8._0.hash, headid);
 			} else {
 				return false;
 			}
@@ -11508,11 +11466,11 @@ var _user$project$Main$canonFitness = function (strings) {
 			})(0),
 		A2(
 			_elm_lang$core$List$map,
-			function (_p10) {
+			function (_p9) {
 				return A2(
 					_elm_lang$core$Result$withDefault,
 					0,
-					_fredcy$elm_parseint$ParseInt$parseIntHex(_p10));
+					_fredcy$elm_parseint$ParseInt$parseIntHex(_p9));
 			},
 			strings));
 };
@@ -11683,10 +11641,61 @@ var _user$project$Main$getOperations = function (nodeUrl) {
 		body,
 		_user$project$Main$decodeOperations);
 };
-var _user$project$Main$Model = F9(
-	function (a, b, c, d, e, f, g, h, i) {
-		return {blocks: a, schemaData: b, errors: c, nodeUrl: d, operations: e, showBlock: f, showBranch: g, levels: h, schemaQuery: i};
+var _user$project$Main$decodeOperationContents = A4(
+	_elm_lang$core$Json_Decode$map3,
+	_user$project$Main$Operation,
+	_elm_lang$core$Json_Decode$succeed('bogus'),
+	A2(_elm_lang$core$Json_Decode$field, 'net_id', _elm_lang$core$Json_Decode$string),
+	A2(_elm_lang$core$Json_Decode$field, 'data', _elm_lang$core$Json_Decode$string));
+var _user$project$Main$getOperation = F2(
+	function (nodeUrl, operationId) {
+		var setHash = F2(
+			function (hash, operation) {
+				return _elm_lang$core$Native_Utils.update(
+					operation,
+					{hash: hash});
+			});
+		var decoder = A2(
+			_elm_lang$core$Json_Decode$map,
+			setHash(operationId),
+			_user$project$Main$decodeOperationContents);
+		var body = _elm_lang$http$Http$jsonBody(
+			_elm_lang$core$Json_Encode$object(
+				{ctor: '[]'}));
+		return A3(
+			_elm_lang$http$Http$post,
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				nodeUrl,
+				A2(_elm_lang$core$Basics_ops['++'], '/operations/', operationId)),
+			body,
+			decoder);
 	});
+var _user$project$Main$Model = function (a) {
+	return function (b) {
+		return function (c) {
+			return function (d) {
+				return function (e) {
+					return function (f) {
+						return function (g) {
+							return function (h) {
+								return function (i) {
+									return function (j) {
+										return function (k) {
+											return function (l) {
+												return {blocks: a, schemaData: b, errors: c, nodeUrl: d, operations: e, operation: f, showBlock: g, showOperation: h, showBranch: i, levels: j, schemaQuery: k, parse: l};
+											};
+										};
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+};
 var _user$project$Main$Flags = function (a) {
 	return {nodeUrl: a};
 };
@@ -11790,9 +11799,9 @@ var _user$project$Main$viewHeads = F2(
 			});
 		var viewHead = F2(
 			function (i, blocks) {
-				var _p11 = blocks;
-				if (_p11.ctor === '::') {
-					return A2(viewBlockSummary, i, _p11._0);
+				var _p10 = blocks;
+				if (_p10.ctor === '::') {
+					return A2(viewBlockSummary, i, _p10._0);
 				} else {
 					return _elm_lang$html$Html$text('');
 				}
@@ -11900,6 +11909,166 @@ var _user$project$Main$viewHeads = F2(
 					_1: {ctor: '[]'}
 				}
 			});
+	});
+var _user$project$Main$ShowOperation = function (a) {
+	return {ctor: 'ShowOperation', _0: a};
+};
+var _user$project$Main$viewBlock = function (block) {
+	var viewProperty = F2(
+		function (label, value) {
+			return A2(
+				_elm_lang$html$Html$div,
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html_Attributes$class('property'),
+					_1: {ctor: '[]'}
+				},
+				{
+					ctor: '::',
+					_0: A2(
+						_elm_lang$html$Html$div,
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$class('label'),
+							_1: {ctor: '[]'}
+						},
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html$text(label),
+							_1: {ctor: '[]'}
+						}),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$div,
+							{ctor: '[]'},
+							{
+								ctor: '::',
+								_0: value,
+								_1: {ctor: '[]'}
+							}),
+						_1: {ctor: '[]'}
+					}
+				});
+		});
+	var viewPropertyString = F2(
+		function (label, value) {
+			return A2(
+				viewProperty,
+				label,
+				_elm_lang$html$Html$text(value));
+		});
+	var viewPropertyList = F2(
+		function (label, values) {
+			return A2(
+				viewProperty,
+				label,
+				_elm_lang$html$Html$text(
+					_elm_lang$core$String$concat(
+						A2(_elm_lang$core$List$intersperse, ', ', values))));
+		});
+	var viewPropertyList2 = F2(
+		function (label, values) {
+			var li = function (value) {
+				return A2(
+					_elm_lang$html$Html$li,
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html_Events$onClick(
+							_user$project$Main$ShowOperation(value)),
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$class('operation'),
+							_1: {ctor: '[]'}
+						}
+					},
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html$text(value),
+						_1: {ctor: '[]'}
+					});
+			};
+			return A2(
+				viewProperty,
+				label,
+				A2(
+					_elm_lang$html$Html$ol,
+					{ctor: '[]'},
+					A2(_elm_lang$core$List$map, li, values)));
+		});
+	return A2(
+		_elm_lang$html$Html$div,
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html_Attributes$class('block'),
+			_1: {ctor: '[]'}
+		},
+		{
+			ctor: '::',
+			_0: A2(
+				_elm_lang$html$Html$h3,
+				{ctor: '[]'},
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html$text('Block'),
+					_1: {ctor: '[]'}
+				}),
+			_1: {
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$div,
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html_Attributes$class('property-list'),
+						_1: {ctor: '[]'}
+					},
+					{
+						ctor: '::',
+						_0: A2(viewPropertyString, 'hash', block.hash),
+						_1: {
+							ctor: '::',
+							_0: A2(viewPropertyString, 'predecessor', block.predecessor),
+							_1: {
+								ctor: '::',
+								_0: A2(viewPropertyString, 'timestamp', block.timestamp),
+								_1: {
+									ctor: '::',
+									_0: A2(viewPropertyList, 'fitness', block.fitness),
+									_1: {
+										ctor: '::',
+										_0: A2(viewPropertyList2, 'operations', block.operations),
+										_1: {ctor: '[]'}
+									}
+								}
+							}
+						}
+					}),
+				_1: {ctor: '[]'}
+			}
+		});
+};
+var _user$project$Main$viewShowBlock = F2(
+	function (blocks, blockhashMaybe) {
+		var _p11 = blockhashMaybe;
+		if (_p11.ctor === 'Just') {
+			var _p13 = _p11._0;
+			var _p12 = A2(_user$project$Main$findBlock, blocks, _p13);
+			if (_p12.ctor === 'Just') {
+				return _user$project$Main$viewBlock(_p12._0);
+			} else {
+				return A2(
+					_elm_lang$html$Html$div,
+					{ctor: '[]'},
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html$text(
+							A2(_elm_lang$core$Basics_ops['++'], 'Cannot find block ', _p13)),
+						_1: {ctor: '[]'}
+					});
+			}
+		} else {
+			return _elm_lang$html$Html$text('');
+		}
 	});
 var _user$project$Main$ShowBlock = function (a) {
 	return {ctor: 'ShowBlock', _0: a};
@@ -12136,24 +12305,69 @@ var _user$project$Main$view = function (model) {
 							_0: A2(_user$project$Main$viewShowBlock, model.blocks, model.showBlock),
 							_1: {
 								ctor: '::',
-								_0: function () {
-									var _p12 = model.schemaData;
-									if (_p12.ctor === 'Just') {
-										return A2(
-											_elm_lang$html$Html$map,
-											_user$project$Main$SchemaMsg,
-											A2(_user$project$Schema$viewSchemaDataTop, model.schemaQuery, _p12._0));
-									} else {
-										return _elm_lang$html$Html$text('');
+								_0: A2(_user$project$Main$viewShowOperation, model.operation, model.showOperation),
+								_1: {
+									ctor: '::',
+									_0: _user$project$Main$viewParse(model.parse),
+									_1: {
+										ctor: '::',
+										_0: _user$project$Main$viewOperations(model.operations),
+										_1: {
+											ctor: '::',
+											_0: function () {
+												var _p14 = model.schemaData;
+												if (_p14.ctor === 'Just') {
+													return A2(
+														_elm_lang$html$Html$map,
+														_user$project$Main$SchemaMsg,
+														A2(_user$project$Schema$viewSchemaDataTop, model.schemaQuery, _p14._0));
+												} else {
+													return _elm_lang$html$Html$text('');
+												}
+											}(),
+											_1: {ctor: '[]'}
+										}
 									}
-								}(),
-								_1: {ctor: '[]'}
+								}
 							}
 						}
 					}
 				}
 			}
 		});
+};
+var _user$project$Main$LoadParsedOperation = function (a) {
+	return {ctor: 'LoadParsedOperation', _0: a};
+};
+var _user$project$Main$getParseOperationCommand = F2(
+	function (nodeUrl, operation) {
+		var body = _elm_lang$http$Http$jsonBody(
+			_elm_lang$core$Json_Encode$object(
+				{
+					ctor: '::',
+					_0: {
+						ctor: '_Tuple2',
+						_0: 'data',
+						_1: _elm_lang$core$Json_Encode$string(operation.data)
+					},
+					_1: {
+						ctor: '::',
+						_0: {
+							ctor: '_Tuple2',
+							_0: 'net_id',
+							_1: _elm_lang$core$Json_Encode$string(operation.netID)
+						},
+						_1: {ctor: '[]'}
+					}
+				}));
+		var url = A2(_elm_lang$core$Basics_ops['++'], nodeUrl, '/blocks/head/proto/helpers/parse/operation');
+		return A2(
+			_elm_lang$http$Http$send,
+			_user$project$Main$LoadParsedOperation,
+			A3(_elm_lang$http$Http$post, url, body, _elm_lang$core$Json_Decode$value));
+	});
+var _user$project$Main$LoadOperation = function (a) {
+	return {ctor: 'LoadOperation', _0: a};
 };
 var _user$project$Main$LoadOperations = function (a) {
 	return {ctor: 'LoadOperations', _0: a};
@@ -12193,18 +12407,18 @@ var _user$project$Main$getLevelCommands = F2(
 	});
 var _user$project$Main$update = F2(
 	function (msg, model) {
-		var _p13 = A2(_elm_lang$core$Debug$log, 'msg', msg);
-		switch (_p13.ctor) {
+		var _p15 = A2(_elm_lang$core$Debug$log, 'msg', msg);
+		switch (_p15.ctor) {
 			case 'LoadBlocks':
-				var _p14 = _p13._0;
-				if (_p14.ctor === 'Ok') {
-					var _p15 = _p14._0;
+				var _p16 = _p15._0;
+				if (_p16.ctor === 'Ok') {
+					var _p17 = _p16._0;
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
-							{blocks: _p15}),
-						_1: A2(_user$project$Main$getLevelCommands, model.nodeUrl, _p15)
+							{blocks: _p17}),
+						_1: A2(_user$project$Main$getLevelCommands, model.nodeUrl, _p17)
 					};
 				} else {
 					return {
@@ -12212,15 +12426,15 @@ var _user$project$Main$update = F2(
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								errors: {ctor: '::', _0: _p14._0, _1: model.errors}
+								errors: {ctor: '::', _0: _p16._0, _1: model.errors}
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				}
 			case 'LoadLevel':
-				var _p16 = _p13._1;
-				if (_p16.ctor === 'Ok') {
-					var newLevels = A3(_elm_lang$core$Dict$insert, _p13._0, _p16._0, model.levels);
+				var _p18 = _p15._1;
+				if (_p18.ctor === 'Ok') {
+					var newLevels = A3(_elm_lang$core$Dict$insert, _p15._0, _p18._0, model.levels);
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
@@ -12234,20 +12448,21 @@ var _user$project$Main$update = F2(
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								errors: {ctor: '::', _0: _p16._0, _1: model.errors}
+								errors: {ctor: '::', _0: _p18._0, _1: model.errors}
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				}
 			case 'LoadSchema':
-				var _p17 = _p13._0;
-				if (_p17.ctor === 'Ok') {
+				var _p19 = _p15._0;
+				if (_p19.ctor === 'Ok') {
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								schemaData: _elm_lang$core$Maybe$Just(_p17._0)
+								schemaData: _elm_lang$core$Maybe$Just(
+									_user$project$Schema$collapseTrees(_p19._0))
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
@@ -12257,13 +12472,13 @@ var _user$project$Main$update = F2(
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								errors: {ctor: '::', _0: _p17._0, _1: model.errors}
+								errors: {ctor: '::', _0: _p19._0, _1: model.errors}
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				}
 			case 'SchemaMsg':
-				var newSchema = A2(_user$project$Schema$update, _p13._0, model.schemaData);
+				var newSchema = A2(_user$project$Schema$update, _p15._0, model.schemaData);
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
@@ -12272,14 +12487,14 @@ var _user$project$Main$update = F2(
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			case 'LoadOperations':
-				var _p18 = _p13._0;
-				if (_p18.ctor === 'Ok') {
+				var _p20 = _p15._0;
+				if (_p20.ctor === 'Ok') {
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								operations: _user$project$Main$Success(_p18._0)
+								operations: _user$project$Main$Success(_p20._0)
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
@@ -12289,7 +12504,54 @@ var _user$project$Main$update = F2(
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								operations: _user$project$Main$Failure(_p18._0)
+								operations: _user$project$Main$Failure(_p20._0)
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				}
+			case 'LoadOperation':
+				var _p21 = _p15._0;
+				if (_p21.ctor === 'Ok') {
+					var _p22 = _p21._0;
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								operation: _user$project$Main$Success(_p22)
+							}),
+						_1: A2(_user$project$Main$getParseOperationCommand, model.nodeUrl, _p22)
+					};
+				} else {
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								operation: _user$project$Main$Failure(_p21._0)
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				}
+			case 'LoadParsedOperation':
+				var _p23 = _p15._0;
+				if (_p23.ctor === 'Ok') {
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								parse: _user$project$Main$Success(_p23._0)
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				} else {
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								parse: _user$project$Main$Failure(_p23._0)
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
@@ -12300,9 +12562,23 @@ var _user$project$Main$update = F2(
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							showBlock: _elm_lang$core$Maybe$Just(_p13._0)
+							showBlock: _elm_lang$core$Maybe$Just(_p15._0)
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
+				};
+			case 'ShowOperation':
+				var _p24 = _p15._0;
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							showOperation: _elm_lang$core$Maybe$Just(_p24)
+						}),
+					_1: A2(
+						_elm_lang$http$Http$send,
+						_user$project$Main$LoadOperation,
+						A2(_user$project$Main$getOperation, model.nodeUrl, _p24))
 				};
 			default:
 				return {
@@ -12310,7 +12586,7 @@ var _user$project$Main$update = F2(
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							showBranch: _elm_lang$core$Maybe$Just(_p13._0)
+							showBranch: _elm_lang$core$Maybe$Just(_p15._0)
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
@@ -12325,11 +12601,14 @@ var _user$project$Main$init = function (flags) {
 		schemaData: _elm_lang$core$Maybe$Nothing,
 		errors: {ctor: '[]'},
 		nodeUrl: flags.nodeUrl,
-		operations: _user$project$Main$Loading,
+		operations: _user$project$Main$NotAsked,
+		operation: _user$project$Main$NotAsked,
 		showBlock: _elm_lang$core$Maybe$Nothing,
+		showOperation: _elm_lang$core$Maybe$Nothing,
 		showBranch: _elm_lang$core$Maybe$Nothing,
 		levels: _elm_lang$core$Dict$empty,
-		schemaQuery: '/describe/blocks/head/proto'
+		schemaQuery: '/describe/blocks/head/proto',
+		parse: _user$project$Main$NotAsked
 	};
 	return {
 		ctor: '_Tuple2',
