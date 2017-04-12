@@ -70,8 +70,7 @@ type alias Model =
     , schemaData : Maybe SchemaData
     , errors : List Http.Error
     , nodeUrl : String
-    , operations : RemoteData Http.Error (List Operation)
-    , operation : RemoteData Http.Error Operation
+    , operations : Dict OperationID Operation
     , showBlock : Maybe BlockID
     , showOperation : Maybe OperationID
     , showBranch : Maybe Int
@@ -85,7 +84,6 @@ type Msg
     = LoadBlocks (Result Http.Error BlocksData)
     | LoadLevel BlockID (Result Http.Error Int)
     | LoadSchema (Result Http.Error SchemaData)
-    | LoadOperations (Result Http.Error (List Operation))
     | LoadOperation (Result Http.Error Operation)
     | LoadParsedOperation (Result Http.Error Decode.Value)
     | SchemaMsg Schema.Msg
@@ -264,8 +262,7 @@ init flags =
             , schemaData = Nothing
             , errors = []
             , nodeUrl = flags.nodeUrl
-            , operations = NotAsked
-            , operation = NotAsked
+            , operations = Dict.empty
             , showBlock = Nothing
             , showOperation = Nothing
             , showBranch = Nothing
@@ -279,7 +276,6 @@ init flags =
         , Cmd.batch
             [ Http.send LoadBlocks (getBlocks model.nodeUrl)
             , Http.send LoadSchema (getSchema model.nodeUrl model.schemaQuery)
-              --, Http.send LoadOperations (getOperations model.nodeUrl)
             ]
         )
 
@@ -324,23 +320,17 @@ update msg model =
             in
                 ( { model | schemaData = newSchema }, Cmd.none )
 
-        LoadOperations operationsResult ->
-            case operationsResult of
-                Ok operationsData ->
-                    ( { model | operations = Success operationsData }, Cmd.none )
-
-                Err error ->
-                    ( { model | operations = Failure error }, Cmd.none )
-
         LoadOperation operationResult ->
             case operationResult of
                 Ok operation ->
-                    ( { model | operation = Success operation }
+                    ( { model
+                        | operations = Dict.insert operation.hash operation model.operations
+                      }
                     , getParseOperationCommand model.nodeUrl operation
                     )
 
                 Err error ->
-                    ( { model | operation = Failure error }, Cmd.none )
+                    ( { model | errors = error :: model.errors }, Cmd.none )
 
         LoadParsedOperation parseResult ->
             case parseResult of
@@ -355,11 +345,19 @@ update msg model =
 
         ShowOperation operationhash ->
             ( { model | showOperation = Just operationhash }
-            , Http.send LoadOperation (getOperation model.nodeUrl operationhash)
+            , getOperationIfNew model.nodeUrl model.operations operationhash
             )
 
         ShowBranch index ->
             ( { model | showBranch = Just index }, Cmd.none )
+
+
+getOperationIfNew : String -> Dict OperationID Operation -> OperationID -> Cmd Msg
+getOperationIfNew nodeUrl operations operationId =
+    if Dict.member operationId operations then
+        Cmd.none
+    else
+        Http.send LoadOperation (getOperation nodeUrl operationId)
 
 
 view : Model -> Html Msg
@@ -370,9 +368,8 @@ view model =
         , viewHeads model.blocks model.levels
         , viewShowBranch model.blocks model.showBranch
         , viewShowBlock model.blocks model.showBlock
-        , viewShowOperation model.operation model.showOperation
+        , viewShowOperation model.operations model.showOperation
         , viewParse model.parse
-        , viewOperations model.operations
         , case model.schemaData of
             Just schemaData ->
                 viewSchemaDataTop model.schemaQuery schemaData |> H.map SchemaMsg
@@ -594,19 +591,13 @@ findOperation operations operationId =
     List.find (\operation -> operation.hash == operationId) operations
 
 
-viewShowOperation : RemoteData error Operation -> Maybe OperationID -> Html Msg
-viewShowOperation operationData operationidMaybe =
-    case operationidMaybe of
-        Just operationId ->
-            case operationData of
-                Success operation ->
-                    viewOperation operation
-
-                _ ->
-                    H.text (toString operationData)
-
-        Nothing ->
-            H.text ""
+viewShowOperation : Dict OperationID Operation -> Maybe OperationID -> Html Msg
+viewShowOperation operations operationidMaybe =
+    operationidMaybe
+        |> Maybe.andThen
+            (\oId -> Dict.get oId operations)
+        |> Maybe.map viewOperation
+        |> Maybe.withDefault (H.text "")
 
 
 viewOperations : RemoteData Http.Error (List Operation) -> Html Msg
