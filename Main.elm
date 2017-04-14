@@ -71,12 +71,12 @@ type alias Model =
     , errors : List Http.Error
     , nodeUrl : String
     , operations : Dict OperationID Operation
+    , parsedOperations : Dict OperationID Decode.Value
     , showBlock : Maybe BlockID
     , showOperation : Maybe OperationID
     , showBranch : Maybe Int
     , levels : Dict BlockID Int
     , schemaQuery : String
-    , parse : RemoteData Http.Error Decode.Value
     }
 
 
@@ -85,7 +85,7 @@ type Msg
     | LoadLevel BlockID (Result Http.Error Int)
     | LoadSchema (Result Http.Error SchemaData)
     | LoadOperation (Result Http.Error Operation)
-    | LoadParsedOperation (Result Http.Error Decode.Value)
+    | LoadParsedOperation OperationID (Result Http.Error Decode.Value)
     | SchemaMsg Schema.Msg
     | ShowBlock BlockID
     | ShowOperation OperationID
@@ -247,7 +247,7 @@ getParseOperationCommand nodeUrl operation =
                 |> Encode.object
                 |> Http.jsonBody
     in
-        Http.post url body Decode.value |> Http.send LoadParsedOperation
+        Http.post url body Decode.value |> Http.send (LoadParsedOperation operation.hash)
 
 
 type alias Flags =
@@ -263,19 +263,19 @@ init flags =
             , errors = []
             , nodeUrl = flags.nodeUrl
             , operations = Dict.empty
+            , parsedOperations = Dict.empty
             , showBlock = Nothing
             , showOperation = Nothing
             , showBranch = Nothing
             , levels =
                 Dict.empty
             , schemaQuery = "/describe/blocks/head/proto"
-            , parse = NotAsked
             }
     in
         ( model
         , Cmd.batch
             [ Http.send LoadBlocks (getBlocks model.nodeUrl)
-            , Http.send LoadSchema (getSchema model.nodeUrl model.schemaQuery)
+              --, Http.send LoadSchema (getSchema model.nodeUrl model.schemaQuery)
             ]
         )
 
@@ -332,13 +332,18 @@ update msg model =
                 Err error ->
                     ( { model | errors = error :: model.errors }, Cmd.none )
 
-        LoadParsedOperation parseResult ->
+        LoadParsedOperation operationId parseResult ->
             case parseResult of
                 Ok parse ->
-                    ( { model | parse = Success parse }, Cmd.none )
+                    ( { model
+                        | parsedOperations =
+                            Dict.insert operationId parse model.parsedOperations
+                      }
+                    , Cmd.none
+                    )
 
                 Err error ->
-                    ( { model | parse = Failure error }, Cmd.none )
+                    ( { model | errors = error :: model.errors }, Cmd.none )
 
         ShowBlock blockhash ->
             ( { model | showBlock = Just blockhash }, Cmd.none )
@@ -369,7 +374,7 @@ view model =
         , viewShowBranch model.blocks model.showBranch
         , viewShowBlock model.blocks model.showBlock
         , viewShowOperation model.operations model.showOperation
-        , viewParse model.parse
+        , viewParse model.parsedOperations model.showOperation
         , case model.schemaData of
             Just schemaData ->
                 viewSchemaDataTop model.schemaQuery schemaData |> H.map SchemaMsg
@@ -414,8 +419,9 @@ viewHeads branches levels =
                 , H.td
                     [ HA.class "hash"
                     , HE.onClick (ShowBranch i)
+                    , HA.title block.hash
                     ]
-                    [ H.text block.hash ]
+                    [ H.text (shortHash block.hash) ]
                 , H.td [] [ H.text block.timestamp ]
                 , H.td [] [ H.text (toString (canonFitness block.fitness)) ]
                 , H.td []
@@ -474,16 +480,18 @@ viewBranch n branch =
     let
         tableHeader =
             H.tr []
-                [ H.th [ HA.class "hash" ] [ H.text "hash" ]
+                [ H.th [] [ H.text "hash" ]
                 , H.th [ HA.class "timestamp" ] [ H.text "timestamp" ]
                 , H.th [ HA.class "operations" ] [ H.text "operations" ]
                 ]
     in
-        H.div [ HA.class "branch" ]
+        H.div []
             [ H.h3 [] [ H.text ("branch " ++ toString n) ]
-            , H.table [ HA.class "blockchain" ]
-                [ H.thead [] [ tableHeader ]
-                , H.tbody [] (List.indexedMap viewBlock2 branch)
+            , H.div [ HA.class "branch" ]
+                [ H.table [ HA.class "blockchain" ]
+                    [ H.thead [] [ tableHeader ]
+                    , H.tbody [] (List.indexedMap viewBlock2 branch)
+                    ]
                 ]
             ]
 
@@ -493,10 +501,10 @@ viewBlock2 n block =
     H.tr [ HA.class "block" ]
         [ H.td
             [ HA.class "hash"
-            , HA.title "click to view block details"
+            , HA.title block.hash
             , HE.onClick (ShowBlock block.hash)
             ]
-            [ H.text block.hash ]
+            [ H.text (shortHash block.hash) ]
         , H.td [ HA.class "timestamp" ] [ H.text block.timestamp ]
         , H.td [ HA.class "operations" ] [ H.text <| toString <| List.length block.operations ]
         ]
@@ -520,7 +528,7 @@ viewBlock block =
         viewProperty label value =
             H.div [ HA.class "property" ]
                 [ H.div [ HA.class "label" ] [ H.text label ]
-                , H.div [] [ value ]
+                , H.div [ HA.class label ] [ value ]
                 ]
 
         viewPropertyString : String -> String -> Html Msg
@@ -531,22 +539,30 @@ viewBlock block =
         viewPropertyList label values =
             viewProperty label (List.intersperse ", " values |> String.concat |> H.text)
 
-        viewPropertyList2 : String -> List String -> Html Msg
-        viewPropertyList2 label values =
+        viewOperations : String -> List String -> Html Msg
+        viewOperations label values =
             let
                 li value =
-                    H.li [ HE.onClick (ShowOperation value), HA.class "operation" ] [ H.text value ]
+                    H.li
+                        [ HE.onClick (ShowOperation value)
+                        , HA.class "operation hash"
+                        , HA.title value
+                        ]
+                        [ H.text (shortHash value) ]
             in
                 H.ol [] (List.map li values) |> viewProperty label
     in
         H.div [ HA.class "block" ]
-            [ H.h3 [] [ H.text "Block" ]
+            [ H.h3 []
+                [ H.text "Block "
+                , H.span [ HA.class "hash" ] [ H.text (shortHash block.hash) ]
+                ]
             , H.div [ HA.class "property-list" ]
                 [ viewPropertyString "hash" block.hash
                 , viewPropertyString "predecessor" block.predecessor
                 , viewPropertyString "timestamp" block.timestamp
                 , viewPropertyList "fitness" block.fitness
-                , viewPropertyList2 "operations" block.operations
+                , viewOperations "operations" block.operations
                 ]
             ]
 
@@ -616,8 +632,9 @@ viewOperations operationsStatus =
         ]
 
 
+shortHash : Base58CheckEncodedSHA256 -> String
 shortHash hash =
-    String.left 8 hash
+    String.left 12 hash
 
 
 viewOperation : Operation -> Html Msg
@@ -627,7 +644,14 @@ viewOperation operation =
             "operationdata-" ++ operation.hash
     in
         H.div []
-            [ H.h4 [] [ H.text ("Operation " ++ operation.hash) ]
+            [ H.h3 []
+                [ H.text "Operation "
+                , H.span [ HA.class "hash" ] [ H.text (shortHash operation.hash) ]
+                ]
+            , H.div [ HA.class "property" ]
+                [ H.div [ HA.class "label" ] [ H.text "net_id" ]
+                , H.div [ ] [ H.text operation.netID ]
+                ]
             , H.div [ HA.class "property" ]
                 [ H.div [ HA.class "label" ] [ H.text "data" ]
                 , H.div [ HA.class "operation-data" ] [ H.text operation.data ]
@@ -682,12 +706,23 @@ viewDebug model =
         ]
 
 
-viewParse : RemoteData Http.Error Decode.Value -> Html Msg
-viewParse parseData =
-    H.div []
-        [ H.h2 [] [ H.text "Parsed operation" ]
-        , H.text (toString parseData)
-        ]
+viewParse : Dict OperationID Decode.Value -> Maybe OperationID -> Html Msg
+viewParse parsedOperations operationIdMaybe =
+    case operationIdMaybe of
+        Just operationId ->
+            let
+                parse =
+                    Dict.get operationId parsedOperations
+                        |> Maybe.map (Encode.encode 2)
+                        |> Maybe.withDefault "cannot get parse"
+            in
+                H.div []
+                    [ H.h4 [] [ H.text "Parsed operation" ]
+                    , H.pre [] [ H.text parse ]
+                    ]
+
+        Nothing ->
+            H.text ""
 
 
 subscriptions : Model -> Sub Msg

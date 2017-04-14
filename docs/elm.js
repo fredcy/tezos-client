@@ -11073,28 +11073,47 @@ var _user$project$Schema$viewSchemaDataTop = F2(
 var _user$project$Main$subscriptions = function (model) {
 	return _elm_lang$core$Platform_Sub$none;
 };
-var _user$project$Main$viewParse = function (parseData) {
-	return A2(
-		_elm_lang$html$Html$div,
-		{ctor: '[]'},
-		{
-			ctor: '::',
-			_0: A2(
-				_elm_lang$html$Html$h2,
+var _user$project$Main$viewParse = F2(
+	function (parsedOperations, operationIdMaybe) {
+		var _p0 = operationIdMaybe;
+		if (_p0.ctor === 'Just') {
+			var parse = A2(
+				_elm_lang$core$Maybe$withDefault,
+				'cannot get parse',
+				A2(
+					_elm_lang$core$Maybe$map,
+					_elm_lang$core$Json_Encode$encode(2),
+					A2(_elm_lang$core$Dict$get, _p0._0, parsedOperations)));
+			return A2(
+				_elm_lang$html$Html$div,
 				{ctor: '[]'},
 				{
 					ctor: '::',
-					_0: _elm_lang$html$Html$text('Parsed operation'),
-					_1: {ctor: '[]'}
-				}),
-			_1: {
-				ctor: '::',
-				_0: _elm_lang$html$Html$text(
-					_elm_lang$core$Basics$toString(parseData)),
-				_1: {ctor: '[]'}
-			}
-		});
-};
+					_0: A2(
+						_elm_lang$html$Html$h4,
+						{ctor: '[]'},
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html$text('Parsed operation'),
+							_1: {ctor: '[]'}
+						}),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$pre,
+							{ctor: '[]'},
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html$text(parse),
+								_1: {ctor: '[]'}
+							}),
+						_1: {ctor: '[]'}
+					}
+				});
+		} else {
+			return _elm_lang$html$Html$text('');
+		}
+	});
 var _user$project$Main$viewDebug = function (model) {
 	return A2(
 		_elm_lang$html$Html$div,
@@ -11123,8 +11142,8 @@ var _user$project$Main$viewDebug = function (model) {
 };
 var _user$project$Main$viewErrorInfo = F2(
 	function (nodeUrl, error) {
-		var _p0 = error;
-		switch (_p0.ctor) {
+		var _p1 = error;
+		switch (_p1.ctor) {
 			case 'BadPayload':
 				return A2(
 					_elm_lang$html$Html$div,
@@ -11155,14 +11174,14 @@ var _user$project$Main$viewErrorInfo = F2(
 								},
 								{
 									ctor: '::',
-									_0: _elm_lang$html$Html$text(_p0._0),
+									_0: _elm_lang$html$Html$text(_p1._0),
 									_1: {ctor: '[]'}
 								}),
 							_1: {ctor: '[]'}
 						}
 					});
 			case 'BadStatus':
-				var _p1 = _p0._0;
+				var _p2 = _p1._0;
 				return A2(
 					_elm_lang$html$Html$div,
 					{ctor: '[]'},
@@ -11184,7 +11203,7 @@ var _user$project$Main$viewErrorInfo = F2(
 								{
 									ctor: '::',
 									_0: _elm_lang$html$Html$text(
-										_elm_lang$core$Basics$toString(_p1.status)),
+										_elm_lang$core$Basics$toString(_p2.status)),
 									_1: {ctor: '[]'}
 								}),
 							_1: {
@@ -11194,7 +11213,7 @@ var _user$project$Main$viewErrorInfo = F2(
 									{ctor: '[]'},
 									{
 										ctor: '::',
-										_0: _elm_lang$html$Html$text(_p1.url),
+										_0: _elm_lang$html$Html$text(_p2.url),
 										_1: {ctor: '[]'}
 									}),
 								_1: {ctor: '[]'}
@@ -11236,8 +11255,8 @@ var _user$project$Main$viewErrorInfo = F2(
 	});
 var _user$project$Main$viewError = F2(
 	function (nodeUrl, errors) {
-		var _p2 = errors;
-		if (_p2.ctor === '[]') {
+		var _p3 = errors;
+		if (_p3.ctor === '[]') {
 			return _elm_lang$html$Html$text('');
 		} else {
 			return A2(
@@ -11265,12 +11284,15 @@ var _user$project$Main$viewError = F2(
 							A2(
 								_elm_lang$core$List$map,
 								_user$project$Main$viewErrorInfo(nodeUrl),
-								_p2)),
+								_p3)),
 						_1: {ctor: '[]'}
 					}
 				});
 		}
 	});
+var _user$project$Main$shortHash = function (hash) {
+	return A2(_elm_lang$core$String$left, 12, hash);
+};
 var _user$project$Main$viewOperation = function (operation) {
 	var id = A2(_elm_lang$core$Basics_ops['++'], 'operationdata-', operation.hash);
 	return A2(
@@ -11279,13 +11301,28 @@ var _user$project$Main$viewOperation = function (operation) {
 		{
 			ctor: '::',
 			_0: A2(
-				_elm_lang$html$Html$h4,
+				_elm_lang$html$Html$h3,
 				{ctor: '[]'},
 				{
 					ctor: '::',
-					_0: _elm_lang$html$Html$text(
-						A2(_elm_lang$core$Basics_ops['++'], 'Operation ', operation.hash)),
-					_1: {ctor: '[]'}
+					_0: _elm_lang$html$Html$text('Operation '),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$span,
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html_Attributes$class('hash'),
+								_1: {ctor: '[]'}
+							},
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html$text(
+									_user$project$Main$shortHash(operation.hash)),
+								_1: {ctor: '[]'}
+							}),
+						_1: {ctor: '[]'}
+					}
 				}),
 			_1: {
 				ctor: '::',
@@ -11307,32 +11344,66 @@ var _user$project$Main$viewOperation = function (operation) {
 							},
 							{
 								ctor: '::',
-								_0: _elm_lang$html$Html$text('data'),
+								_0: _elm_lang$html$Html$text('net_id'),
 								_1: {ctor: '[]'}
 							}),
 						_1: {
 							ctor: '::',
 							_0: A2(
 								_elm_lang$html$Html$div,
+								{ctor: '[]'},
 								{
 									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$class('operation-data'),
-									_1: {ctor: '[]'}
-								},
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html$text(operation.data),
+									_0: _elm_lang$html$Html$text(operation.netID),
 									_1: {ctor: '[]'}
 								}),
 							_1: {ctor: '[]'}
 						}
 					}),
-				_1: {ctor: '[]'}
+				_1: {
+					ctor: '::',
+					_0: A2(
+						_elm_lang$html$Html$div,
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$class('property'),
+							_1: {ctor: '[]'}
+						},
+						{
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$div,
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html_Attributes$class('label'),
+									_1: {ctor: '[]'}
+								},
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html$text('data'),
+									_1: {ctor: '[]'}
+								}),
+							_1: {
+								ctor: '::',
+								_0: A2(
+									_elm_lang$html$Html$div,
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html_Attributes$class('operation-data'),
+										_1: {ctor: '[]'}
+									},
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html$text(operation.data),
+										_1: {ctor: '[]'}
+									}),
+								_1: {ctor: '[]'}
+							}
+						}),
+					_1: {ctor: '[]'}
+				}
 			}
 		});
-};
-var _user$project$Main$shortHash = function (hash) {
-	return A2(_elm_lang$core$String$left, 8, hash);
 };
 var _user$project$Main$viewOperations = function (operationsStatus) {
 	return A2(
@@ -11351,8 +11422,8 @@ var _user$project$Main$viewOperations = function (operationsStatus) {
 			_1: {
 				ctor: '::',
 				_0: function () {
-					var _p3 = operationsStatus;
-					switch (_p3.ctor) {
+					var _p4 = operationsStatus;
+					switch (_p4.ctor) {
 						case 'Success':
 							return A2(
 								_elm_lang$html$Html$div,
@@ -11361,7 +11432,7 @@ var _user$project$Main$viewOperations = function (operationsStatus) {
 									_0: _elm_lang$html$Html_Attributes$class('property-list'),
 									_1: {ctor: '[]'}
 								},
-								A2(_elm_lang$core$List$map, _user$project$Main$viewOperation, _p3._0));
+								A2(_elm_lang$core$List$map, _user$project$Main$viewOperation, _p4._0));
 						case 'Failure':
 							return A2(
 								_elm_lang$html$Html$div,
@@ -11428,18 +11499,18 @@ var _user$project$Main$findBlock = F2(
 	function (blockchains, hash) {
 		findBlock:
 		while (true) {
-			var _p4 = blockchains;
-			if (_p4.ctor === '[]') {
+			var _p5 = blockchains;
+			if (_p5.ctor === '[]') {
 				return _elm_lang$core$Maybe$Nothing;
 			} else {
-				var _p5 = A2(_user$project$Main$findInChain, _p4._0, hash);
-				if (_p5.ctor === 'Just') {
-					return _elm_lang$core$Maybe$Just(_p5._0);
+				var _p6 = A2(_user$project$Main$findInChain, _p5._0, hash);
+				if (_p6.ctor === 'Just') {
+					return _elm_lang$core$Maybe$Just(_p6._0);
 				} else {
-					var _v5 = _p4._1,
-						_v6 = hash;
-					blockchains = _v5;
-					hash = _v6;
+					var _v6 = _p5._1,
+						_v7 = hash;
+					blockchains = _v6;
+					hash = _v7;
 					continue findBlock;
 				}
 			}
@@ -11448,9 +11519,9 @@ var _user$project$Main$findBlock = F2(
 var _user$project$Main$findBranchByHead = F2(
 	function (branches, headid) {
 		var match = function (branch) {
-			var _p6 = branch;
-			if (_p6.ctor === '::') {
-				return _elm_lang$core$Native_Utils.eq(_p6._0.hash, headid);
+			var _p7 = branch;
+			if (_p7.ctor === '::') {
+				return _elm_lang$core$Native_Utils.eq(_p7._0.hash, headid);
 			} else {
 				return false;
 			}
@@ -11466,11 +11537,11 @@ var _user$project$Main$canonFitness = function (strings) {
 			})(0),
 		A2(
 			_elm_lang$core$List$map,
-			function (_p7) {
+			function (_p8) {
 				return A2(
 					_elm_lang$core$Result$withDefault,
 					0,
-					_fredcy$elm_parseint$ParseInt$parseIntHex(_p7));
+					_fredcy$elm_parseint$ParseInt$parseIntHex(_p8));
 			},
 			strings));
 };
@@ -11682,7 +11753,7 @@ var _user$project$Main$Model = function (a) {
 								return function (i) {
 									return function (j) {
 										return function (k) {
-											return {blocks: a, schemaData: b, errors: c, nodeUrl: d, operations: e, showBlock: f, showOperation: g, showBranch: h, levels: i, schemaQuery: j, parse: k};
+											return {blocks: a, schemaData: b, errors: c, nodeUrl: d, operations: e, parsedOperations: f, showBlock: g, showOperation: h, showBranch: i, levels: j, schemaQuery: k};
 										};
 									};
 								};
@@ -11741,12 +11812,17 @@ var _user$project$Main$viewHeads = F2(
 										ctor: '::',
 										_0: _elm_lang$html$Html_Events$onClick(
 											_user$project$Main$ShowBranch(i)),
-										_1: {ctor: '[]'}
+										_1: {
+											ctor: '::',
+											_0: _elm_lang$html$Html_Attributes$title(block.hash),
+											_1: {ctor: '[]'}
+										}
 									}
 								},
 								{
 									ctor: '::',
-									_0: _elm_lang$html$Html$text(block.hash),
+									_0: _elm_lang$html$Html$text(
+										_user$project$Main$shortHash(block.hash)),
 									_1: {ctor: '[]'}
 								}),
 							_1: {
@@ -11797,9 +11873,9 @@ var _user$project$Main$viewHeads = F2(
 			});
 		var viewHead = F2(
 			function (i, blocks) {
-				var _p8 = blocks;
-				if (_p8.ctor === '::') {
-					return A2(viewBlockSummary, i, _p8._0);
+				var _p9 = blocks;
+				if (_p9.ctor === '::') {
+					return A2(viewBlockSummary, i, _p9._0);
 				} else {
 					return _elm_lang$html$Html$text('');
 				}
@@ -11939,7 +12015,11 @@ var _user$project$Main$viewBlock = function (block) {
 						ctor: '::',
 						_0: A2(
 							_elm_lang$html$Html$div,
-							{ctor: '[]'},
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html_Attributes$class(label),
+								_1: {ctor: '[]'}
+							},
 							{
 								ctor: '::',
 								_0: value,
@@ -11965,7 +12045,7 @@ var _user$project$Main$viewBlock = function (block) {
 					_elm_lang$core$String$concat(
 						A2(_elm_lang$core$List$intersperse, ', ', values))));
 		});
-	var viewPropertyList2 = F2(
+	var viewOperations = F2(
 		function (label, values) {
 			var li = function (value) {
 				return A2(
@@ -11976,13 +12056,18 @@ var _user$project$Main$viewBlock = function (block) {
 							_user$project$Main$ShowOperation(value)),
 						_1: {
 							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$class('operation'),
-							_1: {ctor: '[]'}
+							_0: _elm_lang$html$Html_Attributes$class('operation hash'),
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$html$Html_Attributes$title(value),
+								_1: {ctor: '[]'}
+							}
 						}
 					},
 					{
 						ctor: '::',
-						_0: _elm_lang$html$Html$text(value),
+						_0: _elm_lang$html$Html$text(
+							_user$project$Main$shortHash(value)),
 						_1: {ctor: '[]'}
 					});
 			};
@@ -12008,8 +12093,24 @@ var _user$project$Main$viewBlock = function (block) {
 				{ctor: '[]'},
 				{
 					ctor: '::',
-					_0: _elm_lang$html$Html$text('Block'),
-					_1: {ctor: '[]'}
+					_0: _elm_lang$html$Html$text('Block '),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$span,
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html_Attributes$class('hash'),
+								_1: {ctor: '[]'}
+							},
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html$text(
+									_user$project$Main$shortHash(block.hash)),
+								_1: {ctor: '[]'}
+							}),
+						_1: {ctor: '[]'}
+					}
 				}),
 			_1: {
 				ctor: '::',
@@ -12034,7 +12135,7 @@ var _user$project$Main$viewBlock = function (block) {
 									_0: A2(viewPropertyList, 'fitness', block.fitness),
 									_1: {
 										ctor: '::',
-										_0: A2(viewPropertyList2, 'operations', block.operations),
+										_0: A2(viewOperations, 'operations', block.operations),
 										_1: {ctor: '[]'}
 									}
 								}
@@ -12047,12 +12148,12 @@ var _user$project$Main$viewBlock = function (block) {
 };
 var _user$project$Main$viewShowBlock = F2(
 	function (blocks, blockhashMaybe) {
-		var _p9 = blockhashMaybe;
-		if (_p9.ctor === 'Just') {
-			var _p11 = _p9._0;
-			var _p10 = A2(_user$project$Main$findBlock, blocks, _p11);
-			if (_p10.ctor === 'Just') {
-				return _user$project$Main$viewBlock(_p10._0);
+		var _p10 = blockhashMaybe;
+		if (_p10.ctor === 'Just') {
+			var _p12 = _p10._0;
+			var _p11 = A2(_user$project$Main$findBlock, blocks, _p12);
+			if (_p11.ctor === 'Just') {
+				return _user$project$Main$viewBlock(_p11._0);
 			} else {
 				return A2(
 					_elm_lang$html$Html$div,
@@ -12060,7 +12161,7 @@ var _user$project$Main$viewShowBlock = F2(
 					{
 						ctor: '::',
 						_0: _elm_lang$html$Html$text(
-							A2(_elm_lang$core$Basics_ops['++'], 'Cannot find block ', _p11)),
+							A2(_elm_lang$core$Basics_ops['++'], 'Cannot find block ', _p12)),
 						_1: {ctor: '[]'}
 					});
 			}
@@ -12089,7 +12190,7 @@ var _user$project$Main$viewBlock2 = F2(
 						_0: _elm_lang$html$Html_Attributes$class('hash'),
 						_1: {
 							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$title('click to view block details'),
+							_0: _elm_lang$html$Html_Attributes$title(block.hash),
 							_1: {
 								ctor: '::',
 								_0: _elm_lang$html$Html_Events$onClick(
@@ -12100,7 +12201,8 @@ var _user$project$Main$viewBlock2 = F2(
 					},
 					{
 						ctor: '::',
-						_0: _elm_lang$html$Html$text(block.hash),
+						_0: _elm_lang$html$Html$text(
+							_user$project$Main$shortHash(block.hash)),
 						_1: {ctor: '[]'}
 					}),
 				_1: {
@@ -12147,11 +12249,7 @@ var _user$project$Main$viewBranch = F2(
 				ctor: '::',
 				_0: A2(
 					_elm_lang$html$Html$th,
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html_Attributes$class('hash'),
-						_1: {ctor: '[]'}
-					},
+					{ctor: '[]'},
 					{
 						ctor: '::',
 						_0: _elm_lang$html$Html$text('hash'),
@@ -12191,11 +12289,7 @@ var _user$project$Main$viewBranch = F2(
 			});
 		return A2(
 			_elm_lang$html$Html$div,
-			{
-				ctor: '::',
-				_0: _elm_lang$html$Html_Attributes$class('branch'),
-				_1: {ctor: '[]'}
-			},
+			{ctor: '[]'},
 			{
 				ctor: '::',
 				_0: A2(
@@ -12213,30 +12307,41 @@ var _user$project$Main$viewBranch = F2(
 				_1: {
 					ctor: '::',
 					_0: A2(
-						_elm_lang$html$Html$table,
+						_elm_lang$html$Html$div,
 						{
 							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$class('blockchain'),
+							_0: _elm_lang$html$Html_Attributes$class('branch'),
 							_1: {ctor: '[]'}
 						},
 						{
 							ctor: '::',
 							_0: A2(
-								_elm_lang$html$Html$thead,
-								{ctor: '[]'},
+								_elm_lang$html$Html$table,
 								{
 									ctor: '::',
-									_0: tableHeader,
+									_0: _elm_lang$html$Html_Attributes$class('blockchain'),
 									_1: {ctor: '[]'}
+								},
+								{
+									ctor: '::',
+									_0: A2(
+										_elm_lang$html$Html$thead,
+										{ctor: '[]'},
+										{
+											ctor: '::',
+											_0: tableHeader,
+											_1: {ctor: '[]'}
+										}),
+									_1: {
+										ctor: '::',
+										_0: A2(
+											_elm_lang$html$Html$tbody,
+											{ctor: '[]'},
+											A2(_elm_lang$core$List$indexedMap, _user$project$Main$viewBlock2, branch)),
+										_1: {ctor: '[]'}
+									}
 								}),
-							_1: {
-								ctor: '::',
-								_0: A2(
-									_elm_lang$html$Html$tbody,
-									{ctor: '[]'},
-									A2(_elm_lang$core$List$indexedMap, _user$project$Main$viewBlock2, branch)),
-								_1: {ctor: '[]'}
-							}
+							_1: {ctor: '[]'}
 						}),
 					_1: {ctor: '[]'}
 				}
@@ -12306,16 +12411,16 @@ var _user$project$Main$view = function (model) {
 								_0: A2(_user$project$Main$viewShowOperation, model.operations, model.showOperation),
 								_1: {
 									ctor: '::',
-									_0: _user$project$Main$viewParse(model.parse),
+									_0: A2(_user$project$Main$viewParse, model.parsedOperations, model.showOperation),
 									_1: {
 										ctor: '::',
 										_0: function () {
-											var _p12 = model.schemaData;
-											if (_p12.ctor === 'Just') {
+											var _p13 = model.schemaData;
+											if (_p13.ctor === 'Just') {
 												return A2(
 													_elm_lang$html$Html$map,
 													_user$project$Main$SchemaMsg,
-													A2(_user$project$Schema$viewSchemaDataTop, model.schemaQuery, _p12._0));
+													A2(_user$project$Schema$viewSchemaDataTop, model.schemaQuery, _p13._0));
 											} else {
 												return _elm_lang$html$Html$text('');
 											}
@@ -12330,9 +12435,10 @@ var _user$project$Main$view = function (model) {
 			}
 		});
 };
-var _user$project$Main$LoadParsedOperation = function (a) {
-	return {ctor: 'LoadParsedOperation', _0: a};
-};
+var _user$project$Main$LoadParsedOperation = F2(
+	function (a, b) {
+		return {ctor: 'LoadParsedOperation', _0: a, _1: b};
+	});
 var _user$project$Main$getParseOperationCommand = F2(
 	function (nodeUrl, operation) {
 		var body = _elm_lang$http$Http$jsonBody(
@@ -12357,7 +12463,7 @@ var _user$project$Main$getParseOperationCommand = F2(
 		var url = A2(_elm_lang$core$Basics_ops['++'], nodeUrl, '/blocks/head/proto/helpers/parse/operation');
 		return A2(
 			_elm_lang$http$Http$send,
-			_user$project$Main$LoadParsedOperation,
+			_user$project$Main$LoadParsedOperation(operation.hash),
 			A3(_elm_lang$http$Http$post, url, body, _elm_lang$core$Json_Decode$value));
 	});
 var _user$project$Main$LoadOperation = function (a) {
@@ -12405,18 +12511,18 @@ var _user$project$Main$getLevelCommands = F2(
 	});
 var _user$project$Main$update = F2(
 	function (msg, model) {
-		var _p13 = A2(_elm_lang$core$Debug$log, 'msg', msg);
-		switch (_p13.ctor) {
+		var _p14 = A2(_elm_lang$core$Debug$log, 'msg', msg);
+		switch (_p14.ctor) {
 			case 'LoadBlocks':
-				var _p14 = _p13._0;
-				if (_p14.ctor === 'Ok') {
-					var _p15 = _p14._0;
+				var _p15 = _p14._0;
+				if (_p15.ctor === 'Ok') {
+					var _p16 = _p15._0;
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
-							{blocks: _p15}),
-						_1: A2(_user$project$Main$getLevelCommands, model.nodeUrl, _p15)
+							{blocks: _p16}),
+						_1: A2(_user$project$Main$getLevelCommands, model.nodeUrl, _p16)
 					};
 				} else {
 					return {
@@ -12424,15 +12530,15 @@ var _user$project$Main$update = F2(
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								errors: {ctor: '::', _0: _p14._0, _1: model.errors}
+								errors: {ctor: '::', _0: _p15._0, _1: model.errors}
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				}
 			case 'LoadLevel':
-				var _p16 = _p13._1;
-				if (_p16.ctor === 'Ok') {
-					var newLevels = A3(_elm_lang$core$Dict$insert, _p13._0, _p16._0, model.levels);
+				var _p17 = _p14._1;
+				if (_p17.ctor === 'Ok') {
+					var newLevels = A3(_elm_lang$core$Dict$insert, _p14._0, _p17._0, model.levels);
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
@@ -12446,56 +12552,23 @@ var _user$project$Main$update = F2(
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								errors: {ctor: '::', _0: _p16._0, _1: model.errors}
+								errors: {ctor: '::', _0: _p17._0, _1: model.errors}
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				}
 			case 'LoadSchema':
-				var _p17 = _p13._0;
-				if (_p17.ctor === 'Ok') {
+				var _p18 = _p14._0;
+				if (_p18.ctor === 'Ok') {
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
 								schemaData: _elm_lang$core$Maybe$Just(
-									_user$project$Schema$collapseTrees(_p17._0))
+									_user$project$Schema$collapseTrees(_p18._0))
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
-					};
-				} else {
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Native_Utils.update(
-							model,
-							{
-								errors: {ctor: '::', _0: _p17._0, _1: model.errors}
-							}),
-						_1: _elm_lang$core$Platform_Cmd$none
-					};
-				}
-			case 'SchemaMsg':
-				var newSchema = A2(_user$project$Schema$update, _p13._0, model.schemaData);
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{schemaData: newSchema}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-			case 'LoadOperation':
-				var _p18 = _p13._0;
-				if (_p18.ctor === 'Ok') {
-					var _p19 = _p18._0;
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Native_Utils.update(
-							model,
-							{
-								operations: A3(_elm_lang$core$Dict$insert, _p19.hash, _p19, model.operations)
-							}),
-						_1: A2(_user$project$Main$getParseOperationCommand, model.nodeUrl, _p19)
 					};
 				} else {
 					return {
@@ -12508,15 +12581,48 @@ var _user$project$Main$update = F2(
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				}
-			case 'LoadParsedOperation':
-				var _p20 = _p13._0;
-				if (_p20.ctor === 'Ok') {
+			case 'SchemaMsg':
+				var newSchema = A2(_user$project$Schema$update, _p14._0, model.schemaData);
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{schemaData: newSchema}),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+			case 'LoadOperation':
+				var _p19 = _p14._0;
+				if (_p19.ctor === 'Ok') {
+					var _p20 = _p19._0;
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								parse: _user$project$Main$Success(_p20._0)
+								operations: A3(_elm_lang$core$Dict$insert, _p20.hash, _p20, model.operations)
+							}),
+						_1: A2(_user$project$Main$getParseOperationCommand, model.nodeUrl, _p20)
+					};
+				} else {
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								errors: {ctor: '::', _0: _p19._0, _1: model.errors}
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				}
+			case 'LoadParsedOperation':
+				var _p21 = _p14._1;
+				if (_p21.ctor === 'Ok') {
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								parsedOperations: A3(_elm_lang$core$Dict$insert, _p14._0, _p21._0, model.parsedOperations)
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
@@ -12526,7 +12632,7 @@ var _user$project$Main$update = F2(
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								parse: _user$project$Main$Failure(_p20._0)
+								errors: {ctor: '::', _0: _p21._0, _1: model.errors}
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
@@ -12537,20 +12643,20 @@ var _user$project$Main$update = F2(
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							showBlock: _elm_lang$core$Maybe$Just(_p13._0)
+							showBlock: _elm_lang$core$Maybe$Just(_p14._0)
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			case 'ShowOperation':
-				var _p21 = _p13._0;
+				var _p22 = _p14._0;
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							showOperation: _elm_lang$core$Maybe$Just(_p21)
+							showOperation: _elm_lang$core$Maybe$Just(_p22)
 						}),
-					_1: A3(_user$project$Main$getOperationIfNew, model.nodeUrl, model.operations, _p21)
+					_1: A3(_user$project$Main$getOperationIfNew, model.nodeUrl, model.operations, _p22)
 				};
 			default:
 				return {
@@ -12558,7 +12664,7 @@ var _user$project$Main$update = F2(
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							showBranch: _elm_lang$core$Maybe$Just(_p13._0)
+							showBranch: _elm_lang$core$Maybe$Just(_p14._0)
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
@@ -12574,12 +12680,12 @@ var _user$project$Main$init = function (flags) {
 		errors: {ctor: '[]'},
 		nodeUrl: flags.nodeUrl,
 		operations: _elm_lang$core$Dict$empty,
+		parsedOperations: _elm_lang$core$Dict$empty,
 		showBlock: _elm_lang$core$Maybe$Nothing,
 		showOperation: _elm_lang$core$Maybe$Nothing,
 		showBranch: _elm_lang$core$Maybe$Nothing,
 		levels: _elm_lang$core$Dict$empty,
-		schemaQuery: '/describe/blocks/head/proto',
-		parse: _user$project$Main$NotAsked
+		schemaQuery: '/describe/blocks/head/proto'
 	};
 	return {
 		ctor: '_Tuple2',
@@ -12591,14 +12697,7 @@ var _user$project$Main$init = function (flags) {
 					_elm_lang$http$Http$send,
 					_user$project$Main$LoadBlocks,
 					_user$project$Main$getBlocks(model.nodeUrl)),
-				_1: {
-					ctor: '::',
-					_0: A2(
-						_elm_lang$http$Http$send,
-						_user$project$Main$LoadSchema,
-						A2(_user$project$Main$getSchema, model.nodeUrl, model.schemaQuery)),
-					_1: {ctor: '[]'}
-				}
+				_1: {ctor: '[]'}
 			})
 	};
 };

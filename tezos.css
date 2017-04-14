@@ -101,8 +101,7 @@ TR.head TD {
 
 .branch {
     height: 300px;
-    width: 60em;
-    padding-bottom: 1.5em;
+    width: 25em;
 }
 
 .branch table {
@@ -113,13 +112,12 @@ TR.head TD {
 } 
 
 .branch table thead {
-    flex: 0 0 auto;
-    width: 100%;
-    /* width: calc(100% - 1em); */
+    /* flex: 0 0 auto; */
+    width: calc(100% - 1em); /* room for scrollbar */
 }
 
 .branch table tbody {
-    flex: 1 1 auto;
+    /* flex: 1 1 auto; */
     display: block;
     overflow-y: scroll;
 }
@@ -128,29 +126,21 @@ TR.head TD {
     width: 100%;
 }
 
-.branch thead, .branch tbody tr {
+.branch thead, .branch tbody {
     display: table;
     table-layout: fixed;
 }
 
-.branch td.hash,
-.branch th.hash {
-    width: 15em;                /* give more room to hash column */
-}
-
-.branch td.timestamp,
-.branch th.timestamp {
-    width: 5em;
-}
-
-.branch td.operations,
-.branch th.operations {
-    width: 2em;
+.branch td.operations {
     text-align: right;
 }
 
 table.blockchain td {
     padding: .5em;
+}
+
+td.timestamp {
+    white-space: nowrap;
 }
 
 /* make block hash values look like link */
@@ -164,4 +154,8 @@ table.blockchain tr.block td.hash:hover,
 table.heads td.hash:hover {
     color: red;
     text-decoration: underline;
+}
+
+.hash, .predecessor {
+    font-family: Andale Mono, Courier New, monospace;
 }
