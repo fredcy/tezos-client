@@ -28,6 +28,10 @@ type alias NetID =
     Base58CheckEncodedSHA256
 
 
+type alias SourceID =
+    Base58CheckEncodedSHA256
+
+
 type alias Fitness =
     String
 
@@ -65,13 +69,23 @@ type alias Operation =
     }
 
 
+type SubOperation
+    = Unknown Decode.Value
+
+
+type alias ParsedOperation =
+    { source : SourceID
+    , operations : List SubOperation
+    }
+
+
 type alias Model =
     { blocks : List (List Block)
     , schemaData : Maybe SchemaData
     , errors : List Http.Error
     , nodeUrl : String
     , operations : Dict OperationID Operation
-    , parsedOperations : Dict OperationID Decode.Value
+    , parsedOperations : Dict OperationID ParsedOperation
     , showBlock : Maybe BlockID
     , showOperation : Maybe OperationID
     , showBranch : Maybe Int
@@ -85,7 +99,7 @@ type Msg
     | LoadLevel BlockID (Result Http.Error Int)
     | LoadSchema (Result Http.Error SchemaData)
     | LoadOperation (Result Http.Error Operation)
-    | LoadParsedOperation OperationID (Result Http.Error Decode.Value)
+    | LoadParsedOperation OperationID (Result Http.Error ParsedOperation)
     | SchemaMsg Schema.Msg
     | ShowBlock BlockID
     | ShowOperation OperationID
@@ -107,7 +121,7 @@ getBlocks : String -> Http.Request BlocksData
 getBlocks nodeUrl =
     let
         maxBlocksToGet =
-            100
+            5
 
         body =
             [ ( "operations", Encode.bool True )
@@ -158,12 +172,9 @@ getOperation nodeUrl operationId =
         body =
             [] |> Encode.object |> Http.jsonBody
 
-        setHash hash operation =
-            { operation | hash = hash }
-
         decoder : Decode.Decoder Operation
         decoder =
-            decodeOperationContents |> Decode.map (setHash operationId)
+            decodeOperationContents operationId
     in
         Http.post (nodeUrl ++ "/operations/" ++ operationId) body decoder
 
@@ -181,10 +192,13 @@ decodeOperation =
         (Decode.at [ "contents", "data" ] Decode.string)
 
 
-decodeOperationContents : Decode.Decoder Operation
-decodeOperationContents =
+{-| Decode RPC response with Operation data that does not include the hash of
+the operation; instead the caller must pass that hash value.
+-}
+decodeOperationContents : OperationID -> Decode.Decoder Operation
+decodeOperationContents operationId =
     Decode.map3 Operation
-        (Decode.succeed "bogus")
+        (Decode.succeed operationId)
         (Decode.field "net_id" Decode.string)
         (Decode.field "data" Decode.string)
 
@@ -234,6 +248,8 @@ decodeLevel =
     Decode.at [ "ok", "level" ] Decode.int
 
 
+{-| Form RPC command to parse the given operation.
+-}
 getParseOperationCommand : String -> Operation -> Cmd Msg
 getParseOperationCommand nodeUrl operation =
     let
@@ -247,7 +263,17 @@ getParseOperationCommand nodeUrl operation =
                 |> Encode.object
                 |> Http.jsonBody
     in
-        Http.post url body Decode.value |> Http.send (LoadParsedOperation operation.hash)
+        Http.post url body decodeParsedOperation
+            |> Http.send (LoadParsedOperation operation.hash)
+
+
+decodeParsedOperation : Decode.Decoder ParsedOperation
+decodeParsedOperation =
+    Decode.field "ok"
+        (Decode.map2 ParsedOperation
+            (Decode.field "source" Decode.string)
+            (Decode.field "operations" (Decode.list (Decode.map Unknown Decode.value)))
+        )
 
 
 type alias Flags =
@@ -287,7 +313,10 @@ update msg model =
             case blocksMaybe of
                 Ok blocks ->
                     ( { model | blocks = blocks }
-                    , getLevelCommands model.nodeUrl blocks
+                    , Cmd.batch
+                        [ getLevelCommands model.nodeUrl blocks
+                        , getBlocksOperationsDetail model blocks
+                        ]
                     )
 
                 Err error ->
@@ -346,15 +375,42 @@ update msg model =
                     ( { model | errors = error :: model.errors }, Cmd.none )
 
         ShowBlock blockhash ->
-            ( { model | showBlock = Just blockhash }, Cmd.none )
+            ( { model | showBlock = Just blockhash }
+            , getBlockOperationInfo model blockhash
+            )
 
         ShowOperation operationhash ->
             ( { model | showOperation = Just operationhash }
             , getOperationIfNew model.nodeUrl model.operations operationhash
+              -- get details of operations, anticipating user request to view those details
             )
 
         ShowBranch index ->
             ( { model | showBranch = Just index }, Cmd.none )
+
+
+getBlockOperationInfo : Model -> BlockID -> Cmd Msg
+getBlockOperationInfo model blockhash =
+    findBlock model.blocks blockhash
+        |> Maybe.map .operations
+        |> Maybe.map (List.map (getOperationIfNew model.nodeUrl model.operations))
+        |> Maybe.map Cmd.batch
+        |> Maybe.withDefault Cmd.none
+
+
+{-| Form command to get details of all operations in the (potentially
+multi-headed) blockchain.
+-}
+getBlocksOperationsDetail : Model -> List (List Block) -> Cmd Msg
+getBlocksOperationsDetail model blockChains =
+    let
+        doChain : List Block -> Cmd Msg
+        doChain blocks =
+            blocks
+                |> List.map (.operations >> List.map (getOperationIfNew model.nodeUrl model.operations) >> Cmd.batch)
+                |> Cmd.batch
+    in
+        Cmd.batch (List.map doChain blockChains)
 
 
 getOperationIfNew : String -> Dict OperationID Operation -> OperationID -> Cmd Msg
@@ -650,7 +706,7 @@ viewOperation operation =
                 ]
             , H.div [ HA.class "property" ]
                 [ H.div [ HA.class "label" ] [ H.text "net_id" ]
-                , H.div [ ] [ H.text operation.netID ]
+                , H.div [] [ H.text operation.netID ]
                 ]
             , H.div [ HA.class "property" ]
                 [ H.div [ HA.class "label" ] [ H.text "data" ]
@@ -706,19 +762,20 @@ viewDebug model =
         ]
 
 
-viewParse : Dict OperationID Decode.Value -> Maybe OperationID -> Html Msg
+viewParse : Dict OperationID ParsedOperation -> Maybe OperationID -> Html Msg
 viewParse parsedOperations operationIdMaybe =
     case operationIdMaybe of
         Just operationId ->
             let
                 parse =
                     Dict.get operationId parsedOperations
-                        |> Maybe.map (Encode.encode 2)
+                        -- |> Maybe.map (Encode.encode 2)
+                        |> Maybe.map toString
                         |> Maybe.withDefault "cannot get parse"
             in
                 H.div []
                     [ H.h4 [] [ H.text "Parsed operation" ]
-                    , H.pre [] [ H.text parse ]
+                    , H.div [] [ H.text parse ]
                     ]
 
         Nothing ->
