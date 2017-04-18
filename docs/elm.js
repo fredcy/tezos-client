@@ -11574,6 +11574,15 @@ var _user$project$Main$viewHeader = function (nodeUrl) {
 			}
 		});
 };
+var _user$project$Main$decodeDebug = function (message) {
+	return A2(
+		_elm_lang$core$Json_Decode$andThen,
+		function (value) {
+			var _p9 = A2(_elm_lang$core$Debug$log, message, value);
+			return _elm_lang$core$Json_Decode$value;
+		},
+		_elm_lang$core$Json_Decode$value);
+};
 var _user$project$Main$decodeLevel = A2(
 	_elm_lang$core$Json_Decode$at,
 	{
@@ -11636,7 +11645,7 @@ var _user$project$Main$decodeBlocks = A2(
 		_elm_lang$core$Json_Decode$list(_user$project$Main$decodeBlock)));
 var _user$project$Main$getBlocks = function (nodeUrl) {
 	var url = A2(_elm_lang$core$Basics_ops['++'], nodeUrl, '/blocks');
-	var maxBlocksToGet = 5;
+	var maxBlocksToGet = 200;
 	var body = _elm_lang$http$Http$jsonBody(
 		_elm_lang$core$Json_Encode$object(
 			{
@@ -11773,21 +11782,64 @@ var _user$project$Main$Failure = function (a) {
 };
 var _user$project$Main$Loading = {ctor: 'Loading'};
 var _user$project$Main$NotAsked = {ctor: 'NotAsked'};
+var _user$project$Main$SeedNonceRevelation = F2(
+	function (a, b) {
+		return {ctor: 'SeedNonceRevelation', _0: a, _1: b};
+	});
+var _user$project$Main$Endorsement = F2(
+	function (a, b) {
+		return {ctor: 'Endorsement', _0: a, _1: b};
+	});
 var _user$project$Main$Unknown = function (a) {
 	return {ctor: 'Unknown', _0: a};
 };
+var _user$project$Main$decodeEndorsement = A2(
+	_elm_lang$core$Json_Decode$andThen,
+	function (kind) {
+		var _p10 = kind;
+		switch (_p10) {
+			case 'endorsement':
+				return A3(
+					_elm_lang$core$Json_Decode$map2,
+					_user$project$Main$Endorsement,
+					A2(_elm_lang$core$Json_Decode$field, 'block', _elm_lang$core$Json_Decode$string),
+					A2(_elm_lang$core$Json_Decode$field, 'slot', _elm_lang$core$Json_Decode$int));
+			case 'seed_nonce_revelation':
+				return A3(
+					_elm_lang$core$Json_Decode$map2,
+					_user$project$Main$SeedNonceRevelation,
+					A2(_elm_lang$core$Json_Decode$field, 'level', _elm_lang$core$Json_Decode$int),
+					A2(_elm_lang$core$Json_Decode$field, 'nonce', _elm_lang$core$Json_Decode$string));
+			default:
+				return A2(
+					_elm_lang$core$Json_Decode$map,
+					_user$project$Main$Unknown,
+					_user$project$Main$decodeDebug('bad kind'));
+		}
+	},
+	A2(_elm_lang$core$Json_Decode$field, 'kind', _elm_lang$core$Json_Decode$string));
+var _user$project$Main$decodeSubOperation = _elm_lang$core$Json_Decode$oneOf(
+	{
+		ctor: '::',
+		_0: _user$project$Main$decodeEndorsement,
+		_1: {
+			ctor: '::',
+			_0: A2(_elm_lang$core$Json_Decode$map, _user$project$Main$Unknown, _elm_lang$core$Json_Decode$value),
+			_1: {ctor: '[]'}
+		}
+	});
 var _user$project$Main$decodeParsedOperation = A2(
 	_elm_lang$core$Json_Decode$field,
 	'ok',
 	A3(
 		_elm_lang$core$Json_Decode$map2,
 		_user$project$Main$ParsedOperation,
-		A2(_elm_lang$core$Json_Decode$field, 'source', _elm_lang$core$Json_Decode$string),
+		_elm_lang$core$Json_Decode$maybe(
+			A2(_elm_lang$core$Json_Decode$field, 'source', _elm_lang$core$Json_Decode$string)),
 		A2(
 			_elm_lang$core$Json_Decode$field,
 			'operations',
-			_elm_lang$core$Json_Decode$list(
-				A2(_elm_lang$core$Json_Decode$map, _user$project$Main$Unknown, _elm_lang$core$Json_Decode$value)))));
+			_elm_lang$core$Json_Decode$list(_user$project$Main$decodeSubOperation))));
 var _user$project$Main$ShowBranch = function (a) {
 	return {ctor: 'ShowBranch', _0: a};
 };
@@ -11885,9 +11937,9 @@ var _user$project$Main$viewHeads = F2(
 			});
 		var viewHead = F2(
 			function (i, blocks) {
-				var _p9 = blocks;
-				if (_p9.ctor === '::') {
-					return A2(viewBlockSummary, i, _p9._0);
+				var _p11 = blocks;
+				if (_p11.ctor === '::') {
+					return A2(viewBlockSummary, i, _p11._0);
 				} else {
 					return _elm_lang$html$Html$text('');
 				}
@@ -12160,12 +12212,12 @@ var _user$project$Main$viewBlock = function (block) {
 };
 var _user$project$Main$viewShowBlock = F2(
 	function (blocks, blockhashMaybe) {
-		var _p10 = blockhashMaybe;
-		if (_p10.ctor === 'Just') {
-			var _p12 = _p10._0;
-			var _p11 = A2(_user$project$Main$findBlock, blocks, _p12);
-			if (_p11.ctor === 'Just') {
-				return _user$project$Main$viewBlock(_p11._0);
+		var _p12 = blockhashMaybe;
+		if (_p12.ctor === 'Just') {
+			var _p14 = _p12._0;
+			var _p13 = A2(_user$project$Main$findBlock, blocks, _p14);
+			if (_p13.ctor === 'Just') {
+				return _user$project$Main$viewBlock(_p13._0);
 			} else {
 				return A2(
 					_elm_lang$html$Html$div,
@@ -12173,7 +12225,7 @@ var _user$project$Main$viewShowBlock = F2(
 					{
 						ctor: '::',
 						_0: _elm_lang$html$Html$text(
-							A2(_elm_lang$core$Basics_ops['++'], 'Cannot find block ', _p12)),
+							A2(_elm_lang$core$Basics_ops['++'], 'Cannot find block ', _p14)),
 						_1: {ctor: '[]'}
 					});
 			}
@@ -12427,12 +12479,12 @@ var _user$project$Main$view = function (model) {
 									_1: {
 										ctor: '::',
 										_0: function () {
-											var _p13 = model.schemaData;
-											if (_p13.ctor === 'Just') {
+											var _p15 = model.schemaData;
+											if (_p15.ctor === 'Just') {
 												return A2(
 													_elm_lang$html$Html$map,
 													_user$project$Main$SchemaMsg,
-													A2(_user$project$Schema$viewSchemaDataTop, model.schemaQuery, _p13._0));
+													A2(_user$project$Schema$viewSchemaDataTop, model.schemaQuery, _p15._0));
 											} else {
 												return _elm_lang$html$Html$text('');
 											}
@@ -12513,14 +12565,14 @@ var _user$project$Main$getBlocksOperationsDetail = F2(
 			return _elm_lang$core$Platform_Cmd$batch(
 				A2(
 					_elm_lang$core$List$map,
-					function (_p14) {
+					function (_p16) {
 						return _elm_lang$core$Platform_Cmd$batch(
 							A2(
 								_elm_lang$core$List$map,
 								A2(_user$project$Main$getOperationIfNew, model.nodeUrl, model.operations),
 								function (_) {
 									return _.operations;
-								}(_p14)));
+								}(_p16)));
 					},
 					blocks));
 		};
@@ -12562,24 +12614,24 @@ var _user$project$Main$getLevelCommands = F2(
 	});
 var _user$project$Main$update = F2(
 	function (msg, model) {
-		var _p15 = A2(_elm_lang$core$Debug$log, 'msg', msg);
-		switch (_p15.ctor) {
+		var _p17 = msg;
+		switch (_p17.ctor) {
 			case 'LoadBlocks':
-				var _p16 = _p15._0;
-				if (_p16.ctor === 'Ok') {
-					var _p17 = _p16._0;
+				var _p18 = _p17._0;
+				if (_p18.ctor === 'Ok') {
+					var _p19 = _p18._0;
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
-							{blocks: _p17}),
+							{blocks: _p19}),
 						_1: _elm_lang$core$Platform_Cmd$batch(
 							{
 								ctor: '::',
-								_0: A2(_user$project$Main$getLevelCommands, model.nodeUrl, _p17),
+								_0: A2(_user$project$Main$getLevelCommands, model.nodeUrl, _p19),
 								_1: {
 									ctor: '::',
-									_0: A2(_user$project$Main$getBlocksOperationsDetail, model, _p17),
+									_0: A2(_user$project$Main$getBlocksOperationsDetail, model, _p19),
 									_1: {ctor: '[]'}
 								}
 							})
@@ -12590,15 +12642,15 @@ var _user$project$Main$update = F2(
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								errors: {ctor: '::', _0: _p16._0, _1: model.errors}
+								errors: {ctor: '::', _0: _p18._0, _1: model.errors}
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				}
 			case 'LoadLevel':
-				var _p18 = _p15._1;
-				if (_p18.ctor === 'Ok') {
-					var newLevels = A3(_elm_lang$core$Dict$insert, _p15._0, _p18._0, model.levels);
+				var _p20 = _p17._1;
+				if (_p20.ctor === 'Ok') {
+					var newLevels = A3(_elm_lang$core$Dict$insert, _p17._0, _p20._0, model.levels);
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
@@ -12612,21 +12664,21 @@ var _user$project$Main$update = F2(
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								errors: {ctor: '::', _0: _p18._0, _1: model.errors}
+								errors: {ctor: '::', _0: _p20._0, _1: model.errors}
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				}
 			case 'LoadSchema':
-				var _p19 = _p15._0;
-				if (_p19.ctor === 'Ok') {
+				var _p21 = _p17._0;
+				if (_p21.ctor === 'Ok') {
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
 								schemaData: _elm_lang$core$Maybe$Just(
-									_user$project$Schema$collapseTrees(_p19._0))
+									_user$project$Schema$collapseTrees(_p21._0))
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
@@ -12636,13 +12688,13 @@ var _user$project$Main$update = F2(
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								errors: {ctor: '::', _0: _p19._0, _1: model.errors}
+								errors: {ctor: '::', _0: _p21._0, _1: model.errors}
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				}
 			case 'SchemaMsg':
-				var newSchema = A2(_user$project$Schema$update, _p15._0, model.schemaData);
+				var newSchema = A2(_user$project$Schema$update, _p17._0, model.schemaData);
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
@@ -12651,40 +12703,17 @@ var _user$project$Main$update = F2(
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			case 'LoadOperation':
-				var _p20 = _p15._0;
-				if (_p20.ctor === 'Ok') {
-					var _p21 = _p20._0;
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Native_Utils.update(
-							model,
-							{
-								operations: A3(_elm_lang$core$Dict$insert, _p21.hash, _p21, model.operations)
-							}),
-						_1: A2(_user$project$Main$getParseOperationCommand, model.nodeUrl, _p21)
-					};
-				} else {
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Native_Utils.update(
-							model,
-							{
-								errors: {ctor: '::', _0: _p20._0, _1: model.errors}
-							}),
-						_1: _elm_lang$core$Platform_Cmd$none
-					};
-				}
-			case 'LoadParsedOperation':
-				var _p22 = _p15._1;
+				var _p22 = _p17._0;
 				if (_p22.ctor === 'Ok') {
+					var _p23 = _p22._0;
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								parsedOperations: A3(_elm_lang$core$Dict$insert, _p15._0, _p22._0, model.parsedOperations)
+								operations: A3(_elm_lang$core$Dict$insert, _p23.hash, _p23, model.operations)
 							}),
-						_1: _elm_lang$core$Platform_Cmd$none
+						_1: A2(_user$project$Main$getParseOperationCommand, model.nodeUrl, _p23)
 					};
 				} else {
 					return {
@@ -12697,27 +12726,50 @@ var _user$project$Main$update = F2(
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				}
+			case 'LoadParsedOperation':
+				var _p24 = _p17._1;
+				if (_p24.ctor === 'Ok') {
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								parsedOperations: A3(_elm_lang$core$Dict$insert, _p17._0, _p24._0, model.parsedOperations)
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				} else {
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								errors: {ctor: '::', _0: _p24._0, _1: model.errors}
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				}
 			case 'ShowBlock':
-				var _p23 = _p15._0;
+				var _p25 = _p17._0;
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							showBlock: _elm_lang$core$Maybe$Just(_p23)
+							showBlock: _elm_lang$core$Maybe$Just(_p25)
 						}),
-					_1: A2(_user$project$Main$getBlockOperationInfo, model, _p23)
+					_1: A2(_user$project$Main$getBlockOperationInfo, model, _p25)
 				};
 			case 'ShowOperation':
-				var _p24 = _p15._0;
+				var _p26 = _p17._0;
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							showOperation: _elm_lang$core$Maybe$Just(_p24)
+							showOperation: _elm_lang$core$Maybe$Just(_p26)
 						}),
-					_1: A3(_user$project$Main$getOperationIfNew, model.nodeUrl, model.operations, _p24)
+					_1: A3(_user$project$Main$getOperationIfNew, model.nodeUrl, model.operations, _p26)
 				};
 			default:
 				return {
@@ -12725,7 +12777,7 @@ var _user$project$Main$update = F2(
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							showBranch: _elm_lang$core$Maybe$Just(_p15._0)
+							showBranch: _elm_lang$core$Maybe$Just(_p17._0)
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};

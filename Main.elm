@@ -69,12 +69,22 @@ type alias Operation =
     }
 
 
+type alias Level =
+    Int
+
+
+type alias Nonce =
+    String
+
+
 type SubOperation
     = Unknown Decode.Value
+    | Endorsement BlockID Int
+    | SeedNonceRevelation Level Nonce
 
 
 type alias ParsedOperation =
-    { source : SourceID
+    { source : Maybe SourceID
     , operations : List SubOperation
     }
 
@@ -121,7 +131,7 @@ getBlocks : String -> Http.Request BlocksData
 getBlocks nodeUrl =
     let
         maxBlocksToGet =
-            5
+            200
 
         body =
             [ ( "operations", Encode.bool True )
@@ -271,9 +281,56 @@ decodeParsedOperation : Decode.Decoder ParsedOperation
 decodeParsedOperation =
     Decode.field "ok"
         (Decode.map2 ParsedOperation
-            (Decode.field "source" Decode.string)
-            (Decode.field "operations" (Decode.list (Decode.map Unknown Decode.value)))
+            (Decode.maybe (Decode.field "source" Decode.string))
+            (Decode.field "operations" (Decode.list decodeSubOperation))
         )
+
+
+decodeSubOperation : Decode.Decoder SubOperation
+decodeSubOperation =
+    Decode.oneOf
+        [ decodeEndorsement
+        , Decode.map Unknown Decode.value
+        ]
+
+
+decodeEndorsement : Decode.Decoder SubOperation
+decodeEndorsement =
+    Decode.field "kind" Decode.string
+        |> Decode.andThen
+            (\kind ->
+                case kind of
+                    "endorsement" ->
+                        (Decode.map2 Endorsement
+                            (Decode.field "block" Decode.string)
+                            (Decode.field "slot" Decode.int)
+                        )
+
+                    "seed_nonce_revelation" ->
+                        Decode.map2 SeedNonceRevelation
+                            (Decode.field "level" Decode.int)
+                            (Decode.field "nonce" Decode.string)
+
+                    _ ->
+                        decodeDebug "bad kind" |> Decode.map Unknown
+            )
+
+
+{-| This decoder is useful for debugging. It is basically the same as just
+`Decode.value` except that it has the side-effect of logging the decoded value
+along with a message.
+-}
+decodeDebug : String -> Decode.Decoder Decode.Value
+decodeDebug message =
+    Decode.value
+        |> Decode.andThen
+            (\value ->
+                let
+                    _ =
+                        Debug.log message value
+                in
+                    Decode.value
+            )
 
 
 type alias Flags =
@@ -308,7 +365,7 @@ init flags =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg |> Debug.log "msg" of
+    case msg of
         LoadBlocks blocksMaybe ->
             case blocksMaybe of
                 Ok blocks ->
@@ -770,7 +827,8 @@ viewParse parsedOperations operationIdMaybe =
                 parse =
                     Dict.get operationId parsedOperations
                         -- |> Maybe.map (Encode.encode 2)
-                        |> Maybe.map toString
+                        |>
+                            Maybe.map toString
                         |> Maybe.withDefault "cannot get parse"
             in
                 H.div []
