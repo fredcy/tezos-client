@@ -33,11 +33,19 @@ type alias SourceID =
     Base58CheckEncodedSHA256
 
 
+type alias Signature =
+    Base58CheckEncodedSHA256
+
+
 type alias Fitness =
     String
 
 
 type alias Timestamp =
+    String
+
+
+type alias URL =
     String
 
 
@@ -87,8 +95,11 @@ type SubOperation
 
 
 type alias ParsedOperation =
-    { source : Maybe SourceID
+    { hash : OperationID
+    , net_id : NetID
+    , source : SourceID
     , operations : List SubOperation
+    , signature : Signature
     }
 
 
@@ -103,16 +114,22 @@ type alias Model =
     , nodeUrl : String
     , operations : Dict OperationID Operation
     , parsedOperations : Dict OperationID ParsedOperation
+    , blockOperations : Dict BlockID (List ParsedOperation)
     , showBlock : Maybe BlockID
     , showOperation : Maybe OperationID
     , showBranch : Maybe Int
     }
 
 
+type alias BlockOperations =
+    List (List ParsedOperation)
+
+
 type Msg
     = LoadBlocks (Result Http.Error BlocksData)
     | LoadSchema SchemaName (Result Http.Error SchemaData)
     | LoadOperation (Result Http.Error Operation)
+    | LoadBlockOperations BlockID (Result Http.Error BlockOperations)
     | LoadParsedOperation OperationID (Result Http.Error ParsedOperation)
     | SchemaMsg SchemaName Schema.Msg
     | ShowBlock BlockID
@@ -127,6 +144,11 @@ main =
         , view = view
         , subscriptions = subscriptions
         }
+
+
+emptyJsonBody : Http.Body
+emptyJsonBody =
+    Encode.object [] |> Http.jsonBody
 
 
 {-| Construct an RPC request for the blockchain header data.
@@ -272,13 +294,19 @@ getParseOperationCommand nodeUrl operation =
             |> Http.send (LoadParsedOperation operation.hash)
 
 
+decodeParsedOperationResponse : Decode.Decoder ParsedOperation
+decodeParsedOperationResponse =
+    Decode.field "ok" decodeParsedOperation
+
+
 decodeParsedOperation : Decode.Decoder ParsedOperation
 decodeParsedOperation =
-    Decode.field "ok"
-        (Decode.map2 ParsedOperation
-            (Decode.maybe (Decode.field "source" Decode.string))
-            (Decode.field "operations" (Decode.list decodeSubOperation))
-        )
+    Decode.succeed ParsedOperation
+        |> Decode.required "hash" Decode.string
+        |> Decode.required "net_id" Decode.string
+        |> Decode.required "source" Decode.string
+        |> Decode.required "operations" (Decode.list decodeSubOperation)
+        |> Decode.required "signature" Decode.string
 
 
 decodeSubOperation : Decode.Decoder SubOperation
@@ -345,6 +373,7 @@ init flags =
             , showBlock = Nothing
             , showOperation = Nothing
             , showBranch = Nothing
+            , blockOperations = Dict.empty
             }
 
         schemaQuery1 =
@@ -356,8 +385,8 @@ init flags =
         ( model
         , Cmd.batch
             [ Http.send LoadBlocks (getBlocks model.nodeUrl)
-            , Http.send (LoadSchema schemaQuery1) (getSchema model.nodeUrl schemaQuery1)
-            , Http.send (LoadSchema schemaQuery2) (getSchema model.nodeUrl schemaQuery2)
+              --, Http.send (LoadSchema schemaQuery1) (getSchema model.nodeUrl schemaQuery1)
+              --, Http.send (LoadSchema schemaQuery2) (getSchema model.nodeUrl schemaQuery2)
             ]
         )
 
@@ -369,7 +398,8 @@ update msg model =
             case blocksMaybe of
                 Ok blocks ->
                     ( { model | blocks = blocks }
-                    , getBlocksOperationsDetail model blocks
+                      --, getBlocksOperationsDetail model blocks
+                    , Cmd.none
                     )
 
                 Err error ->
@@ -427,9 +457,12 @@ update msg model =
                 Err error ->
                     ( { model | errors = error :: model.errors }, Cmd.none )
 
+        LoadBlockOperations blockhash result ->
+            ( model, Cmd.none )
+
         ShowBlock blockhash ->
             ( { model | showBlock = Just blockhash }
-            , getBlockOperationInfo model blockhash
+            , getBlockOperationDetails model.nodeUrl blockhash
             )
 
         ShowOperation operationhash ->
@@ -454,6 +487,22 @@ getBlockOperationInfo model blockhash =
         |> Maybe.map (List.map (getOperationIfNew model.nodeUrl model.operations))
         |> Maybe.map Cmd.batch
         |> Maybe.withDefault Cmd.none
+
+
+getBlockOperationDetails : URL -> BlockID -> Cmd Msg
+getBlockOperationDetails nodeUrl blockHash =
+    let
+        url =
+            nodeUrl ++ "/blocks/" ++ blockHash ++ "/proto/operations"
+    in
+        Http.post url emptyJsonBody decodeBlockOperationDetails
+            |> Http.send (LoadBlockOperations blockHash)
+
+
+decodeBlockOperationDetails : Decode.Decoder BlockOperations
+decodeBlockOperationDetails =
+    -- I don't understand why the RPC response data has two levels of lists. Anyway...
+    Decode.field "ok" (Decode.list (Decode.list decodeParsedOperation))
 
 
 {-| Form command to get details of all operations in the (potentially
