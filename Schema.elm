@@ -160,11 +160,11 @@ margin =
     HA.style [ ( "margin-left", "1.5em" ) ]
 
 
-update : Msg -> Maybe SchemaData -> Maybe SchemaData
-update msg schemaDataMaybe =
+update : Msg -> SchemaData -> SchemaData
+update msg schemaData =
     case msg of
         ClickField context ->
-            Maybe.map (toggleVisible (List.reverse context)) schemaDataMaybe
+            toggleVisible (List.reverse context) schemaData
 
 
 {-| Change the visibility flag for a particular field in the schema. The
@@ -262,7 +262,8 @@ objectMap name ( visibility, value ) =
     ( visibility && (name /= "tree"), collapseTrees value )
 
 
-{-| Mark every "tree" object element as collapsed (not visible)
+{-| Mark every "tree" object element as collapsed (not visible). The idea is to
+show the user a collapsed view that they can then expand as desired.
 -}
 collapseTrees : SchemaData -> SchemaData
 collapseTrees schemaData =

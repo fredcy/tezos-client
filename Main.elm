@@ -6,6 +6,7 @@ import Html.Events as HE
 import Http
 import Json.Decode as Decode
 import Json.Encode as Encode
+import Json.Decode.Pipeline as Decode
 import Dict exposing (Dict)
 import List.Extra as List
 import ParseInt
@@ -47,7 +48,9 @@ type alias Block =
     , timestamp :
         String
         -- TODO convert to date value
-    , operations : List OperationID
+    , operations : List (List OperationID)
+    , net_id : NetID
+    , level : Level
     }
 
 
@@ -89,9 +92,13 @@ type alias ParsedOperation =
     }
 
 
+type alias SchemaName =
+    String
+
+
 type alias Model =
     { blocks : List (List Block)
-    , schemaData : Maybe SchemaData
+    , schemaData : Dict SchemaName SchemaData
     , errors : List Http.Error
     , nodeUrl : String
     , operations : Dict OperationID Operation
@@ -99,18 +106,15 @@ type alias Model =
     , showBlock : Maybe BlockID
     , showOperation : Maybe OperationID
     , showBranch : Maybe Int
-    , levels : Dict BlockID Int
-    , schemaQuery : String
     }
 
 
 type Msg
     = LoadBlocks (Result Http.Error BlocksData)
-    | LoadLevel BlockID (Result Http.Error Int)
-    | LoadSchema (Result Http.Error SchemaData)
+    | LoadSchema SchemaName (Result Http.Error SchemaData)
     | LoadOperation (Result Http.Error Operation)
     | LoadParsedOperation OperationID (Result Http.Error ParsedOperation)
-    | SchemaMsg Schema.Msg
+    | SchemaMsg SchemaName Schema.Msg
     | ShowBlock BlockID
     | ShowOperation OperationID
     | ShowBranch Int
@@ -131,10 +135,10 @@ getBlocks : String -> Http.Request BlocksData
 getBlocks nodeUrl =
     let
         maxBlocksToGet =
-            200
+            20
 
         body =
-            [ ( "operations", Encode.bool True )
+            [ ( "include_ops", Encode.bool True )
             , ( "length", Encode.int maxBlocksToGet )
             ]
                 |> Encode.object
@@ -153,12 +157,14 @@ decodeBlocks =
 
 decodeBlock : Decode.Decoder Block
 decodeBlock =
-    Decode.map5 Block
-        (Decode.field "hash" Decode.string)
-        (Decode.field "predecessor" Decode.string)
-        (Decode.field "fitness" (Decode.list Decode.string))
-        (Decode.field "timestamp" decodeTimestamp)
-        (Decode.field "operations" (Decode.list Decode.string))
+    Decode.succeed Block
+        |> Decode.required "hash" Decode.string
+        |> Decode.required "predecessor" Decode.string
+        |> Decode.required "fitness" (Decode.list Decode.string)
+        |> Decode.required "timestamp" decodeTimestamp
+        |> Decode.required "operations" (Decode.list (Decode.list Decode.string))
+        |> Decode.required "net_id" Decode.string
+        |> Decode.required "level" Decode.int
 
 
 decodeTimestamp : Decode.Decoder Timestamp
@@ -167,13 +173,16 @@ decodeTimestamp =
     Decode.string
 
 
-getOperations : String -> Http.Request (List Operation)
-getOperations nodeUrl =
+getOperations : String -> BlockID -> Http.Request (List Operation)
+getOperations nodeUrl blockId =
     let
         body =
-            [ ( "contents", Encode.bool True ) ] |> Encode.object |> Http.jsonBody
+            [] |> Encode.object |> Http.jsonBody
+
+        query =
+            "/blocks/" ++ blockId ++ "/proto/operations"
     in
-        Http.post (nodeUrl ++ "/operations") body decodeOperations
+        Http.post (nodeUrl ++ query) body decodeOperations
 
 
 getOperation : String -> OperationID -> Http.Request Operation
@@ -207,10 +216,19 @@ the operation; instead the caller must pass that hash value.
 -}
 decodeOperationContents : OperationID -> Decode.Decoder Operation
 decodeOperationContents operationId =
-    Decode.map3 Operation
-        (Decode.succeed operationId)
-        (Decode.field "net_id" Decode.string)
-        (Decode.field "data" Decode.string)
+    (Decode.list
+        (Decode.map3 Operation
+            (Decode.succeed operationId)
+            (Decode.field "net_id" Decode.string)
+            (Decode.field "data" Decode.string)
+        )
+    )
+        |> Decode.andThen
+            (\opList ->
+                List.head opList
+                    |> Maybe.map Decode.succeed
+                    |> Maybe.withDefault (Decode.fail "bad operation list")
+            )
 
 
 getSchema : String -> String -> Http.Request SchemaData
@@ -223,29 +241,6 @@ getSchema nodeUrl schemaQuery =
             nodeUrl ++ schemaQuery
     in
         Http.post url body decodeSchema
-
-
-getLevelCommand : String -> BlockID -> Cmd Msg
-getLevelCommand nodeUrl blockid =
-    let
-        url =
-            nodeUrl ++ "/blocks/" ++ blockid ++ "/proto/context/level"
-
-        body =
-            Encode.object [] |> Http.jsonBody
-
-        request : Http.Request Int
-        request =
-            Http.post url body decodeLevel
-    in
-        Http.send (LoadLevel blockid) request
-
-
-getLevelCommands : String -> List (List Block) -> Cmd Msg
-getLevelCommands nodeUrl branches =
-    List.filterMap getHeadId branches
-        |> List.map (getLevelCommand nodeUrl)
-        |> Cmd.batch
 
 
 getHeadId : List Block -> Maybe BlockID
@@ -342,7 +337,7 @@ init flags =
     let
         model =
             { blocks = []
-            , schemaData = Nothing
+            , schemaData = Dict.empty
             , errors = []
             , nodeUrl = flags.nodeUrl
             , operations = Dict.empty
@@ -350,61 +345,62 @@ init flags =
             , showBlock = Nothing
             , showOperation = Nothing
             , showBranch = Nothing
-            , levels =
-                Dict.empty
-            , schemaQuery = "/describe/blocks/head/proto"
             }
+
+        schemaQuery1 =
+            "/describe"
+
+        schemaQuery2 =
+            "/describe/blocks/head/proto"
     in
         ( model
         , Cmd.batch
             [ Http.send LoadBlocks (getBlocks model.nodeUrl)
-              --, Http.send LoadSchema (getSchema model.nodeUrl model.schemaQuery)
+            , Http.send (LoadSchema schemaQuery1) (getSchema model.nodeUrl schemaQuery1)
+            , Http.send (LoadSchema schemaQuery2) (getSchema model.nodeUrl schemaQuery2)
             ]
         )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
+    case msg |> Debug.log "msg" of
         LoadBlocks blocksMaybe ->
             case blocksMaybe of
                 Ok blocks ->
                     ( { model | blocks = blocks }
-                    , Cmd.batch
-                        [ getLevelCommands model.nodeUrl blocks
-                        , getBlocksOperationsDetail model blocks
-                        ]
+                    , getBlocksOperationsDetail model blocks
                     )
 
                 Err error ->
                     ( { model | errors = error :: model.errors }, Cmd.none )
 
-        LoadLevel blockid result ->
-            case result of
-                Ok level ->
-                    let
-                        newLevels =
-                            Dict.insert blockid level model.levels
-                    in
-                        ( { model | levels = newLevels }, Cmd.none )
-
-                Err error ->
-                    ( { model | errors = error :: model.errors }, Cmd.none )
-
-        LoadSchema schemaMaybe ->
+        LoadSchema schemaName schemaMaybe ->
             case schemaMaybe of
                 Ok schemaData ->
-                    ( { model | schemaData = Just (collapseTrees schemaData) }, Cmd.none )
+                    ( { model | schemaData = Dict.insert schemaName (collapseTrees schemaData) model.schemaData }
+                    , Cmd.none
+                    )
 
                 Err error ->
                     ( { model | errors = error :: model.errors }, Cmd.none )
 
-        SchemaMsg msg ->
+        SchemaMsg name msg ->
             let
-                newSchema =
-                    Schema.update msg model.schemaData
+                newSchemaMaybe : Maybe SchemaData
+                newSchemaMaybe =
+                    Dict.get name model.schemaData |> Maybe.map (Schema.update msg)
             in
-                ( { model | schemaData = newSchema }, Cmd.none )
+                case newSchemaMaybe of
+                    Just newSchema ->
+                        ( { model | schemaData = Dict.insert name newSchema model.schemaData }, Cmd.none )
+
+                    Nothing ->
+                        let
+                            _ =
+                                Debug.log "Failed to find schema" name
+                        in
+                            ( model, Cmd.none )
 
         LoadOperation operationResult ->
             case operationResult of
@@ -412,7 +408,7 @@ update msg model =
                     ( { model
                         | operations = Dict.insert operation.hash operation model.operations
                       }
-                    , getParseOperationCommand model.nodeUrl operation
+                    , Cmd.none
                     )
 
                 Err error ->
@@ -446,10 +442,15 @@ update msg model =
             ( { model | showBranch = Just index }, Cmd.none )
 
 
+getBlockOperationIDs : Block -> List OperationID
+getBlockOperationIDs block =
+    List.concatMap identity block.operations
+
+
 getBlockOperationInfo : Model -> BlockID -> Cmd Msg
 getBlockOperationInfo model blockhash =
     findBlock model.blocks blockhash
-        |> Maybe.map .operations
+        |> Maybe.map getBlockOperationIDs
         |> Maybe.map (List.map (getOperationIfNew model.nodeUrl model.operations))
         |> Maybe.map Cmd.batch
         |> Maybe.withDefault Cmd.none
@@ -464,7 +465,7 @@ getBlocksOperationsDetail model blockChains =
         doChain : List Block -> Cmd Msg
         doChain blocks =
             blocks
-                |> List.map (.operations >> List.map (getOperationIfNew model.nodeUrl model.operations) >> Cmd.batch)
+                |> List.map (getBlockOperationIDs >> List.map (getOperationIfNew model.nodeUrl model.operations) >> Cmd.batch)
                 |> Cmd.batch
     in
         Cmd.batch (List.map doChain blockChains)
@@ -483,20 +484,27 @@ view model =
     H.div []
         [ viewHeader model.nodeUrl
         , viewError model.nodeUrl model.errors
-        , viewHeads model.blocks model.levels
+        , viewHeads model.blocks
         , viewShowBranch model.blocks model.showBranch
         , viewShowBlock model.blocks model.showBlock
         , viewShowOperation model.operations model.showOperation
         , viewParse model.parsedOperations model.showOperation
-        , case model.schemaData of
-            Just schemaData ->
-                viewSchemaDataTop model.schemaQuery schemaData |> H.map SchemaMsg
-
-            Nothing ->
-                H.text ""
-          --, viewSchemaDataRaw model.schemaData |> H.map SchemaMsg
-          --     , viewDebug model
+        , viewSchemas model.schemaData
         ]
+
+
+viewSchemas : Dict SchemaName SchemaData -> Html Msg
+viewSchemas schemas =
+    let
+        names =
+            Dict.keys schemas
+
+        viewSchema name =
+            Dict.get name schemas
+                |> Maybe.map (\data -> viewSchemaDataTop name data |> H.map (SchemaMsg name))
+                |> Maybe.withDefault (H.text "failed to get schema from dict")
+    in
+        H.div [] (List.map viewSchema names)
 
 
 viewHeader : String -> Html Msg
@@ -513,8 +521,8 @@ canonFitness strings =
         |> List.dropWhile ((==) 0)
 
 
-viewHeads : List (List Block) -> Dict BlockID Int -> Html Msg
-viewHeads branches levels =
+viewHeads : List (List Block) -> Html Msg
+viewHeads branches =
     let
         header =
             H.tr []
@@ -537,12 +545,7 @@ viewHeads branches levels =
                     [ H.text (shortHash block.hash) ]
                 , H.td [] [ H.text block.timestamp ]
                 , H.td [] [ H.text (toString (canonFitness block.fitness)) ]
-                , H.td []
-                    [ Dict.get block.hash levels
-                        |> Maybe.map toString
-                        |> Maybe.withDefault ""
-                        |> H.text
-                    ]
+                , H.td [] [ H.text (toString block.level) ]
                 ]
 
         viewHead : Int -> List Block -> Html Msg
@@ -595,7 +598,6 @@ viewBranch n branch =
             H.tr []
                 [ H.th [] [ H.text "hash" ]
                 , H.th [ HA.class "timestamp" ] [ H.text "timestamp" ]
-                , H.th [ HA.class "operations" ] [ H.text "operations" ]
                 ]
     in
         H.div []
@@ -619,7 +621,6 @@ viewBlock2 n block =
             ]
             [ H.text (shortHash block.hash) ]
         , H.td [ HA.class "timestamp" ] [ H.text block.timestamp ]
-        , H.td [ HA.class "operations" ] [ H.text <| toString <| List.length block.operations ]
         ]
 
 
@@ -652,7 +653,7 @@ viewBlock block =
         viewPropertyList label values =
             viewProperty label (List.intersperse ", " values |> String.concat |> H.text)
 
-        viewOperations : String -> List String -> Html Msg
+        viewOperations : String -> List OperationID -> Html Msg
         viewOperations label values =
             let
                 li value =
@@ -664,6 +665,10 @@ viewBlock block =
                         [ H.text (shortHash value) ]
             in
                 H.ol [] (List.map li values) |> viewProperty label
+
+        viewOperationsList : String -> List (List OperationID) -> Html Msg
+        viewOperationsList label outerList =
+            H.div [] (List.map (viewOperations label) outerList)
     in
         H.div [ HA.class "block" ]
             [ H.h3 []
@@ -675,7 +680,8 @@ viewBlock block =
                 , viewPropertyString "predecessor" block.predecessor
                 , viewPropertyString "timestamp" block.timestamp
                 , viewPropertyList "fitness" block.fitness
-                , viewOperations "operations" block.operations
+                , viewPropertyString "net_id" block.net_id
+                , viewOperationsList "operations" block.operations
                 ]
             ]
 
@@ -780,7 +786,7 @@ viewError nodeUrl errors =
 
         errors ->
             H.div [ HA.class "error" ]
-                [ H.h1 [] [ H.text "Error" ]
+                [ H.h1 [] [ H.text "Errors" ]
                 , H.div [] (List.map (viewErrorInfo nodeUrl) errors)
                 ]
 
@@ -789,13 +795,13 @@ viewErrorInfo nodeUrl error =
     case error of
         Http.BadPayload message response ->
             H.div []
-                [ H.h2 [] [ H.text "Bad Payload (JSON parsing problem)" ]
+                [ H.h4 [] [ H.text "Bad Payload (JSON parsing problem)" ]
                 , H.div [ HA.style [ ( "white-space", "pre" ) ] ] [ H.text message ]
                 ]
 
         Http.BadStatus response ->
             H.div []
-                [ H.h2 [] [ H.text "Bad response status from node" ]
+                [ H.h4 [] [ H.text "Bad response status from node" ]
                 , H.div [] [ H.text (toString response.status) ]
                 , H.div [] [ H.text response.url ]
                   --, H.div [ HA.style [ ( "white-space", "pre" ) ] ] [ H.text (toString response) ]
@@ -803,7 +809,7 @@ viewErrorInfo nodeUrl error =
 
         Http.NetworkError ->
             H.div []
-                [ H.h2 [] [ H.text "Network Error" ]
+                [ H.h4 [] [ H.text "Network Error" ]
                 , H.div [] [ H.text ("Unable to access Tezos node at " ++ nodeUrl) ]
                 ]
 
