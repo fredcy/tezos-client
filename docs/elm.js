@@ -11149,10 +11149,625 @@ var _user$project$Schema$viewSchemaDataTop = F2(
 			});
 	});
 
-var _user$project$Main$subscriptions = function (model) {
-	return _elm_lang$core$Platform_Sub$none;
+var _user$project$Model$findOperation = F2(
+	function (operations, operationId) {
+		return A2(
+			_elm_community$list_extra$List_Extra$find,
+			function (operation) {
+				return _elm_lang$core$Native_Utils.eq(operation.hash, operationId);
+			},
+			operations);
+	});
+var _user$project$Model$findInChain = F2(
+	function (blocks, hash) {
+		return A2(
+			_elm_community$list_extra$List_Extra$find,
+			function (block) {
+				return _elm_lang$core$Native_Utils.eq(block.hash, hash);
+			},
+			blocks);
+	});
+var _user$project$Model$findBlock = F2(
+	function (blockchains, hash) {
+		findBlock:
+		while (true) {
+			var _p0 = blockchains;
+			if (_p0.ctor === '[]') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				var _p1 = A2(_user$project$Model$findInChain, _p0._0, hash);
+				if (_p1.ctor === 'Just') {
+					return _elm_lang$core$Maybe$Just(_p1._0);
+				} else {
+					var _v2 = _p0._1,
+						_v3 = hash;
+					blockchains = _v2;
+					hash = _v3;
+					continue findBlock;
+				}
+			}
+		}
+	});
+var _user$project$Model$Block = F7(
+	function (a, b, c, d, e, f, g) {
+		return {hash: a, predecessor: b, fitness: c, timestamp: d, operations: e, net_id: f, level: g};
+	});
+var _user$project$Model$Operation = F3(
+	function (a, b, c) {
+		return {hash: a, netID: b, data: c};
+	});
+var _user$project$Model$ParsedOperation = F5(
+	function (a, b, c, d, e) {
+		return {hash: a, net_id: b, source: c, operations: d, signature: e};
+	});
+var _user$project$Model$Model = function (a) {
+	return function (b) {
+		return function (c) {
+			return function (d) {
+				return function (e) {
+					return function (f) {
+						return function (g) {
+							return function (h) {
+								return function (i) {
+									return function (j) {
+										return {blocks: a, schemaData: b, errors: c, nodeUrl: d, operations: e, parsedOperations: f, blockOperations: g, showBlock: h, showOperation: i, showBranch: j};
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
 };
-var _user$project$Main$viewParse = F2(
+var _user$project$Model$Success = function (a) {
+	return {ctor: 'Success', _0: a};
+};
+var _user$project$Model$Failure = function (a) {
+	return {ctor: 'Failure', _0: a};
+};
+var _user$project$Model$Loading = {ctor: 'Loading'};
+var _user$project$Model$NotAsked = {ctor: 'NotAsked'};
+var _user$project$Model$SeedNonceRevelation = F2(
+	function (a, b) {
+		return {ctor: 'SeedNonceRevelation', _0: a, _1: b};
+	});
+var _user$project$Model$Endorsement = F2(
+	function (a, b) {
+		return {ctor: 'Endorsement', _0: a, _1: b};
+	});
+var _user$project$Model$Unknown = function (a) {
+	return {ctor: 'Unknown', _0: a};
+};
+
+var _user$project$Update$getBlockOperationIDs = function (block) {
+	return A2(_elm_lang$core$List$concatMap, _elm_lang$core$Basics$identity, block.operations);
+};
+var _user$project$Update$decodeDebug = function (message) {
+	return A2(
+		_elm_lang$core$Json_Decode$andThen,
+		function (value) {
+			var _p0 = A2(_elm_lang$core$Debug$log, message, value);
+			return _elm_lang$core$Json_Decode$value;
+		},
+		_elm_lang$core$Json_Decode$value);
+};
+var _user$project$Update$decodeEndorsement = A2(
+	_elm_lang$core$Json_Decode$andThen,
+	function (kind) {
+		var _p1 = kind;
+		switch (_p1) {
+			case 'endorsement':
+				return A3(
+					_elm_lang$core$Json_Decode$map2,
+					_user$project$Model$Endorsement,
+					A2(_elm_lang$core$Json_Decode$field, 'block', _elm_lang$core$Json_Decode$string),
+					A2(_elm_lang$core$Json_Decode$field, 'slot', _elm_lang$core$Json_Decode$int));
+			case 'seed_nonce_revelation':
+				return A3(
+					_elm_lang$core$Json_Decode$map2,
+					_user$project$Model$SeedNonceRevelation,
+					A2(_elm_lang$core$Json_Decode$field, 'level', _elm_lang$core$Json_Decode$int),
+					A2(_elm_lang$core$Json_Decode$field, 'nonce', _elm_lang$core$Json_Decode$string));
+			default:
+				return A2(
+					_elm_lang$core$Json_Decode$map,
+					_user$project$Model$Unknown,
+					_user$project$Update$decodeDebug('bad kind'));
+		}
+	},
+	A2(_elm_lang$core$Json_Decode$field, 'kind', _elm_lang$core$Json_Decode$string));
+var _user$project$Update$decodeSubOperation = _elm_lang$core$Json_Decode$oneOf(
+	{
+		ctor: '::',
+		_0: _user$project$Update$decodeEndorsement,
+		_1: {
+			ctor: '::',
+			_0: A2(_elm_lang$core$Json_Decode$map, _user$project$Model$Unknown, _elm_lang$core$Json_Decode$value),
+			_1: {ctor: '[]'}
+		}
+	});
+var _user$project$Update$decodeParsedOperation = A3(
+	_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+	'signature',
+	_elm_lang$core$Json_Decode$string,
+	A3(
+		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+		'operations',
+		_elm_lang$core$Json_Decode$list(_user$project$Update$decodeSubOperation),
+		A3(
+			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+			'source',
+			_elm_lang$core$Json_Decode$string,
+			A3(
+				_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+				'net_id',
+				_elm_lang$core$Json_Decode$string,
+				A3(
+					_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+					'hash',
+					_elm_lang$core$Json_Decode$string,
+					_elm_lang$core$Json_Decode$succeed(_user$project$Model$ParsedOperation))))));
+var _user$project$Update$decodeBlockOperationDetails = A2(
+	_elm_lang$core$Json_Decode$field,
+	'ok',
+	_elm_lang$core$Json_Decode$list(
+		_elm_lang$core$Json_Decode$list(_user$project$Update$decodeParsedOperation)));
+var _user$project$Update$decodeParsedOperationResponse = A2(_elm_lang$core$Json_Decode$field, 'ok', _user$project$Update$decodeParsedOperation);
+var _user$project$Update$decodeLevel = A2(
+	_elm_lang$core$Json_Decode$at,
+	{
+		ctor: '::',
+		_0: 'ok',
+		_1: {
+			ctor: '::',
+			_0: 'level',
+			_1: {ctor: '[]'}
+		}
+	},
+	_elm_lang$core$Json_Decode$int);
+var _user$project$Update$getHeadId = function (blocks) {
+	return A2(
+		_elm_lang$core$Maybe$map,
+		function (_) {
+			return _.hash;
+		},
+		_elm_lang$core$List$head(blocks));
+};
+var _user$project$Update$getSchema = F2(
+	function (nodeUrl, schemaQuery) {
+		var url = A2(_elm_lang$core$Basics_ops['++'], nodeUrl, schemaQuery);
+		var body = _elm_lang$http$Http$jsonBody(
+			_elm_lang$core$Json_Encode$object(
+				{
+					ctor: '::',
+					_0: {
+						ctor: '_Tuple2',
+						_0: 'recursive',
+						_1: _elm_lang$core$Json_Encode$bool(true)
+					},
+					_1: {ctor: '[]'}
+				}));
+		return A3(_elm_lang$http$Http$post, url, body, _user$project$Schema$decodeSchema);
+	});
+var _user$project$Update$decodeOperationContents = function (operationId) {
+	return A2(
+		_elm_lang$core$Json_Decode$andThen,
+		function (opList) {
+			return A2(
+				_elm_lang$core$Maybe$withDefault,
+				_elm_lang$core$Json_Decode$fail('bad operation list'),
+				A2(
+					_elm_lang$core$Maybe$map,
+					_elm_lang$core$Json_Decode$succeed,
+					_elm_lang$core$List$head(opList)));
+		},
+		_elm_lang$core$Json_Decode$list(
+			A4(
+				_elm_lang$core$Json_Decode$map3,
+				_user$project$Model$Operation,
+				_elm_lang$core$Json_Decode$succeed(operationId),
+				A2(_elm_lang$core$Json_Decode$field, 'net_id', _elm_lang$core$Json_Decode$string),
+				A2(_elm_lang$core$Json_Decode$field, 'data', _elm_lang$core$Json_Decode$string))));
+};
+var _user$project$Update$decodeOperation = A4(
+	_elm_lang$core$Json_Decode$map3,
+	_user$project$Model$Operation,
+	A2(_elm_lang$core$Json_Decode$field, 'hash', _elm_lang$core$Json_Decode$string),
+	A2(
+		_elm_lang$core$Json_Decode$at,
+		{
+			ctor: '::',
+			_0: 'contents',
+			_1: {
+				ctor: '::',
+				_0: 'net_id',
+				_1: {ctor: '[]'}
+			}
+		},
+		_elm_lang$core$Json_Decode$string),
+	A2(
+		_elm_lang$core$Json_Decode$at,
+		{
+			ctor: '::',
+			_0: 'contents',
+			_1: {
+				ctor: '::',
+				_0: 'data',
+				_1: {ctor: '[]'}
+			}
+		},
+		_elm_lang$core$Json_Decode$string));
+var _user$project$Update$decodeOperations = A2(
+	_elm_lang$core$Json_Decode$field,
+	'operations',
+	_elm_lang$core$Json_Decode$list(_user$project$Update$decodeOperation));
+var _user$project$Update$getOperation = F2(
+	function (nodeUrl, operationId) {
+		var decoder = _user$project$Update$decodeOperationContents(operationId);
+		var body = _elm_lang$http$Http$jsonBody(
+			_elm_lang$core$Json_Encode$object(
+				{ctor: '[]'}));
+		return A3(
+			_elm_lang$http$Http$post,
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				nodeUrl,
+				A2(_elm_lang$core$Basics_ops['++'], '/operations/', operationId)),
+			body,
+			decoder);
+	});
+var _user$project$Update$getOperations = F2(
+	function (nodeUrl, blockId) {
+		var query = A2(
+			_elm_lang$core$Basics_ops['++'],
+			'/blocks/',
+			A2(_elm_lang$core$Basics_ops['++'], blockId, '/proto/operations'));
+		var body = _elm_lang$http$Http$jsonBody(
+			_elm_lang$core$Json_Encode$object(
+				{ctor: '[]'}));
+		return A3(
+			_elm_lang$http$Http$post,
+			A2(_elm_lang$core$Basics_ops['++'], nodeUrl, query),
+			body,
+			_user$project$Update$decodeOperations);
+	});
+var _user$project$Update$decodeTimestamp = _elm_lang$core$Json_Decode$string;
+var _user$project$Update$decodeBlock = A3(
+	_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+	'level',
+	_elm_lang$core$Json_Decode$int,
+	A3(
+		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+		'net_id',
+		_elm_lang$core$Json_Decode$string,
+		A3(
+			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+			'operations',
+			_elm_lang$core$Json_Decode$list(
+				_elm_lang$core$Json_Decode$list(_elm_lang$core$Json_Decode$string)),
+			A3(
+				_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+				'timestamp',
+				_user$project$Update$decodeTimestamp,
+				A3(
+					_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+					'fitness',
+					_elm_lang$core$Json_Decode$list(_elm_lang$core$Json_Decode$string),
+					A3(
+						_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+						'predecessor',
+						_elm_lang$core$Json_Decode$string,
+						A3(
+							_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+							'hash',
+							_elm_lang$core$Json_Decode$string,
+							_elm_lang$core$Json_Decode$succeed(_user$project$Model$Block))))))));
+var _user$project$Update$decodeBlocks = A2(
+	_elm_lang$core$Json_Decode$field,
+	'blocks',
+	_elm_lang$core$Json_Decode$list(
+		_elm_lang$core$Json_Decode$list(_user$project$Update$decodeBlock)));
+var _user$project$Update$getBlocks = function (nodeUrl) {
+	var url = A2(_elm_lang$core$Basics_ops['++'], nodeUrl, '/blocks');
+	var maxBlocksToGet = 20;
+	var body = _elm_lang$http$Http$jsonBody(
+		_elm_lang$core$Json_Encode$object(
+			{
+				ctor: '::',
+				_0: {
+					ctor: '_Tuple2',
+					_0: 'include_ops',
+					_1: _elm_lang$core$Json_Encode$bool(true)
+				},
+				_1: {
+					ctor: '::',
+					_0: {
+						ctor: '_Tuple2',
+						_0: 'length',
+						_1: _elm_lang$core$Json_Encode$int(maxBlocksToGet)
+					},
+					_1: {ctor: '[]'}
+				}
+			}));
+	return A3(_elm_lang$http$Http$post, url, body, _user$project$Update$decodeBlocks);
+};
+var _user$project$Update$emptyJsonBody = _elm_lang$http$Http$jsonBody(
+	_elm_lang$core$Json_Encode$object(
+		{ctor: '[]'}));
+var _user$project$Update$ShowBranch = function (a) {
+	return {ctor: 'ShowBranch', _0: a};
+};
+var _user$project$Update$ShowOperation = function (a) {
+	return {ctor: 'ShowOperation', _0: a};
+};
+var _user$project$Update$ShowBlock = function (a) {
+	return {ctor: 'ShowBlock', _0: a};
+};
+var _user$project$Update$SchemaMsg = F2(
+	function (a, b) {
+		return {ctor: 'SchemaMsg', _0: a, _1: b};
+	});
+var _user$project$Update$LoadParsedOperation = F2(
+	function (a, b) {
+		return {ctor: 'LoadParsedOperation', _0: a, _1: b};
+	});
+var _user$project$Update$getParseOperationCommand = F2(
+	function (nodeUrl, operation) {
+		var body = _elm_lang$http$Http$jsonBody(
+			_elm_lang$core$Json_Encode$object(
+				{
+					ctor: '::',
+					_0: {
+						ctor: '_Tuple2',
+						_0: 'data',
+						_1: _elm_lang$core$Json_Encode$string(operation.data)
+					},
+					_1: {
+						ctor: '::',
+						_0: {
+							ctor: '_Tuple2',
+							_0: 'net_id',
+							_1: _elm_lang$core$Json_Encode$string(operation.netID)
+						},
+						_1: {ctor: '[]'}
+					}
+				}));
+		var url = A2(_elm_lang$core$Basics_ops['++'], nodeUrl, '/blocks/head/proto/helpers/parse/operation');
+		return A2(
+			_elm_lang$http$Http$send,
+			_user$project$Update$LoadParsedOperation(operation.hash),
+			A3(_elm_lang$http$Http$post, url, body, _user$project$Update$decodeParsedOperation));
+	});
+var _user$project$Update$LoadBlockOperations = F2(
+	function (a, b) {
+		return {ctor: 'LoadBlockOperations', _0: a, _1: b};
+	});
+var _user$project$Update$getBlockOperationDetails = F2(
+	function (nodeUrl, blockHash) {
+		var url = A2(
+			_elm_lang$core$Basics_ops['++'],
+			nodeUrl,
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				'/blocks/',
+				A2(_elm_lang$core$Basics_ops['++'], blockHash, '/proto/operations')));
+		return A2(
+			_elm_lang$http$Http$send,
+			_user$project$Update$LoadBlockOperations(blockHash),
+			A3(_elm_lang$http$Http$post, url, _user$project$Update$emptyJsonBody, _user$project$Update$decodeBlockOperationDetails));
+	});
+var _user$project$Update$LoadOperation = function (a) {
+	return {ctor: 'LoadOperation', _0: a};
+};
+var _user$project$Update$getOperationIfNew = F3(
+	function (nodeUrl, operations, operationId) {
+		return A2(_elm_lang$core$Dict$member, operationId, operations) ? _elm_lang$core$Platform_Cmd$none : A2(
+			_elm_lang$http$Http$send,
+			_user$project$Update$LoadOperation,
+			A2(_user$project$Update$getOperation, nodeUrl, operationId));
+	});
+var _user$project$Update$update = F2(
+	function (msg, model) {
+		var _p2 = A2(_elm_lang$core$Debug$log, 'msg', msg);
+		switch (_p2.ctor) {
+			case 'LoadBlocks':
+				var _p3 = _p2._0;
+				if (_p3.ctor === 'Ok') {
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{blocks: _p3._0}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				} else {
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								errors: {ctor: '::', _0: _p3._0, _1: model.errors}
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				}
+			case 'LoadSchema':
+				var _p4 = _p2._1;
+				if (_p4.ctor === 'Ok') {
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								schemaData: A3(
+									_elm_lang$core$Dict$insert,
+									_p2._0,
+									_user$project$Schema$collapseTrees(_p4._0),
+									model.schemaData)
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				} else {
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								errors: {ctor: '::', _0: _p4._0, _1: model.errors}
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				}
+			case 'SchemaMsg':
+				var _p7 = _p2._0;
+				var newSchemaMaybe = A2(
+					_elm_lang$core$Maybe$map,
+					_user$project$Schema$update(_p2._1),
+					A2(_elm_lang$core$Dict$get, _p7, model.schemaData));
+				var _p5 = newSchemaMaybe;
+				if (_p5.ctor === 'Just') {
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								schemaData: A3(_elm_lang$core$Dict$insert, _p7, _p5._0, model.schemaData)
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				} else {
+					var _p6 = A2(_elm_lang$core$Debug$log, 'Failed to find schema', _p7);
+					return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+				}
+			case 'LoadOperation':
+				var _p8 = _p2._0;
+				if (_p8.ctor === 'Ok') {
+					var _p9 = _p8._0;
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								operations: A3(_elm_lang$core$Dict$insert, _p9.hash, _p9, model.operations)
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				} else {
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								errors: {ctor: '::', _0: _p8._0, _1: model.errors}
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				}
+			case 'LoadParsedOperation':
+				var _p10 = _p2._1;
+				if (_p10.ctor === 'Ok') {
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								parsedOperations: A3(_elm_lang$core$Dict$insert, _p2._0, _p10._0, model.parsedOperations)
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				} else {
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								errors: {ctor: '::', _0: _p10._0, _1: model.errors}
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				}
+			case 'LoadBlockOperations':
+				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+			case 'ShowBlock':
+				var _p11 = _p2._0;
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							showBlock: _elm_lang$core$Maybe$Just(_p11)
+						}),
+					_1: A2(_user$project$Update$getBlockOperationDetails, model.nodeUrl, _p11)
+				};
+			case 'ShowOperation':
+				var _p12 = _p2._0;
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							showOperation: _elm_lang$core$Maybe$Just(_p12)
+						}),
+					_1: A3(_user$project$Update$getOperationIfNew, model.nodeUrl, model.operations, _p12)
+				};
+			default:
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							showBranch: _elm_lang$core$Maybe$Just(_p2._0)
+						}),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+		}
+	});
+var _user$project$Update$getBlockOperationInfo = F2(
+	function (model, blockhash) {
+		return A2(
+			_elm_lang$core$Maybe$withDefault,
+			_elm_lang$core$Platform_Cmd$none,
+			A2(
+				_elm_lang$core$Maybe$map,
+				_elm_lang$core$Platform_Cmd$batch,
+				A2(
+					_elm_lang$core$Maybe$map,
+					_elm_lang$core$List$map(
+						A2(_user$project$Update$getOperationIfNew, model.nodeUrl, model.operations)),
+					A2(
+						_elm_lang$core$Maybe$map,
+						_user$project$Update$getBlockOperationIDs,
+						A2(_user$project$Model$findBlock, model.blocks, blockhash)))));
+	});
+var _user$project$Update$getBlocksOperationsDetail = F2(
+	function (model, blockChains) {
+		var doChain = function (blocks) {
+			return _elm_lang$core$Platform_Cmd$batch(
+				A2(
+					_elm_lang$core$List$map,
+					function (_p13) {
+						return _elm_lang$core$Platform_Cmd$batch(
+							A2(
+								_elm_lang$core$List$map,
+								A2(_user$project$Update$getOperationIfNew, model.nodeUrl, model.operations),
+								_user$project$Update$getBlockOperationIDs(_p13)));
+					},
+					blocks));
+		};
+		return _elm_lang$core$Platform_Cmd$batch(
+			A2(_elm_lang$core$List$map, doChain, blockChains));
+	});
+var _user$project$Update$LoadSchema = F2(
+	function (a, b) {
+		return {ctor: 'LoadSchema', _0: a, _1: b};
+	});
+var _user$project$Update$LoadBlocks = function (a) {
+	return {ctor: 'LoadBlocks', _0: a};
+};
+
+var _user$project$View$viewParse = F2(
 	function (parsedOperations, operationIdMaybe) {
 		var _p0 = operationIdMaybe;
 		if (_p0.ctor === 'Just') {
@@ -11193,7 +11808,7 @@ var _user$project$Main$viewParse = F2(
 			return _elm_lang$html$Html$text('');
 		}
 	});
-var _user$project$Main$viewDebug = function (model) {
+var _user$project$View$viewDebug = function (model) {
 	return A2(
 		_elm_lang$html$Html$div,
 		{
@@ -11219,7 +11834,7 @@ var _user$project$Main$viewDebug = function (model) {
 			}
 		});
 };
-var _user$project$Main$viewErrorInfo = F2(
+var _user$project$View$viewErrorInfo = F2(
 	function (nodeUrl, error) {
 		var _p1 = error;
 		switch (_p1.ctor) {
@@ -11332,7 +11947,7 @@ var _user$project$Main$viewErrorInfo = F2(
 					_elm_lang$core$Basics$toString(error));
 		}
 	});
-var _user$project$Main$viewError = F2(
+var _user$project$View$viewError = F2(
 	function (nodeUrl, errors) {
 		var _p3 = errors;
 		if (_p3.ctor === '[]') {
@@ -11362,17 +11977,17 @@ var _user$project$Main$viewError = F2(
 							{ctor: '[]'},
 							A2(
 								_elm_lang$core$List$map,
-								_user$project$Main$viewErrorInfo(nodeUrl),
+								_user$project$View$viewErrorInfo(nodeUrl),
 								_p3)),
 						_1: {ctor: '[]'}
 					}
 				});
 		}
 	});
-var _user$project$Main$shortHash = function (hash) {
+var _user$project$View$shortHash = function (hash) {
 	return A2(_elm_lang$core$String$left, 12, hash);
 };
-var _user$project$Main$viewOperation = function (operation) {
+var _user$project$View$viewOperation = function (operation) {
 	var id = A2(_elm_lang$core$Basics_ops['++'], 'operationdata-', operation.hash);
 	return A2(
 		_elm_lang$html$Html$div,
@@ -11397,7 +12012,7 @@ var _user$project$Main$viewOperation = function (operation) {
 							{
 								ctor: '::',
 								_0: _elm_lang$html$Html$text(
-									_user$project$Main$shortHash(operation.hash)),
+									_user$project$View$shortHash(operation.hash)),
 								_1: {ctor: '[]'}
 							}),
 						_1: {ctor: '[]'}
@@ -11484,7 +12099,7 @@ var _user$project$Main$viewOperation = function (operation) {
 			}
 		});
 };
-var _user$project$Main$viewOperations = function (operationsStatus) {
+var _user$project$View$viewOperations = function (operationsStatus) {
 	return A2(
 		_elm_lang$html$Html$div,
 		{ctor: '[]'},
@@ -11511,7 +12126,7 @@ var _user$project$Main$viewOperations = function (operationsStatus) {
 									_0: _elm_lang$html$Html_Attributes$class('property-list'),
 									_1: {ctor: '[]'}
 								},
-								A2(_elm_lang$core$List$map, _user$project$Main$viewOperation, _p4._0));
+								A2(_elm_lang$core$List$map, _user$project$View$viewOperation, _p4._0));
 						case 'Failure':
 							return A2(
 								_elm_lang$html$Html$div,
@@ -11541,14 +12156,14 @@ var _user$project$Main$viewOperations = function (operationsStatus) {
 			}
 		});
 };
-var _user$project$Main$viewShowOperation = F2(
+var _user$project$View$viewShowOperation = F2(
 	function (operations, operationidMaybe) {
 		return A2(
 			_elm_lang$core$Maybe$withDefault,
 			_elm_lang$html$Html$text(''),
 			A2(
 				_elm_lang$core$Maybe$map,
-				_user$project$Main$viewOperation,
+				_user$project$View$viewOperation,
 				A2(
 					_elm_lang$core$Maybe$andThen,
 					function (oId) {
@@ -11556,58 +12171,395 @@ var _user$project$Main$viewShowOperation = F2(
 					},
 					operationidMaybe)));
 	});
-var _user$project$Main$findOperation = F2(
-	function (operations, operationId) {
-		return A2(
-			_elm_community$list_extra$List_Extra$find,
-			function (operation) {
-				return _elm_lang$core$Native_Utils.eq(operation.hash, operationId);
-			},
-			operations);
-	});
-var _user$project$Main$findInChain = F2(
-	function (blocks, hash) {
-		return A2(
-			_elm_community$list_extra$List_Extra$find,
-			function (block) {
-				return _elm_lang$core$Native_Utils.eq(block.hash, hash);
-			},
-			blocks);
-	});
-var _user$project$Main$findBlock = F2(
-	function (blockchains, hash) {
-		findBlock:
-		while (true) {
-			var _p5 = blockchains;
-			if (_p5.ctor === '[]') {
-				return _elm_lang$core$Maybe$Nothing;
-			} else {
-				var _p6 = A2(_user$project$Main$findInChain, _p5._0, hash);
-				if (_p6.ctor === 'Just') {
-					return _elm_lang$core$Maybe$Just(_p6._0);
-				} else {
-					var _v6 = _p5._1,
-						_v7 = hash;
-					blockchains = _v6;
-					hash = _v7;
-					continue findBlock;
-				}
+var _user$project$View$viewBlock = function (block) {
+	var viewProperty = F2(
+		function (label, value) {
+			return A2(
+				_elm_lang$html$Html$div,
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html_Attributes$class('property'),
+					_1: {ctor: '[]'}
+				},
+				{
+					ctor: '::',
+					_0: A2(
+						_elm_lang$html$Html$div,
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$class('label'),
+							_1: {ctor: '[]'}
+						},
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html$text(label),
+							_1: {ctor: '[]'}
+						}),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$div,
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html_Attributes$class(label),
+								_1: {ctor: '[]'}
+							},
+							{
+								ctor: '::',
+								_0: value,
+								_1: {ctor: '[]'}
+							}),
+						_1: {ctor: '[]'}
+					}
+				});
+		});
+	var viewPropertyString = F2(
+		function (label, value) {
+			return A2(
+				viewProperty,
+				label,
+				_elm_lang$html$Html$text(value));
+		});
+	var viewPropertyList = F2(
+		function (label, values) {
+			return A2(
+				viewProperty,
+				label,
+				_elm_lang$html$Html$text(
+					_elm_lang$core$String$concat(
+						A2(_elm_lang$core$List$intersperse, ', ', values))));
+		});
+	var viewOperations = F2(
+		function (label, values) {
+			var li = function (value) {
+				return A2(
+					_elm_lang$html$Html$li,
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html_Events$onClick(
+							_user$project$Update$ShowOperation(value)),
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$class('operation hash'),
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$html$Html_Attributes$title(value),
+								_1: {ctor: '[]'}
+							}
+						}
+					},
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html$text(
+							_user$project$View$shortHash(value)),
+						_1: {ctor: '[]'}
+					});
+			};
+			return A2(
+				viewProperty,
+				label,
+				A2(
+					_elm_lang$html$Html$ol,
+					{ctor: '[]'},
+					A2(_elm_lang$core$List$map, li, values)));
+		});
+	var viewOperationsList = F2(
+		function (label, outerList) {
+			return A2(
+				_elm_lang$html$Html$div,
+				{ctor: '[]'},
+				A2(
+					_elm_lang$core$List$map,
+					viewOperations(label),
+					outerList));
+		});
+	return A2(
+		_elm_lang$html$Html$div,
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html_Attributes$class('block'),
+			_1: {ctor: '[]'}
+		},
+		{
+			ctor: '::',
+			_0: A2(
+				_elm_lang$html$Html$h3,
+				{ctor: '[]'},
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html$text('Block '),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$span,
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html_Attributes$class('hash'),
+								_1: {ctor: '[]'}
+							},
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html$text(
+									_user$project$View$shortHash(block.hash)),
+								_1: {ctor: '[]'}
+							}),
+						_1: {ctor: '[]'}
+					}
+				}),
+			_1: {
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$div,
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html_Attributes$class('property-list'),
+						_1: {ctor: '[]'}
+					},
+					{
+						ctor: '::',
+						_0: A2(viewPropertyString, 'hash', block.hash),
+						_1: {
+							ctor: '::',
+							_0: A2(viewPropertyString, 'predecessor', block.predecessor),
+							_1: {
+								ctor: '::',
+								_0: A2(viewPropertyString, 'timestamp', block.timestamp),
+								_1: {
+									ctor: '::',
+									_0: A2(viewPropertyList, 'fitness', block.fitness),
+									_1: {
+										ctor: '::',
+										_0: A2(viewPropertyString, 'net_id', block.net_id),
+										_1: {
+											ctor: '::',
+											_0: A2(viewOperationsList, 'operations', block.operations),
+											_1: {ctor: '[]'}
+										}
+									}
+								}
+							}
+						}
+					}),
+				_1: {ctor: '[]'}
 			}
+		});
+};
+var _user$project$View$viewShowBlock = F2(
+	function (blocks, blockhashMaybe) {
+		var _p5 = blockhashMaybe;
+		if (_p5.ctor === 'Just') {
+			var _p7 = _p5._0;
+			var _p6 = A2(_user$project$Model$findBlock, blocks, _p7);
+			if (_p6.ctor === 'Just') {
+				return _user$project$View$viewBlock(_p6._0);
+			} else {
+				return A2(
+					_elm_lang$html$Html$div,
+					{ctor: '[]'},
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html$text(
+							A2(_elm_lang$core$Basics_ops['++'], 'Cannot find block ', _p7)),
+						_1: {ctor: '[]'}
+					});
+			}
+		} else {
+			return _elm_lang$html$Html$text('');
 		}
 	});
-var _user$project$Main$findBranchByHead = F2(
+var _user$project$View$viewBlock2 = F2(
+	function (n, block) {
+		return A2(
+			_elm_lang$html$Html$tr,
+			{
+				ctor: '::',
+				_0: _elm_lang$html$Html_Attributes$class('block'),
+				_1: {ctor: '[]'}
+			},
+			{
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$td,
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html_Attributes$class('hash'),
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$title(block.hash),
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$html$Html_Events$onClick(
+									_user$project$Update$ShowBlock(block.hash)),
+								_1: {ctor: '[]'}
+							}
+						}
+					},
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html$text(
+							_user$project$View$shortHash(block.hash)),
+						_1: {ctor: '[]'}
+					}),
+				_1: {
+					ctor: '::',
+					_0: A2(
+						_elm_lang$html$Html$td,
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$class('timestamp'),
+							_1: {ctor: '[]'}
+						},
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html$text(block.timestamp),
+							_1: {ctor: '[]'}
+						}),
+					_1: {ctor: '[]'}
+				}
+			});
+	});
+var _user$project$View$viewBranch = F2(
+	function (n, branch) {
+		var tableHeader = A2(
+			_elm_lang$html$Html$tr,
+			{ctor: '[]'},
+			{
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$th,
+					{ctor: '[]'},
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html$text('hash'),
+						_1: {ctor: '[]'}
+					}),
+				_1: {
+					ctor: '::',
+					_0: A2(
+						_elm_lang$html$Html$th,
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$class('timestamp'),
+							_1: {ctor: '[]'}
+						},
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html$text('timestamp'),
+							_1: {ctor: '[]'}
+						}),
+					_1: {ctor: '[]'}
+				}
+			});
+		return A2(
+			_elm_lang$html$Html$div,
+			{ctor: '[]'},
+			{
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$h3,
+					{ctor: '[]'},
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html$text(
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								'branch ',
+								_elm_lang$core$Basics$toString(n))),
+						_1: {ctor: '[]'}
+					}),
+				_1: {
+					ctor: '::',
+					_0: A2(
+						_elm_lang$html$Html$div,
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$class('branch'),
+							_1: {ctor: '[]'}
+						},
+						{
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$table,
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html_Attributes$class('blockchain'),
+									_1: {ctor: '[]'}
+								},
+								{
+									ctor: '::',
+									_0: A2(
+										_elm_lang$html$Html$thead,
+										{ctor: '[]'},
+										{
+											ctor: '::',
+											_0: tableHeader,
+											_1: {ctor: '[]'}
+										}),
+									_1: {
+										ctor: '::',
+										_0: A2(
+											_elm_lang$html$Html$tbody,
+											{ctor: '[]'},
+											A2(_elm_lang$core$List$indexedMap, _user$project$View$viewBlock2, branch)),
+										_1: {ctor: '[]'}
+									}
+								}),
+							_1: {ctor: '[]'}
+						}),
+					_1: {ctor: '[]'}
+				}
+			});
+	});
+var _user$project$View$viewBlocks = function (branches) {
+	var header = {
+		ctor: '::',
+		_0: A2(
+			_elm_lang$html$Html$h2,
+			{ctor: '[]'},
+			{
+				ctor: '::',
+				_0: _elm_lang$html$Html$text('Block chains'),
+				_1: {ctor: '[]'}
+			}),
+		_1: {ctor: '[]'}
+	};
+	return A2(
+		_elm_lang$html$Html$div,
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html_Attributes$class('branches'),
+			_1: {ctor: '[]'}
+		},
+		A2(
+			_elm_lang$core$Basics_ops['++'],
+			header,
+			A2(_elm_lang$core$List$indexedMap, _user$project$View$viewBranch, branches)));
+};
+var _user$project$View$viewShowBranch = F2(
+	function (branches, indexMaybe) {
+		var index = A2(_elm_lang$core$Maybe$withDefault, 0, indexMaybe);
+		var branchMaybe = A2(_elm_community$list_extra$List_Extra$getAt, index, branches);
+		return A2(
+			_elm_lang$core$Maybe$withDefault,
+			_elm_lang$html$Html$text(''),
+			A2(
+				_elm_lang$core$Maybe$map,
+				_user$project$View$viewBranch(index),
+				branchMaybe));
+	});
+var _user$project$View$findBranchByHead = F2(
 	function (branches, headid) {
 		var match = function (branch) {
-			var _p7 = branch;
-			if (_p7.ctor === '::') {
-				return _elm_lang$core$Native_Utils.eq(_p7._0.hash, headid);
+			var _p8 = branch;
+			if (_p8.ctor === '::') {
+				return _elm_lang$core$Native_Utils.eq(_p8._0.hash, headid);
 			} else {
 				return false;
 			}
 		};
 		return A2(_elm_community$list_extra$List_Extra$find, match, branches);
 	});
-var _user$project$Main$canonFitness = function (strings) {
+var _user$project$View$canonFitness = function (strings) {
 	return A2(
 		_elm_community$list_extra$List_Extra$dropWhile,
 		F2(
@@ -11616,357 +12568,15 @@ var _user$project$Main$canonFitness = function (strings) {
 			})(0),
 		A2(
 			_elm_lang$core$List$map,
-			function (_p8) {
+			function (_p9) {
 				return A2(
 					_elm_lang$core$Result$withDefault,
 					0,
-					_fredcy$elm_parseint$ParseInt$parseIntHex(_p8));
+					_fredcy$elm_parseint$ParseInt$parseIntHex(_p9));
 			},
 			strings));
 };
-var _user$project$Main$viewHeader = function (nodeUrl) {
-	return A2(
-		_elm_lang$html$Html$div,
-		{ctor: '[]'},
-		{
-			ctor: '::',
-			_0: A2(
-				_elm_lang$html$Html$h1,
-				{ctor: '[]'},
-				{
-					ctor: '::',
-					_0: _elm_lang$html$Html$text('Tezos client'),
-					_1: {ctor: '[]'}
-				}),
-			_1: {
-				ctor: '::',
-				_0: A2(
-					_elm_lang$html$Html$div,
-					{ctor: '[]'},
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html$text(
-							A2(_elm_lang$core$Basics_ops['++'], 'Connecting to Tezos RPC server ', nodeUrl)),
-						_1: {ctor: '[]'}
-					}),
-				_1: {ctor: '[]'}
-			}
-		});
-};
-var _user$project$Main$getBlockOperationIDs = function (block) {
-	return A2(_elm_lang$core$List$concatMap, _elm_lang$core$Basics$identity, block.operations);
-};
-var _user$project$Main$decodeDebug = function (message) {
-	return A2(
-		_elm_lang$core$Json_Decode$andThen,
-		function (value) {
-			var _p9 = A2(_elm_lang$core$Debug$log, message, value);
-			return _elm_lang$core$Json_Decode$value;
-		},
-		_elm_lang$core$Json_Decode$value);
-};
-var _user$project$Main$decodeLevel = A2(
-	_elm_lang$core$Json_Decode$at,
-	{
-		ctor: '::',
-		_0: 'ok',
-		_1: {
-			ctor: '::',
-			_0: 'level',
-			_1: {ctor: '[]'}
-		}
-	},
-	_elm_lang$core$Json_Decode$int);
-var _user$project$Main$getHeadId = function (blocks) {
-	return A2(
-		_elm_lang$core$Maybe$map,
-		function (_) {
-			return _.hash;
-		},
-		_elm_lang$core$List$head(blocks));
-};
-var _user$project$Main$getSchema = F2(
-	function (nodeUrl, schemaQuery) {
-		var url = A2(_elm_lang$core$Basics_ops['++'], nodeUrl, schemaQuery);
-		var body = _elm_lang$http$Http$jsonBody(
-			_elm_lang$core$Json_Encode$object(
-				{
-					ctor: '::',
-					_0: {
-						ctor: '_Tuple2',
-						_0: 'recursive',
-						_1: _elm_lang$core$Json_Encode$bool(true)
-					},
-					_1: {ctor: '[]'}
-				}));
-		return A3(_elm_lang$http$Http$post, url, body, _user$project$Schema$decodeSchema);
-	});
-var _user$project$Main$decodeTimestamp = _elm_lang$core$Json_Decode$string;
-var _user$project$Main$emptyJsonBody = _elm_lang$http$Http$jsonBody(
-	_elm_lang$core$Json_Encode$object(
-		{ctor: '[]'}));
-var _user$project$Main$Block = F7(
-	function (a, b, c, d, e, f, g) {
-		return {hash: a, predecessor: b, fitness: c, timestamp: d, operations: e, net_id: f, level: g};
-	});
-var _user$project$Main$decodeBlock = A3(
-	_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-	'level',
-	_elm_lang$core$Json_Decode$int,
-	A3(
-		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-		'net_id',
-		_elm_lang$core$Json_Decode$string,
-		A3(
-			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-			'operations',
-			_elm_lang$core$Json_Decode$list(
-				_elm_lang$core$Json_Decode$list(_elm_lang$core$Json_Decode$string)),
-			A3(
-				_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-				'timestamp',
-				_user$project$Main$decodeTimestamp,
-				A3(
-					_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-					'fitness',
-					_elm_lang$core$Json_Decode$list(_elm_lang$core$Json_Decode$string),
-					A3(
-						_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-						'predecessor',
-						_elm_lang$core$Json_Decode$string,
-						A3(
-							_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-							'hash',
-							_elm_lang$core$Json_Decode$string,
-							_elm_lang$core$Json_Decode$succeed(_user$project$Main$Block))))))));
-var _user$project$Main$decodeBlocks = A2(
-	_elm_lang$core$Json_Decode$field,
-	'blocks',
-	_elm_lang$core$Json_Decode$list(
-		_elm_lang$core$Json_Decode$list(_user$project$Main$decodeBlock)));
-var _user$project$Main$getBlocks = function (nodeUrl) {
-	var url = A2(_elm_lang$core$Basics_ops['++'], nodeUrl, '/blocks');
-	var maxBlocksToGet = 20;
-	var body = _elm_lang$http$Http$jsonBody(
-		_elm_lang$core$Json_Encode$object(
-			{
-				ctor: '::',
-				_0: {
-					ctor: '_Tuple2',
-					_0: 'include_ops',
-					_1: _elm_lang$core$Json_Encode$bool(true)
-				},
-				_1: {
-					ctor: '::',
-					_0: {
-						ctor: '_Tuple2',
-						_0: 'length',
-						_1: _elm_lang$core$Json_Encode$int(maxBlocksToGet)
-					},
-					_1: {ctor: '[]'}
-				}
-			}));
-	return A3(_elm_lang$http$Http$post, url, body, _user$project$Main$decodeBlocks);
-};
-var _user$project$Main$Operation = F3(
-	function (a, b, c) {
-		return {hash: a, netID: b, data: c};
-	});
-var _user$project$Main$decodeOperation = A4(
-	_elm_lang$core$Json_Decode$map3,
-	_user$project$Main$Operation,
-	A2(_elm_lang$core$Json_Decode$field, 'hash', _elm_lang$core$Json_Decode$string),
-	A2(
-		_elm_lang$core$Json_Decode$at,
-		{
-			ctor: '::',
-			_0: 'contents',
-			_1: {
-				ctor: '::',
-				_0: 'net_id',
-				_1: {ctor: '[]'}
-			}
-		},
-		_elm_lang$core$Json_Decode$string),
-	A2(
-		_elm_lang$core$Json_Decode$at,
-		{
-			ctor: '::',
-			_0: 'contents',
-			_1: {
-				ctor: '::',
-				_0: 'data',
-				_1: {ctor: '[]'}
-			}
-		},
-		_elm_lang$core$Json_Decode$string));
-var _user$project$Main$decodeOperations = A2(
-	_elm_lang$core$Json_Decode$field,
-	'operations',
-	_elm_lang$core$Json_Decode$list(_user$project$Main$decodeOperation));
-var _user$project$Main$getOperations = F2(
-	function (nodeUrl, blockId) {
-		var query = A2(
-			_elm_lang$core$Basics_ops['++'],
-			'/blocks/',
-			A2(_elm_lang$core$Basics_ops['++'], blockId, '/proto/operations'));
-		var body = _elm_lang$http$Http$jsonBody(
-			_elm_lang$core$Json_Encode$object(
-				{ctor: '[]'}));
-		return A3(
-			_elm_lang$http$Http$post,
-			A2(_elm_lang$core$Basics_ops['++'], nodeUrl, query),
-			body,
-			_user$project$Main$decodeOperations);
-	});
-var _user$project$Main$decodeOperationContents = function (operationId) {
-	return A2(
-		_elm_lang$core$Json_Decode$andThen,
-		function (opList) {
-			return A2(
-				_elm_lang$core$Maybe$withDefault,
-				_elm_lang$core$Json_Decode$fail('bad operation list'),
-				A2(
-					_elm_lang$core$Maybe$map,
-					_elm_lang$core$Json_Decode$succeed,
-					_elm_lang$core$List$head(opList)));
-		},
-		_elm_lang$core$Json_Decode$list(
-			A4(
-				_elm_lang$core$Json_Decode$map3,
-				_user$project$Main$Operation,
-				_elm_lang$core$Json_Decode$succeed(operationId),
-				A2(_elm_lang$core$Json_Decode$field, 'net_id', _elm_lang$core$Json_Decode$string),
-				A2(_elm_lang$core$Json_Decode$field, 'data', _elm_lang$core$Json_Decode$string))));
-};
-var _user$project$Main$getOperation = F2(
-	function (nodeUrl, operationId) {
-		var decoder = _user$project$Main$decodeOperationContents(operationId);
-		var body = _elm_lang$http$Http$jsonBody(
-			_elm_lang$core$Json_Encode$object(
-				{ctor: '[]'}));
-		return A3(
-			_elm_lang$http$Http$post,
-			A2(
-				_elm_lang$core$Basics_ops['++'],
-				nodeUrl,
-				A2(_elm_lang$core$Basics_ops['++'], '/operations/', operationId)),
-			body,
-			decoder);
-	});
-var _user$project$Main$ParsedOperation = F5(
-	function (a, b, c, d, e) {
-		return {hash: a, net_id: b, source: c, operations: d, signature: e};
-	});
-var _user$project$Main$Model = function (a) {
-	return function (b) {
-		return function (c) {
-			return function (d) {
-				return function (e) {
-					return function (f) {
-						return function (g) {
-							return function (h) {
-								return function (i) {
-									return function (j) {
-										return {blocks: a, schemaData: b, errors: c, nodeUrl: d, operations: e, parsedOperations: f, blockOperations: g, showBlock: h, showOperation: i, showBranch: j};
-									};
-								};
-							};
-						};
-					};
-				};
-			};
-		};
-	};
-};
-var _user$project$Main$Flags = function (a) {
-	return {nodeUrl: a};
-};
-var _user$project$Main$Success = function (a) {
-	return {ctor: 'Success', _0: a};
-};
-var _user$project$Main$Failure = function (a) {
-	return {ctor: 'Failure', _0: a};
-};
-var _user$project$Main$Loading = {ctor: 'Loading'};
-var _user$project$Main$NotAsked = {ctor: 'NotAsked'};
-var _user$project$Main$SeedNonceRevelation = F2(
-	function (a, b) {
-		return {ctor: 'SeedNonceRevelation', _0: a, _1: b};
-	});
-var _user$project$Main$Endorsement = F2(
-	function (a, b) {
-		return {ctor: 'Endorsement', _0: a, _1: b};
-	});
-var _user$project$Main$Unknown = function (a) {
-	return {ctor: 'Unknown', _0: a};
-};
-var _user$project$Main$decodeEndorsement = A2(
-	_elm_lang$core$Json_Decode$andThen,
-	function (kind) {
-		var _p10 = kind;
-		switch (_p10) {
-			case 'endorsement':
-				return A3(
-					_elm_lang$core$Json_Decode$map2,
-					_user$project$Main$Endorsement,
-					A2(_elm_lang$core$Json_Decode$field, 'block', _elm_lang$core$Json_Decode$string),
-					A2(_elm_lang$core$Json_Decode$field, 'slot', _elm_lang$core$Json_Decode$int));
-			case 'seed_nonce_revelation':
-				return A3(
-					_elm_lang$core$Json_Decode$map2,
-					_user$project$Main$SeedNonceRevelation,
-					A2(_elm_lang$core$Json_Decode$field, 'level', _elm_lang$core$Json_Decode$int),
-					A2(_elm_lang$core$Json_Decode$field, 'nonce', _elm_lang$core$Json_Decode$string));
-			default:
-				return A2(
-					_elm_lang$core$Json_Decode$map,
-					_user$project$Main$Unknown,
-					_user$project$Main$decodeDebug('bad kind'));
-		}
-	},
-	A2(_elm_lang$core$Json_Decode$field, 'kind', _elm_lang$core$Json_Decode$string));
-var _user$project$Main$decodeSubOperation = _elm_lang$core$Json_Decode$oneOf(
-	{
-		ctor: '::',
-		_0: _user$project$Main$decodeEndorsement,
-		_1: {
-			ctor: '::',
-			_0: A2(_elm_lang$core$Json_Decode$map, _user$project$Main$Unknown, _elm_lang$core$Json_Decode$value),
-			_1: {ctor: '[]'}
-		}
-	});
-var _user$project$Main$decodeParsedOperation = A3(
-	_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-	'signature',
-	_elm_lang$core$Json_Decode$string,
-	A3(
-		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-		'operations',
-		_elm_lang$core$Json_Decode$list(_user$project$Main$decodeSubOperation),
-		A3(
-			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-			'source',
-			_elm_lang$core$Json_Decode$string,
-			A3(
-				_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-				'net_id',
-				_elm_lang$core$Json_Decode$string,
-				A3(
-					_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-					'hash',
-					_elm_lang$core$Json_Decode$string,
-					_elm_lang$core$Json_Decode$succeed(_user$project$Main$ParsedOperation))))));
-var _user$project$Main$decodeParsedOperationResponse = A2(_elm_lang$core$Json_Decode$field, 'ok', _user$project$Main$decodeParsedOperation);
-var _user$project$Main$decodeBlockOperationDetails = A2(
-	_elm_lang$core$Json_Decode$field,
-	'ok',
-	_elm_lang$core$Json_Decode$list(
-		_elm_lang$core$Json_Decode$list(_user$project$Main$decodeParsedOperation)));
-var _user$project$Main$ShowBranch = function (a) {
-	return {ctor: 'ShowBranch', _0: a};
-};
-var _user$project$Main$viewHeads = function (branches) {
+var _user$project$View$viewHeads = function (branches) {
 	var viewBlockSummary = F2(
 		function (i, block) {
 			return A2(
@@ -11997,7 +12607,7 @@ var _user$project$Main$viewHeads = function (branches) {
 								_1: {
 									ctor: '::',
 									_0: _elm_lang$html$Html_Events$onClick(
-										_user$project$Main$ShowBranch(i)),
+										_user$project$Update$ShowBranch(i)),
 									_1: {
 										ctor: '::',
 										_0: _elm_lang$html$Html_Attributes$title(block.hash),
@@ -12008,7 +12618,7 @@ var _user$project$Main$viewHeads = function (branches) {
 							{
 								ctor: '::',
 								_0: _elm_lang$html$Html$text(
-									_user$project$Main$shortHash(block.hash)),
+									_user$project$View$shortHash(block.hash)),
 								_1: {ctor: '[]'}
 							}),
 						_1: {
@@ -12030,7 +12640,7 @@ var _user$project$Main$viewHeads = function (branches) {
 										ctor: '::',
 										_0: _elm_lang$html$Html$text(
 											_elm_lang$core$Basics$toString(
-												_user$project$Main$canonFitness(block.fitness))),
+												_user$project$View$canonFitness(block.fitness))),
 										_1: {ctor: '[]'}
 									}),
 								_1: {
@@ -12053,9 +12663,9 @@ var _user$project$Main$viewHeads = function (branches) {
 		});
 	var viewHead = F2(
 		function (i, blocks) {
-			var _p11 = blocks;
-			if (_p11.ctor === '::') {
-				return A2(viewBlockSummary, i, _p11._0);
+			var _p10 = blocks;
+			if (_p10.ctor === '::') {
+				return A2(viewBlockSummary, i, _p10._0);
 			} else {
 				return _elm_lang$html$Html$text('');
 			}
@@ -12164,393 +12774,36 @@ var _user$project$Main$viewHeads = function (branches) {
 			}
 		});
 };
-var _user$project$Main$ShowOperation = function (a) {
-	return {ctor: 'ShowOperation', _0: a};
-};
-var _user$project$Main$viewBlock = function (block) {
-	var viewProperty = F2(
-		function (label, value) {
-			return A2(
-				_elm_lang$html$Html$div,
-				{
-					ctor: '::',
-					_0: _elm_lang$html$Html_Attributes$class('property'),
-					_1: {ctor: '[]'}
-				},
-				{
-					ctor: '::',
-					_0: A2(
-						_elm_lang$html$Html$div,
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$class('label'),
-							_1: {ctor: '[]'}
-						},
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html$text(label),
-							_1: {ctor: '[]'}
-						}),
-					_1: {
-						ctor: '::',
-						_0: A2(
-							_elm_lang$html$Html$div,
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$class(label),
-								_1: {ctor: '[]'}
-							},
-							{
-								ctor: '::',
-								_0: value,
-								_1: {ctor: '[]'}
-							}),
-						_1: {ctor: '[]'}
-					}
-				});
-		});
-	var viewPropertyString = F2(
-		function (label, value) {
-			return A2(
-				viewProperty,
-				label,
-				_elm_lang$html$Html$text(value));
-		});
-	var viewPropertyList = F2(
-		function (label, values) {
-			return A2(
-				viewProperty,
-				label,
-				_elm_lang$html$Html$text(
-					_elm_lang$core$String$concat(
-						A2(_elm_lang$core$List$intersperse, ', ', values))));
-		});
-	var viewOperations = F2(
-		function (label, values) {
-			var li = function (value) {
-				return A2(
-					_elm_lang$html$Html$li,
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html_Events$onClick(
-							_user$project$Main$ShowOperation(value)),
-						_1: {
-							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$class('operation hash'),
-							_1: {
-								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$title(value),
-								_1: {ctor: '[]'}
-							}
-						}
-					},
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html$text(
-							_user$project$Main$shortHash(value)),
-						_1: {ctor: '[]'}
-					});
-			};
-			return A2(
-				viewProperty,
-				label,
-				A2(
-					_elm_lang$html$Html$ol,
-					{ctor: '[]'},
-					A2(_elm_lang$core$List$map, li, values)));
-		});
-	var viewOperationsList = F2(
-		function (label, outerList) {
-			return A2(
-				_elm_lang$html$Html$div,
-				{ctor: '[]'},
-				A2(
-					_elm_lang$core$List$map,
-					viewOperations(label),
-					outerList));
-		});
+var _user$project$View$viewHeader = function (nodeUrl) {
 	return A2(
 		_elm_lang$html$Html$div,
-		{
-			ctor: '::',
-			_0: _elm_lang$html$Html_Attributes$class('block'),
-			_1: {ctor: '[]'}
-		},
+		{ctor: '[]'},
 		{
 			ctor: '::',
 			_0: A2(
-				_elm_lang$html$Html$h3,
+				_elm_lang$html$Html$h1,
 				{ctor: '[]'},
 				{
 					ctor: '::',
-					_0: _elm_lang$html$Html$text('Block '),
-					_1: {
-						ctor: '::',
-						_0: A2(
-							_elm_lang$html$Html$span,
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$class('hash'),
-								_1: {ctor: '[]'}
-							},
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html$text(
-									_user$project$Main$shortHash(block.hash)),
-								_1: {ctor: '[]'}
-							}),
-						_1: {ctor: '[]'}
-					}
+					_0: _elm_lang$html$Html$text('Tezos client'),
+					_1: {ctor: '[]'}
 				}),
 			_1: {
 				ctor: '::',
 				_0: A2(
 					_elm_lang$html$Html$div,
+					{ctor: '[]'},
 					{
 						ctor: '::',
-						_0: _elm_lang$html$Html_Attributes$class('property-list'),
+						_0: _elm_lang$html$Html$text(
+							A2(_elm_lang$core$Basics_ops['++'], 'Connecting to Tezos RPC server ', nodeUrl)),
 						_1: {ctor: '[]'}
-					},
-					{
-						ctor: '::',
-						_0: A2(viewPropertyString, 'hash', block.hash),
-						_1: {
-							ctor: '::',
-							_0: A2(viewPropertyString, 'predecessor', block.predecessor),
-							_1: {
-								ctor: '::',
-								_0: A2(viewPropertyString, 'timestamp', block.timestamp),
-								_1: {
-									ctor: '::',
-									_0: A2(viewPropertyList, 'fitness', block.fitness),
-									_1: {
-										ctor: '::',
-										_0: A2(viewPropertyString, 'net_id', block.net_id),
-										_1: {
-											ctor: '::',
-											_0: A2(viewOperationsList, 'operations', block.operations),
-											_1: {ctor: '[]'}
-										}
-									}
-								}
-							}
-						}
 					}),
 				_1: {ctor: '[]'}
 			}
 		});
 };
-var _user$project$Main$viewShowBlock = F2(
-	function (blocks, blockhashMaybe) {
-		var _p12 = blockhashMaybe;
-		if (_p12.ctor === 'Just') {
-			var _p14 = _p12._0;
-			var _p13 = A2(_user$project$Main$findBlock, blocks, _p14);
-			if (_p13.ctor === 'Just') {
-				return _user$project$Main$viewBlock(_p13._0);
-			} else {
-				return A2(
-					_elm_lang$html$Html$div,
-					{ctor: '[]'},
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html$text(
-							A2(_elm_lang$core$Basics_ops['++'], 'Cannot find block ', _p14)),
-						_1: {ctor: '[]'}
-					});
-			}
-		} else {
-			return _elm_lang$html$Html$text('');
-		}
-	});
-var _user$project$Main$ShowBlock = function (a) {
-	return {ctor: 'ShowBlock', _0: a};
-};
-var _user$project$Main$viewBlock2 = F2(
-	function (n, block) {
-		return A2(
-			_elm_lang$html$Html$tr,
-			{
-				ctor: '::',
-				_0: _elm_lang$html$Html_Attributes$class('block'),
-				_1: {ctor: '[]'}
-			},
-			{
-				ctor: '::',
-				_0: A2(
-					_elm_lang$html$Html$td,
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html_Attributes$class('hash'),
-						_1: {
-							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$title(block.hash),
-							_1: {
-								ctor: '::',
-								_0: _elm_lang$html$Html_Events$onClick(
-									_user$project$Main$ShowBlock(block.hash)),
-								_1: {ctor: '[]'}
-							}
-						}
-					},
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html$text(
-							_user$project$Main$shortHash(block.hash)),
-						_1: {ctor: '[]'}
-					}),
-				_1: {
-					ctor: '::',
-					_0: A2(
-						_elm_lang$html$Html$td,
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$class('timestamp'),
-							_1: {ctor: '[]'}
-						},
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html$text(block.timestamp),
-							_1: {ctor: '[]'}
-						}),
-					_1: {ctor: '[]'}
-				}
-			});
-	});
-var _user$project$Main$viewBranch = F2(
-	function (n, branch) {
-		var tableHeader = A2(
-			_elm_lang$html$Html$tr,
-			{ctor: '[]'},
-			{
-				ctor: '::',
-				_0: A2(
-					_elm_lang$html$Html$th,
-					{ctor: '[]'},
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html$text('hash'),
-						_1: {ctor: '[]'}
-					}),
-				_1: {
-					ctor: '::',
-					_0: A2(
-						_elm_lang$html$Html$th,
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$class('timestamp'),
-							_1: {ctor: '[]'}
-						},
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html$text('timestamp'),
-							_1: {ctor: '[]'}
-						}),
-					_1: {ctor: '[]'}
-				}
-			});
-		return A2(
-			_elm_lang$html$Html$div,
-			{ctor: '[]'},
-			{
-				ctor: '::',
-				_0: A2(
-					_elm_lang$html$Html$h3,
-					{ctor: '[]'},
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html$text(
-							A2(
-								_elm_lang$core$Basics_ops['++'],
-								'branch ',
-								_elm_lang$core$Basics$toString(n))),
-						_1: {ctor: '[]'}
-					}),
-				_1: {
-					ctor: '::',
-					_0: A2(
-						_elm_lang$html$Html$div,
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$class('branch'),
-							_1: {ctor: '[]'}
-						},
-						{
-							ctor: '::',
-							_0: A2(
-								_elm_lang$html$Html$table,
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$class('blockchain'),
-									_1: {ctor: '[]'}
-								},
-								{
-									ctor: '::',
-									_0: A2(
-										_elm_lang$html$Html$thead,
-										{ctor: '[]'},
-										{
-											ctor: '::',
-											_0: tableHeader,
-											_1: {ctor: '[]'}
-										}),
-									_1: {
-										ctor: '::',
-										_0: A2(
-											_elm_lang$html$Html$tbody,
-											{ctor: '[]'},
-											A2(_elm_lang$core$List$indexedMap, _user$project$Main$viewBlock2, branch)),
-										_1: {ctor: '[]'}
-									}
-								}),
-							_1: {ctor: '[]'}
-						}),
-					_1: {ctor: '[]'}
-				}
-			});
-	});
-var _user$project$Main$viewShowBranch = F2(
-	function (branches, indexMaybe) {
-		var index = A2(_elm_lang$core$Maybe$withDefault, 0, indexMaybe);
-		var branchMaybe = A2(_elm_community$list_extra$List_Extra$getAt, index, branches);
-		return A2(
-			_elm_lang$core$Maybe$withDefault,
-			_elm_lang$html$Html$text(''),
-			A2(
-				_elm_lang$core$Maybe$map,
-				_user$project$Main$viewBranch(index),
-				branchMaybe));
-	});
-var _user$project$Main$viewBlocks = function (branches) {
-	var header = {
-		ctor: '::',
-		_0: A2(
-			_elm_lang$html$Html$h2,
-			{ctor: '[]'},
-			{
-				ctor: '::',
-				_0: _elm_lang$html$Html$text('Block chains'),
-				_1: {ctor: '[]'}
-			}),
-		_1: {ctor: '[]'}
-	};
-	return A2(
-		_elm_lang$html$Html$div,
-		{
-			ctor: '::',
-			_0: _elm_lang$html$Html_Attributes$class('branches'),
-			_1: {ctor: '[]'}
-		},
-		A2(
-			_elm_lang$core$Basics_ops['++'],
-			header,
-			A2(_elm_lang$core$List$indexedMap, _user$project$Main$viewBranch, branches)));
-};
-var _user$project$Main$SchemaMsg = F2(
-	function (a, b) {
-		return {ctor: 'SchemaMsg', _0: a, _1: b};
-	});
-var _user$project$Main$viewSchemas = function (schemas) {
+var _user$project$View$viewSchemas = function (schemas) {
 	var viewSchema = function (name) {
 		return A2(
 			_elm_lang$core$Maybe$withDefault,
@@ -12560,7 +12813,7 @@ var _user$project$Main$viewSchemas = function (schemas) {
 				function (data) {
 					return A2(
 						_elm_lang$html$Html$map,
-						_user$project$Main$SchemaMsg(name),
+						_user$project$Update$SchemaMsg(name),
 						A2(_user$project$Schema$viewSchemaDataTop, name, data));
 				},
 				A2(_elm_lang$core$Dict$get, name, schemas)));
@@ -12571,34 +12824,34 @@ var _user$project$Main$viewSchemas = function (schemas) {
 		{ctor: '[]'},
 		A2(_elm_lang$core$List$map, viewSchema, names));
 };
-var _user$project$Main$view = function (model) {
+var _user$project$View$view = function (model) {
 	return A2(
 		_elm_lang$html$Html$div,
 		{ctor: '[]'},
 		{
 			ctor: '::',
-			_0: _user$project$Main$viewHeader(model.nodeUrl),
+			_0: _user$project$View$viewHeader(model.nodeUrl),
 			_1: {
 				ctor: '::',
-				_0: A2(_user$project$Main$viewError, model.nodeUrl, model.errors),
+				_0: A2(_user$project$View$viewError, model.nodeUrl, model.errors),
 				_1: {
 					ctor: '::',
-					_0: _user$project$Main$viewHeads(model.blocks),
+					_0: _user$project$View$viewHeads(model.blocks),
 					_1: {
 						ctor: '::',
-						_0: A2(_user$project$Main$viewShowBranch, model.blocks, model.showBranch),
+						_0: A2(_user$project$View$viewShowBranch, model.blocks, model.showBranch),
 						_1: {
 							ctor: '::',
-							_0: A2(_user$project$Main$viewShowBlock, model.blocks, model.showBlock),
+							_0: A2(_user$project$View$viewShowBlock, model.blocks, model.showBlock),
 							_1: {
 								ctor: '::',
-								_0: A2(_user$project$Main$viewShowOperation, model.operations, model.showOperation),
+								_0: A2(_user$project$View$viewShowOperation, model.operations, model.showOperation),
 								_1: {
 									ctor: '::',
-									_0: A2(_user$project$Main$viewParse, model.parsedOperations, model.showOperation),
+									_0: A2(_user$project$View$viewParse, model.parsedOperations, model.showOperation),
 									_1: {
 										ctor: '::',
-										_0: _user$project$Main$viewSchemas(model.schemaData),
+										_0: _user$project$View$viewSchemas(model.schemaData),
 										_1: {ctor: '[]'}
 									}
 								}
@@ -12609,262 +12862,9 @@ var _user$project$Main$view = function (model) {
 			}
 		});
 };
-var _user$project$Main$LoadParsedOperation = F2(
-	function (a, b) {
-		return {ctor: 'LoadParsedOperation', _0: a, _1: b};
-	});
-var _user$project$Main$getParseOperationCommand = F2(
-	function (nodeUrl, operation) {
-		var body = _elm_lang$http$Http$jsonBody(
-			_elm_lang$core$Json_Encode$object(
-				{
-					ctor: '::',
-					_0: {
-						ctor: '_Tuple2',
-						_0: 'data',
-						_1: _elm_lang$core$Json_Encode$string(operation.data)
-					},
-					_1: {
-						ctor: '::',
-						_0: {
-							ctor: '_Tuple2',
-							_0: 'net_id',
-							_1: _elm_lang$core$Json_Encode$string(operation.netID)
-						},
-						_1: {ctor: '[]'}
-					}
-				}));
-		var url = A2(_elm_lang$core$Basics_ops['++'], nodeUrl, '/blocks/head/proto/helpers/parse/operation');
-		return A2(
-			_elm_lang$http$Http$send,
-			_user$project$Main$LoadParsedOperation(operation.hash),
-			A3(_elm_lang$http$Http$post, url, body, _user$project$Main$decodeParsedOperation));
-	});
-var _user$project$Main$LoadBlockOperations = F2(
-	function (a, b) {
-		return {ctor: 'LoadBlockOperations', _0: a, _1: b};
-	});
-var _user$project$Main$getBlockOperationDetails = F2(
-	function (nodeUrl, blockHash) {
-		var url = A2(
-			_elm_lang$core$Basics_ops['++'],
-			nodeUrl,
-			A2(
-				_elm_lang$core$Basics_ops['++'],
-				'/blocks/',
-				A2(_elm_lang$core$Basics_ops['++'], blockHash, '/proto/operations')));
-		return A2(
-			_elm_lang$http$Http$send,
-			_user$project$Main$LoadBlockOperations(blockHash),
-			A3(_elm_lang$http$Http$post, url, _user$project$Main$emptyJsonBody, _user$project$Main$decodeBlockOperationDetails));
-	});
-var _user$project$Main$LoadOperation = function (a) {
-	return {ctor: 'LoadOperation', _0: a};
-};
-var _user$project$Main$getOperationIfNew = F3(
-	function (nodeUrl, operations, operationId) {
-		return A2(_elm_lang$core$Dict$member, operationId, operations) ? _elm_lang$core$Platform_Cmd$none : A2(
-			_elm_lang$http$Http$send,
-			_user$project$Main$LoadOperation,
-			A2(_user$project$Main$getOperation, nodeUrl, operationId));
-	});
-var _user$project$Main$update = F2(
-	function (msg, model) {
-		var _p15 = A2(_elm_lang$core$Debug$log, 'msg', msg);
-		switch (_p15.ctor) {
-			case 'LoadBlocks':
-				var _p16 = _p15._0;
-				if (_p16.ctor === 'Ok') {
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Native_Utils.update(
-							model,
-							{blocks: _p16._0}),
-						_1: _elm_lang$core$Platform_Cmd$none
-					};
-				} else {
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Native_Utils.update(
-							model,
-							{
-								errors: {ctor: '::', _0: _p16._0, _1: model.errors}
-							}),
-						_1: _elm_lang$core$Platform_Cmd$none
-					};
-				}
-			case 'LoadSchema':
-				var _p17 = _p15._1;
-				if (_p17.ctor === 'Ok') {
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Native_Utils.update(
-							model,
-							{
-								schemaData: A3(
-									_elm_lang$core$Dict$insert,
-									_p15._0,
-									_user$project$Schema$collapseTrees(_p17._0),
-									model.schemaData)
-							}),
-						_1: _elm_lang$core$Platform_Cmd$none
-					};
-				} else {
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Native_Utils.update(
-							model,
-							{
-								errors: {ctor: '::', _0: _p17._0, _1: model.errors}
-							}),
-						_1: _elm_lang$core$Platform_Cmd$none
-					};
-				}
-			case 'SchemaMsg':
-				var _p20 = _p15._0;
-				var newSchemaMaybe = A2(
-					_elm_lang$core$Maybe$map,
-					_user$project$Schema$update(_p15._1),
-					A2(_elm_lang$core$Dict$get, _p20, model.schemaData));
-				var _p18 = newSchemaMaybe;
-				if (_p18.ctor === 'Just') {
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Native_Utils.update(
-							model,
-							{
-								schemaData: A3(_elm_lang$core$Dict$insert, _p20, _p18._0, model.schemaData)
-							}),
-						_1: _elm_lang$core$Platform_Cmd$none
-					};
-				} else {
-					var _p19 = A2(_elm_lang$core$Debug$log, 'Failed to find schema', _p20);
-					return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
-				}
-			case 'LoadOperation':
-				var _p21 = _p15._0;
-				if (_p21.ctor === 'Ok') {
-					var _p22 = _p21._0;
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Native_Utils.update(
-							model,
-							{
-								operations: A3(_elm_lang$core$Dict$insert, _p22.hash, _p22, model.operations)
-							}),
-						_1: _elm_lang$core$Platform_Cmd$none
-					};
-				} else {
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Native_Utils.update(
-							model,
-							{
-								errors: {ctor: '::', _0: _p21._0, _1: model.errors}
-							}),
-						_1: _elm_lang$core$Platform_Cmd$none
-					};
-				}
-			case 'LoadParsedOperation':
-				var _p23 = _p15._1;
-				if (_p23.ctor === 'Ok') {
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Native_Utils.update(
-							model,
-							{
-								parsedOperations: A3(_elm_lang$core$Dict$insert, _p15._0, _p23._0, model.parsedOperations)
-							}),
-						_1: _elm_lang$core$Platform_Cmd$none
-					};
-				} else {
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Native_Utils.update(
-							model,
-							{
-								errors: {ctor: '::', _0: _p23._0, _1: model.errors}
-							}),
-						_1: _elm_lang$core$Platform_Cmd$none
-					};
-				}
-			case 'LoadBlockOperations':
-				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
-			case 'ShowBlock':
-				var _p24 = _p15._0;
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{
-							showBlock: _elm_lang$core$Maybe$Just(_p24)
-						}),
-					_1: A2(_user$project$Main$getBlockOperationDetails, model.nodeUrl, _p24)
-				};
-			case 'ShowOperation':
-				var _p25 = _p15._0;
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{
-							showOperation: _elm_lang$core$Maybe$Just(_p25)
-						}),
-					_1: A3(_user$project$Main$getOperationIfNew, model.nodeUrl, model.operations, _p25)
-				};
-			default:
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{
-							showBranch: _elm_lang$core$Maybe$Just(_p15._0)
-						}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-		}
-	});
-var _user$project$Main$getBlockOperationInfo = F2(
-	function (model, blockhash) {
-		return A2(
-			_elm_lang$core$Maybe$withDefault,
-			_elm_lang$core$Platform_Cmd$none,
-			A2(
-				_elm_lang$core$Maybe$map,
-				_elm_lang$core$Platform_Cmd$batch,
-				A2(
-					_elm_lang$core$Maybe$map,
-					_elm_lang$core$List$map(
-						A2(_user$project$Main$getOperationIfNew, model.nodeUrl, model.operations)),
-					A2(
-						_elm_lang$core$Maybe$map,
-						_user$project$Main$getBlockOperationIDs,
-						A2(_user$project$Main$findBlock, model.blocks, blockhash)))));
-	});
-var _user$project$Main$getBlocksOperationsDetail = F2(
-	function (model, blockChains) {
-		var doChain = function (blocks) {
-			return _elm_lang$core$Platform_Cmd$batch(
-				A2(
-					_elm_lang$core$List$map,
-					function (_p26) {
-						return _elm_lang$core$Platform_Cmd$batch(
-							A2(
-								_elm_lang$core$List$map,
-								A2(_user$project$Main$getOperationIfNew, model.nodeUrl, model.operations),
-								_user$project$Main$getBlockOperationIDs(_p26)));
-					},
-					blocks));
-		};
-		return _elm_lang$core$Platform_Cmd$batch(
-			A2(_elm_lang$core$List$map, doChain, blockChains));
-	});
-var _user$project$Main$LoadSchema = F2(
-	function (a, b) {
-		return {ctor: 'LoadSchema', _0: a, _1: b};
-	});
-var _user$project$Main$LoadBlocks = function (a) {
-	return {ctor: 'LoadBlocks', _0: a};
+
+var _user$project$Main$subscriptions = function (model) {
+	return _elm_lang$core$Platform_Sub$none;
 };
 var _user$project$Main$init = function (flags) {
 	var schemaQuery2 = '/describe/blocks/head/proto';
@@ -12889,14 +12889,28 @@ var _user$project$Main$init = function (flags) {
 				ctor: '::',
 				_0: A2(
 					_elm_lang$http$Http$send,
-					_user$project$Main$LoadBlocks,
-					_user$project$Main$getBlocks(model.nodeUrl)),
-				_1: {ctor: '[]'}
+					_user$project$Update$LoadBlocks,
+					_user$project$Update$getBlocks(model.nodeUrl)),
+				_1: {
+					ctor: '::',
+					_0: A2(
+						_elm_lang$http$Http$send,
+						_user$project$Update$LoadSchema(schemaQuery1),
+						A2(_user$project$Update$getSchema, model.nodeUrl, schemaQuery1)),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_elm_lang$http$Http$send,
+							_user$project$Update$LoadSchema(schemaQuery2),
+							A2(_user$project$Update$getSchema, model.nodeUrl, schemaQuery2)),
+						_1: {ctor: '[]'}
+					}
+				}
 			})
 	};
 };
 var _user$project$Main$main = _elm_lang$html$Html$programWithFlags(
-	{init: _user$project$Main$init, update: _user$project$Main$update, view: _user$project$Main$view, subscriptions: _user$project$Main$subscriptions})(
+	{init: _user$project$Main$init, update: _user$project$Update$update, view: _user$project$View$view, subscriptions: _user$project$Main$subscriptions})(
 	A2(
 		_elm_lang$core$Json_Decode$andThen,
 		function (nodeUrl) {
@@ -12904,6 +12918,9 @@ var _user$project$Main$main = _elm_lang$html$Html$programWithFlags(
 				{nodeUrl: nodeUrl});
 		},
 		A2(_elm_lang$core$Json_Decode$field, 'nodeUrl', _elm_lang$core$Json_Decode$string)));
+var _user$project$Main$Flags = function (a) {
+	return {nodeUrl: a};
+};
 
 var Elm = {};
 Elm['Main'] = Elm['Main'] || {};

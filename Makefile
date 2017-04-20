@@ -1,6 +1,6 @@
 build: elm.js
 
-elm.js: Main.elm Schema.elm
+elm.js: Main.elm Model.elm Schema.elm Update.elm View.elm
 	elm make Main.elm --output=$@
 
 ###
