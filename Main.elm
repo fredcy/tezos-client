@@ -33,7 +33,7 @@ init flags =
             , parsedOperations = Dict.empty
             , showBlock = Nothing
             , showOperation = Nothing
-            , showBranch = Nothing
+            , showBranch = Just 0
             , blockOperations = Dict.empty
             }
 
@@ -46,8 +46,8 @@ init flags =
         ( model
         , Cmd.batch
             [ Http.send LoadBlocks (getBlocks model.nodeUrl)
-            , Http.send (LoadSchema schemaQuery1) (getSchema model.nodeUrl schemaQuery1)
-            , Http.send (LoadSchema schemaQuery2) (getSchema model.nodeUrl schemaQuery2)
+              --, Http.send (LoadSchema schemaQuery1) (getSchema model.nodeUrl schemaQuery1)
+              --, Http.send (LoadSchema schemaQuery2) (getSchema model.nodeUrl schemaQuery2)
             ]
         )
 

@@ -17,8 +17,8 @@ view model =
     H.div []
         [ viewHeader model.nodeUrl
         , viewError model.nodeUrl model.errors
-        , viewHeads model.blocks
-        , viewShowBranch model.blocks model.showBranch
+        , viewHeads model.blocks model.showBranch
+        , viewShowBranch model.blocks model.showBranch model.showBlock
         , viewShowBlock model.blocks model.showBlock
         , viewShowOperation model.operations model.showOperation
         , viewParse model.parsedOperations model.showOperation
@@ -54,47 +54,53 @@ canonFitness strings =
         |> List.dropWhile ((==) 0)
 
 
-viewHeads : List (List Block) -> Html Msg
-viewHeads branches =
+viewHeads : List (List Block) -> Maybe Int -> Html Msg
+viewHeads branches showBranch =
     let
         header =
             H.tr []
-                [ H.th [] [ H.text "index" ]
-                , H.th [] [ H.text "hash" ]
-                , H.th [] [ H.text "timestamp" ]
-                , H.th [] [ H.text "fitness" ]
-                , H.th [] [ H.text "level" ]
+                [ H.th [ HA.class "index" ] [ H.text "index" ]
+                , H.th [ HA.class "hash" ] [ H.text "hash" ]
+                , H.th [ HA.class "timestamp" ] [ H.text "timestamp" ]
+                , H.th [ HA.class "fitness" ] [ H.text "fitness" ]
+                , H.th [ HA.class "level" ] [ H.text "level" ]
                 ]
 
-        viewBlockSummary : Int -> Block -> Html Msg
-        viewBlockSummary i block =
-            H.tr [ HA.class "head" ]
-                [ H.td [] [ H.text (toString i) ]
+        viewBlockSummary : Int -> Block -> Bool -> Html Msg
+        viewBlockSummary i block beingShown =
+            H.tr [ HA.classList [ ( "selected", beingShown ) ] ]
+                [ H.td [ HA.class "index" ] [ H.text (toString i) ]
                 , H.td
                     [ HA.class "hash"
                     , HE.onClick (ShowBranch i)
                     , HA.title block.hash
                     ]
                     [ H.text (shortHash block.hash) ]
-                , H.td [] [ H.text block.timestamp ]
-                , H.td [] [ H.text (toString (canonFitness block.fitness)) ]
-                , H.td [] [ H.text (toString block.level) ]
+                , H.td [ HA.class "timestamp" ] [ H.text block.timestamp ]
+                , H.td [ HA.class "fitness" ] [ H.text (toString (canonFitness block.fitness)) ]
+                , H.td [ HA.class "level" ] [ H.text (toString block.level) ]
                 ]
+
+        isBeingShown : Maybe Int -> Int -> Bool
+        isBeingShown showBranch i =
+            Maybe.map ((==) i) showBranch |> Maybe.withDefault False
 
         viewHead : Int -> List Block -> Html Msg
         viewHead i blocks =
             case blocks of
                 head :: _ ->
-                    viewBlockSummary i head
+                    viewBlockSummary i head (isBeingShown showBranch i)
 
                 _ ->
                     H.text ""
     in
         H.div []
             [ H.h2 [] [ H.text "Blockchain heads" ]
-            , H.table [ HA.class "heads" ]
-                [ H.thead [] [ header ]
-                , H.tbody [] (List.indexedMap viewHead branches)
+            , H.div [ HA.class "scrollable2 heads" ]
+                [ H.table [ HA.class "heads" ]
+                    [ H.thead [] [ header ]
+                    , H.tbody [] (List.indexedMap viewHead branches)
+                    ]
                 ]
             ]
 
@@ -113,8 +119,8 @@ findBranchByHead branches headid =
         List.find match branches
 
 
-viewShowBranch : List (List Block) -> Maybe Int -> Html Msg
-viewShowBranch branches indexMaybe =
+viewShowBranch : List (List Block) -> Maybe Int -> Maybe BlockID -> Html Msg
+viewShowBranch branches indexMaybe blockhashMaybe =
     let
         index =
             Maybe.withDefault 0 indexMaybe
@@ -122,10 +128,11 @@ viewShowBranch branches indexMaybe =
         branchMaybe =
             List.getAt index branches
     in
-        Maybe.map (viewBranch index) branchMaybe |> Maybe.withDefault (H.text "")
+        Maybe.map (viewBranch index blockhashMaybe) branchMaybe |> Maybe.withDefault (H.text "")
 
 
-viewBranch n branch =
+viewBranch : Int -> Maybe BlockID -> List Block -> Html Msg
+viewBranch n blockhashMaybe branch =
     let
         tableHeader =
             H.tr []
@@ -135,18 +142,23 @@ viewBranch n branch =
     in
         H.div []
             [ H.h3 [] [ H.text ("branch " ++ toString n) ]
-            , H.div [ HA.class "branch" ]
+            , H.div [ HA.class "branch scrollable" ]
                 [ H.table [ HA.class "blockchain" ]
                     [ H.thead [] [ tableHeader ]
-                    , H.tbody [] (List.indexedMap viewBlock2 branch)
+                    , H.tbody [] (List.indexedMap (viewBlock2 blockhashMaybe) branch)
                     ]
                 ]
             ]
 
 
-viewBlock2 : Int -> Block -> Html Msg
-viewBlock2 n block =
-    H.tr [ HA.class "block" ]
+viewBlock2 : Maybe BlockID -> Int -> Block -> Html Msg
+viewBlock2 blockhashMaybe n block =
+    H.tr
+        [ HA.classList
+            [ ( "block", True )
+            , ( "selected", Maybe.map ((==) block.hash) blockhashMaybe |> Maybe.withDefault False )
+            ]
+        ]
         [ H.td
             [ HA.class "hash"
             , HA.title block.hash
@@ -155,15 +167,6 @@ viewBlock2 n block =
             [ H.text (shortHash block.hash) ]
         , H.td [ HA.class "timestamp" ] [ H.text block.timestamp ]
         ]
-
-
-viewBlocks : List (List Block) -> Html Msg
-viewBlocks branches =
-    let
-        header =
-            [ H.h2 [] [ H.text "Block chains" ] ]
-    in
-        H.div [ HA.class "branches" ] (header ++ List.indexedMap viewBranch branches)
 
 
 {-| View details of a single block.

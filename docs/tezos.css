@@ -34,9 +34,11 @@ li.operation:hover {
     text-decoration: underline;
 }
 
+/*
 TR.head TD {
     padding: .5em;
 }
+*/
 
 .operation-data {
     word-wrap: break-word;
@@ -97,39 +99,57 @@ TR.head TD {
     color: #CCC;
 }
 
-/* scrollable branch table */
+/* scrollable table */
 
-.branch {
+.scrollable2.heads {
+    height: 300px;
+    width: 38em;
+}
+
+.scrollable.branch {
     height: 300px;
     width: 25em;
 }
 
-.branch table {
+.scrollable table {
     display: flex;
     flex-flow: column;
     height: 100%;
     width: 100%;
 } 
 
-.branch table thead {
+.scrollable table thead {
     /* flex: 0 0 auto; */
     width: calc(100% - 1em); /* room for scrollbar */
 }
 
-.branch table tbody {
+.scrollable table tbody {
     /* flex: 1 1 auto; */
     display: block;
     overflow-y: scroll;
 }
 
-.branch tbody tr {
+.scrollable tbody tr {
     width: 100%;
 }
 
-.branch thead, .branch tbody {
+.scrollable thead, .scrollable tbody {
     display: table;
     table-layout: fixed;
 }
+
+
+div.scrollable2 {
+    display: block;
+    height: 250px;
+    overflow-y: auto;
+}
+
+
+.heads td, .heads th {
+    padding: .5em 1em;
+}
+
 
 .branch td.operations {
     text-align: right;
@@ -156,6 +176,12 @@ table.heads td.hash:hover {
     text-decoration: underline;
 }
 
-.hash, .predecessor {
+td.hash, div.hash,
+td.predecessor, div.predecessor {
     font-family: Andale Mono, Courier New, monospace;
+}
+
+
+tr.selected {
+    background-color: yellow;
 }
