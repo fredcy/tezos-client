@@ -17,9 +17,9 @@ view model =
     H.div []
         [ viewHeader model.nodeUrl
         , viewError model.nodeUrl model.errors
-        , viewHeads model.blocks model.showBranch
-        , viewShowBranch model.blocks model.showBranch model.showBlock
-        , viewShowBlock model.blocks model.showBlock
+        , viewHeads model
+        , viewShowBranch model
+        , viewShowBlock model.blockChains model.showBlock
         , viewShowOperation model.operations model.showOperation
         , viewParse model.parsedOperations model.showOperation
         , viewSchemas model.schemaData
@@ -55,9 +55,28 @@ canonFitness strings =
         |> List.dropWhile ((==) 0)
 
 
-viewHeads : List (List Block) -> Maybe Int -> Html Msg
-viewHeads branches showBranch =
+type BlockStatus
+    = BlockFound Block
+    | BlockNotFound BlockID
+
+
+findBlockStatus : Dict BlockID Block -> BlockID -> BlockStatus
+findBlockStatus blocks blockhash =
+    case Dict.get blockhash blocks of
+        Just block ->
+            BlockFound block
+
+        Nothing ->
+            BlockNotFound blockhash
+
+
+viewHeads : Model -> Html Msg
+viewHeads model =
     let
+        heads : List BlockStatus
+        heads =
+            List.map (findBlockStatus model.blocks) model.heads
+
         header =
             H.tr []
                 [ H.th [ HA.class "index" ] [ H.text "index" ]
@@ -73,7 +92,7 @@ viewHeads branches showBranch =
                 [ H.td [ HA.class "index" ] [ H.text (toString i) ]
                 , H.td
                     [ HA.class "hash"
-                    , HE.onClick (ShowBranch i)
+                    , HE.onClick (ShowBranch block.hash)
                     , HA.title block.hash
                     ]
                     [ H.text (shortHash block.hash) ]
@@ -82,15 +101,15 @@ viewHeads branches showBranch =
                 , H.td [ HA.class "level" ] [ H.text (toString block.level) ]
                 ]
 
-        isBeingShown : Maybe Int -> Int -> Bool
-        isBeingShown showBranch i =
-            Maybe.map ((==) i) showBranch |> Maybe.withDefault False
+        isBeingShown : Maybe BlockID -> BlockID -> Bool
+        isBeingShown showBranch id =
+            Maybe.map ((==) id) showBranch |> Maybe.withDefault False
 
-        viewHead : Int -> List Block -> Html Msg
-        viewHead i blocks =
-            case blocks of
-                head :: _ ->
-                    viewBlockSummary i head (isBeingShown showBranch i)
+        viewHead : Int -> BlockStatus -> Html Msg
+        viewHead i blockStatus =
+            case blockStatus of
+                BlockFound block ->
+                    viewBlockSummary i block (isBeingShown model.showBranch block.hash)
 
                 _ ->
                     H.text ""
@@ -100,7 +119,7 @@ viewHeads branches showBranch =
             , H.div [ HA.class "scrollable2 heads" ]
                 [ H.table [ HA.class "heads" ]
                     [ H.thead [] [ header ]
-                    , H.tbody [] (List.indexedMap viewHead branches)
+                    , H.tbody [] (List.indexedMap viewHead heads)
                     ]
                 ]
             ]
@@ -120,20 +139,30 @@ findBranchByHead branches headid =
         List.find match branches
 
 
-viewShowBranch : List (List Block) -> Maybe Int -> Maybe BlockID -> Html Msg
-viewShowBranch branches indexMaybe blockhashMaybe =
+getBranchList : Dict BlockID Block -> BlockID -> List Block
+getBranchList blocks blockhash =
     let
-        index =
-            Maybe.withDefault 0 indexMaybe
-
-        branchMaybe =
-            List.getAt index branches
+        helper hash blockList =
+            Dict.get hash blocks
+                |> Maybe.map (\block -> helper block.predecessor (block :: blockList))
+                |> Maybe.withDefault blockList
     in
-        Maybe.map (viewBranch index blockhashMaybe) branchMaybe |> Maybe.withDefault (H.text "")
+        helper blockhash [] |> List.reverse
 
 
-viewBranch : Int -> Maybe BlockID -> List Block -> Html Msg
-viewBranch n blockhashMaybe branch =
+viewShowBranch : Model -> Html Msg
+viewShowBranch model =
+    case model.showBranch of
+        Just hash ->
+            getBranchList model.blocks hash
+                 |> viewBranch Nothing
+
+        Nothing ->
+            H.h4 [] [ H.text "no branch selected" ]
+
+
+viewBranch : Maybe BlockID -> List Block -> Html Msg
+viewBranch blockhashMaybe branch =
     let
         tableHeader =
             H.tr []
@@ -142,7 +171,7 @@ viewBranch n blockhashMaybe branch =
                 ]
     in
         H.div []
-            [ H.h3 [] [ H.text ("branch " ++ toString n) ]
+            [ H.h3 [] [ H.text ("branch") ]
             , H.div [ HA.class "branch scrollable" ]
                 [ H.table [ HA.class "blockchain" ]
                     [ H.thead [] [ tableHeader ]
@@ -224,10 +253,10 @@ viewBlock block =
 
 
 viewShowBlock : List (List Block) -> Maybe BlockID -> Html Msg
-viewShowBlock blocks blockhashMaybe =
+viewShowBlock blockChains blockhashMaybe =
     case blockhashMaybe of
         Just blockhash ->
-            case findBlock blocks blockhash of
+            case findBlock blockChains blockhash of
                 Just block ->
                     viewBlock block
 

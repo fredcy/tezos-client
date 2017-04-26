@@ -23,7 +23,7 @@ type Msg
     | SchemaMsg SchemaName Schema.Msg
     | ShowBlock BlockID
     | ShowOperation OperationID
-    | ShowBranch Int
+    | ShowBranch BlockID
     | LoadHeads (Result Http.Error BlocksData)
 
 
@@ -32,11 +32,8 @@ update msg model =
     case msg |> Debug.log "msg" of
         LoadBlocks blocksMaybe ->
             case blocksMaybe of
-                Ok blocks ->
-                    ( { model | blocks = blocks }
-                      --, getBlocksOperationsDetail model blocks
-                    , Cmd.none
-                    )
+                Ok blockChains ->
+                    loadBlocks model blockChains
 
                 Err error ->
                     ( { model | errors = error :: model.errors }, Cmd.none )
@@ -115,9 +112,9 @@ update msg model =
               -- get details of operations, anticipating user request to view those details
             )
 
-        ShowBranch index ->
-            ( { model | showBranch = Just index }
-            , getBranch model.nodeUrl model.blocks index
+        ShowBranch hash ->
+            ( { model | showBranch = Just hash }
+            , getBranch model hash
             )
 
 
@@ -162,19 +159,53 @@ getHeads nodeUrl =
         Http.post url body decodeBlocks |> Http.send LoadHeads
 
 
+addBlock : Block -> Dict BlockID Block -> Dict BlockID Block
+addBlock block blocks =
+    Dict.insert block.hash block blocks
+
+
+addChainBlocks : List Block -> Dict BlockID Block -> Dict BlockID Block
+addChainBlocks chain blocks =
+    List.foldl addBlock blocks chain
+
+
 loadHeads : Model -> BlocksData -> ( Model, Cmd Msg )
 loadHeads model headsData =
     let
+        heads : List BlockID
         heads =
             List.map List.head headsData
                 |> List.filterMap identity
                 |> List.map .hash
+
+        blocks : Dict BlockID Block
+        blocks =
+            List.foldl addChainBlocks model.blocks headsData
     in
-        ( { model | heads = heads }, Cmd.none )
+        ( { model | heads = heads, blocks = blocks }, Cmd.none )
 
 
-getBranch : URL -> List (List Block) -> Int -> Cmd Msg
-getBranch nodeUrl branches branchIndex =
+loadBlocks : Model -> BlocksData -> ( Model, Cmd Msg )
+loadBlocks model blocksData =
+    let
+        blocks : Dict BlockID Block
+        blocks =
+            List.foldl addChainBlocks model.blocks blocksData
+    in
+        ( { model | blockChains = blocksData, blocks = blocks }
+          --, getBlocksOperationsDetail model blockChains
+        , Cmd.none
+        )
+
+
+getBranch : Model -> BlockID -> Cmd Msg
+getBranch model blockhash =
+    getChainStartingAt model.nodeUrl 20 blockhash
+        |> Http.send LoadBlocks
+
+
+getBranchXXX : URL -> List (List Block) -> Int -> Cmd Msg
+getBranchXXX nodeUrl branches branchIndex =
     List.getAt branchIndex branches
         |> Maybe.andThen List.head
         |> Maybe.map .hash
@@ -401,7 +432,7 @@ getBlockOperationIDs block =
 
 getBlockOperationInfo : Model -> BlockID -> Cmd Msg
 getBlockOperationInfo model blockhash =
-    findBlock model.blocks blockhash
+    findBlock model.blockChains blockhash
         |> Maybe.map getBlockOperationIDs
         |> Maybe.map (List.map (getOperationIfNew model.nodeUrl model.operations))
         |> Maybe.map Cmd.batch

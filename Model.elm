@@ -102,8 +102,9 @@ type alias SchemaName =
 
 
 type alias Model =
-    { blocks : List (List Block)
+    { blockChains : List (List Block)
     , heads : List BlockID
+    , blocks : Dict BlockID Block
     , schemaData : Dict SchemaName Schema.SchemaData
     , errors : List Http.Error
     , nodeUrl : String
@@ -112,7 +113,7 @@ type alias Model =
     , blockOperations : Dict BlockID (List ParsedOperation)
     , showBlock : Maybe BlockID
     , showOperation : Maybe OperationID
-    , showBranch : Maybe Int
+    , showBranch : Maybe BlockID
     }
 
 
@@ -121,8 +122,8 @@ type alias BlockOperations =
 
 
 findInChain : List Block -> BlockID -> Maybe Block
-findInChain blocks hash =
-    List.find (\block -> block.hash == hash) blocks
+findInChain blockChains hash =
+    List.find (\block -> block.hash == hash) blockChains
 
 
 findBlock : List (List Block) -> BlockID -> Maybe Block

@@ -11159,13 +11159,13 @@ var _user$project$Model$findOperation = F2(
 			operations);
 	});
 var _user$project$Model$findInChain = F2(
-	function (blocks, hash) {
+	function (blockChains, hash) {
 		return A2(
 			_elm_community$list_extra$List_Extra$find,
 			function (block) {
 				return _elm_lang$core$Native_Utils.eq(block.hash, hash);
 			},
-			blocks);
+			blockChains);
 	});
 var _user$project$Model$findBlock = F2(
 	function (blockchains, hash) {
@@ -11211,7 +11211,9 @@ var _user$project$Model$Model = function (a) {
 								return function (i) {
 									return function (j) {
 										return function (k) {
-											return {blocks: a, heads: b, schemaData: c, errors: d, nodeUrl: e, operations: f, parsedOperations: g, blockOperations: h, showBlock: i, showOperation: j, showBranch: k};
+											return function (l) {
+												return {blockChains: a, heads: b, blocks: c, schemaData: d, errors: e, nodeUrl: f, operations: g, parsedOperations: h, blockOperations: i, showBlock: j, showOperation: k, showBranch: l};
+											};
 										};
 									};
 								};
@@ -11523,8 +11525,17 @@ var _user$project$Update$getChainStartingAt = F3(
 				}));
 		return A3(_elm_lang$http$Http$post, url, body, _user$project$Update$decodeBlocks);
 	});
+var _user$project$Update$addBlock = F2(
+	function (block, blocks) {
+		return A3(_elm_lang$core$Dict$insert, block.hash, block, blocks);
+	});
+var _user$project$Update$addChainBlocks = F2(
+	function (chain, blocks) {
+		return A3(_elm_lang$core$List$foldl, _user$project$Update$addBlock, blocks, chain);
+	});
 var _user$project$Update$loadHeads = F2(
 	function (model, headsData) {
+		var blocks = A3(_elm_lang$core$List$foldl, _user$project$Update$addChainBlocks, model.blocks, headsData);
 		var heads = A2(
 			_elm_lang$core$List$map,
 			function (_) {
@@ -11538,7 +11549,18 @@ var _user$project$Update$loadHeads = F2(
 			ctor: '_Tuple2',
 			_0: _elm_lang$core$Native_Utils.update(
 				model,
-				{heads: heads}),
+				{heads: heads, blocks: blocks}),
+			_1: _elm_lang$core$Platform_Cmd$none
+		};
+	});
+var _user$project$Update$loadBlocks = F2(
+	function (model, blocksData) {
+		var blocks = A3(_elm_lang$core$List$foldl, _user$project$Update$addChainBlocks, model.blocks, blocksData);
+		return {
+			ctor: '_Tuple2',
+			_0: _elm_lang$core$Native_Utils.update(
+				model,
+				{blockChains: blocksData, blocks: blocks}),
 			_1: _elm_lang$core$Platform_Cmd$none
 		};
 	});
@@ -11677,7 +11699,7 @@ var _user$project$Update$getBlockOperationInfo = F2(
 					A2(
 						_elm_lang$core$Maybe$map,
 						_user$project$Update$getBlockOperationIDs,
-						A2(_user$project$Model$findBlock, model.blocks, blockhash)))));
+						A2(_user$project$Model$findBlock, model.blockChains, blockhash)))));
 	});
 var _user$project$Update$getBlocksOperationsDetail = F2(
 	function (model, blockChains) {
@@ -11704,26 +11726,12 @@ var _user$project$Update$LoadSchema = F2(
 var _user$project$Update$LoadBlocks = function (a) {
 	return {ctor: 'LoadBlocks', _0: a};
 };
-var _user$project$Update$getBranch = F3(
-	function (nodeUrl, branches, branchIndex) {
+var _user$project$Update$getBranch = F2(
+	function (model, blockhash) {
 		return A2(
-			_elm_lang$core$Maybe$withDefault,
-			_elm_lang$core$Platform_Cmd$none,
-			A2(
-				_elm_lang$core$Maybe$map,
-				_elm_lang$http$Http$send(_user$project$Update$LoadBlocks),
-				A2(
-					_elm_lang$core$Maybe$map,
-					A2(_user$project$Update$getChainStartingAt, nodeUrl, 20),
-					A2(
-						_elm_lang$core$Maybe$map,
-						function (_) {
-							return _.hash;
-						},
-						A2(
-							_elm_lang$core$Maybe$andThen,
-							_elm_lang$core$List$head,
-							A2(_elm_community$list_extra$List_Extra$getAt, branchIndex, branches))))));
+			_elm_lang$http$Http$send,
+			_user$project$Update$LoadBlocks,
+			A3(_user$project$Update$getChainStartingAt, model.nodeUrl, 20, blockhash));
 	});
 var _user$project$Update$update = F2(
 	function (msg, model) {
@@ -11732,13 +11740,7 @@ var _user$project$Update$update = F2(
 			case 'LoadBlocks':
 				var _p4 = _p3._0;
 				if (_p4.ctor === 'Ok') {
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Native_Utils.update(
-							model,
-							{blocks: _p4._0}),
-						_1: _elm_lang$core$Platform_Cmd$none
-					};
+					return A2(_user$project$Update$loadBlocks, model, _p4._0);
 				} else {
 					return {
 						ctor: '_Tuple2',
@@ -11893,9 +11895,30 @@ var _user$project$Update$update = F2(
 						{
 							showBranch: _elm_lang$core$Maybe$Just(_p15)
 						}),
-					_1: A3(_user$project$Update$getBranch, model.nodeUrl, model.blocks, _p15)
+					_1: A2(_user$project$Update$getBranch, model, _p15)
 				};
 		}
+	});
+var _user$project$Update$getBranchXXX = F3(
+	function (nodeUrl, branches, branchIndex) {
+		return A2(
+			_elm_lang$core$Maybe$withDefault,
+			_elm_lang$core$Platform_Cmd$none,
+			A2(
+				_elm_lang$core$Maybe$map,
+				_elm_lang$http$Http$send(_user$project$Update$LoadBlocks),
+				A2(
+					_elm_lang$core$Maybe$map,
+					A2(_user$project$Update$getChainStartingAt, nodeUrl, 20),
+					A2(
+						_elm_lang$core$Maybe$map,
+						function (_) {
+							return _.hash;
+						},
+						A2(
+							_elm_lang$core$Maybe$andThen,
+							_elm_lang$core$List$head,
+							A2(_elm_community$list_extra$List_Extra$getAt, branchIndex, branches))))));
 	});
 
 var _user$project$View$viewParse = F2(
@@ -12476,11 +12499,11 @@ var _user$project$View$viewBlock = function (block) {
 		});
 };
 var _user$project$View$viewShowBlock = F2(
-	function (blocks, blockhashMaybe) {
+	function (blockChains, blockhashMaybe) {
 		var _p5 = blockhashMaybe;
 		if (_p5.ctor === 'Just') {
 			var _p7 = _p5._0;
-			var _p6 = A2(_user$project$Model$findBlock, blocks, _p7);
+			var _p6 = A2(_user$project$Model$findBlock, blockChains, _p7);
 			if (_p6.ctor === 'Just') {
 				return _user$project$View$viewBlock(_p6._0);
 			} else {
@@ -12571,8 +12594,8 @@ var _user$project$View$viewBlock2 = F3(
 				}
 			});
 	});
-var _user$project$View$viewBranch = F3(
-	function (n, blockhashMaybe, branch) {
+var _user$project$View$viewBranch = F2(
+	function (blockhashMaybe, branch) {
 		var tableHeader = A2(
 			_elm_lang$html$Html$tr,
 			{ctor: '[]'},
@@ -12613,11 +12636,7 @@ var _user$project$View$viewBranch = F3(
 					{ctor: '[]'},
 					{
 						ctor: '::',
-						_0: _elm_lang$html$Html$text(
-							A2(
-								_elm_lang$core$Basics_ops['++'],
-								'branch ',
-								_elm_lang$core$Basics$toString(n))),
+						_0: _elm_lang$html$Html$text('branch'),
 						_1: {ctor: '[]'}
 					}),
 				_1: {
@@ -12666,24 +12685,53 @@ var _user$project$View$viewBranch = F3(
 				}
 			});
 	});
-var _user$project$View$viewShowBranch = F3(
-	function (branches, indexMaybe, blockhashMaybe) {
-		var index = A2(_elm_lang$core$Maybe$withDefault, 0, indexMaybe);
-		var branchMaybe = A2(_elm_community$list_extra$List_Extra$getAt, index, branches);
-		return A2(
-			_elm_lang$core$Maybe$withDefault,
-			_elm_lang$html$Html$text(''),
+var _user$project$View$getBranchList = F2(
+	function (blocks, blockhash) {
+		var helper = F2(
+			function (hash, blockList) {
+				return A2(
+					_elm_lang$core$Maybe$withDefault,
+					blockList,
+					A2(
+						_elm_lang$core$Maybe$map,
+						function (block) {
+							return A2(
+								helper,
+								block.predecessor,
+								{ctor: '::', _0: block, _1: blockList});
+						},
+						A2(_elm_lang$core$Dict$get, hash, blocks)));
+			});
+		return _elm_lang$core$List$reverse(
 			A2(
-				_elm_lang$core$Maybe$map,
-				A2(_user$project$View$viewBranch, index, blockhashMaybe),
-				branchMaybe));
+				helper,
+				blockhash,
+				{ctor: '[]'}));
 	});
+var _user$project$View$viewShowBranch = function (model) {
+	var _p8 = model.showBranch;
+	if (_p8.ctor === 'Just') {
+		return A2(
+			_user$project$View$viewBranch,
+			_elm_lang$core$Maybe$Nothing,
+			A2(_user$project$View$getBranchList, model.blocks, _p8._0));
+	} else {
+		return A2(
+			_elm_lang$html$Html$h4,
+			{ctor: '[]'},
+			{
+				ctor: '::',
+				_0: _elm_lang$html$Html$text('no branch selected'),
+				_1: {ctor: '[]'}
+			});
+	}
+};
 var _user$project$View$findBranchByHead = F2(
 	function (branches, headid) {
 		var match = function (branch) {
-			var _p8 = branch;
-			if (_p8.ctor === '::') {
-				return _elm_lang$core$Native_Utils.eq(_p8._0.hash, headid);
+			var _p9 = branch;
+			if (_p9.ctor === '::') {
+				return _elm_lang$core$Native_Utils.eq(_p9._0.hash, headid);
 			} else {
 				return false;
 			}
@@ -12699,282 +12747,14 @@ var _user$project$View$canonFitness = function (strings) {
 			})(0),
 		A2(
 			_elm_lang$core$List$map,
-			function (_p9) {
+			function (_p10) {
 				return A2(
 					_elm_lang$core$Result$withDefault,
 					0,
-					_fredcy$elm_parseint$ParseInt$parseIntHex(_p9));
+					_fredcy$elm_parseint$ParseInt$parseIntHex(_p10));
 			},
 			strings));
 };
-var _user$project$View$viewHeads = F2(
-	function (branches, showBranch) {
-		var isBeingShown = F2(
-			function (showBranch, i) {
-				return A2(
-					_elm_lang$core$Maybe$withDefault,
-					false,
-					A2(
-						_elm_lang$core$Maybe$map,
-						F2(
-							function (x, y) {
-								return _elm_lang$core$Native_Utils.eq(x, y);
-							})(i),
-						showBranch));
-			});
-		var viewBlockSummary = F3(
-			function (i, block, beingShown) {
-				return A2(
-					_elm_lang$html$Html$tr,
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html_Attributes$classList(
-							{
-								ctor: '::',
-								_0: {ctor: '_Tuple2', _0: 'selected', _1: beingShown},
-								_1: {ctor: '[]'}
-							}),
-						_1: {ctor: '[]'}
-					},
-					{
-						ctor: '::',
-						_0: A2(
-							_elm_lang$html$Html$td,
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$class('index'),
-								_1: {ctor: '[]'}
-							},
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html$text(
-									_elm_lang$core$Basics$toString(i)),
-								_1: {ctor: '[]'}
-							}),
-						_1: {
-							ctor: '::',
-							_0: A2(
-								_elm_lang$html$Html$td,
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$class('hash'),
-									_1: {
-										ctor: '::',
-										_0: _elm_lang$html$Html_Events$onClick(
-											_user$project$Update$ShowBranch(i)),
-										_1: {
-											ctor: '::',
-											_0: _elm_lang$html$Html_Attributes$title(block.hash),
-											_1: {ctor: '[]'}
-										}
-									}
-								},
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html$text(
-										_user$project$View$shortHash(block.hash)),
-									_1: {ctor: '[]'}
-								}),
-							_1: {
-								ctor: '::',
-								_0: A2(
-									_elm_lang$html$Html$td,
-									{
-										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$class('timestamp'),
-										_1: {ctor: '[]'}
-									},
-									{
-										ctor: '::',
-										_0: _elm_lang$html$Html$text(block.timestamp),
-										_1: {ctor: '[]'}
-									}),
-								_1: {
-									ctor: '::',
-									_0: A2(
-										_elm_lang$html$Html$td,
-										{
-											ctor: '::',
-											_0: _elm_lang$html$Html_Attributes$class('fitness'),
-											_1: {ctor: '[]'}
-										},
-										{
-											ctor: '::',
-											_0: _elm_lang$html$Html$text(
-												_elm_lang$core$Basics$toString(
-													_user$project$View$canonFitness(block.fitness))),
-											_1: {ctor: '[]'}
-										}),
-									_1: {
-										ctor: '::',
-										_0: A2(
-											_elm_lang$html$Html$td,
-											{
-												ctor: '::',
-												_0: _elm_lang$html$Html_Attributes$class('level'),
-												_1: {ctor: '[]'}
-											},
-											{
-												ctor: '::',
-												_0: _elm_lang$html$Html$text(
-													_elm_lang$core$Basics$toString(block.level)),
-												_1: {ctor: '[]'}
-											}),
-										_1: {ctor: '[]'}
-									}
-								}
-							}
-						}
-					});
-			});
-		var viewHead = F2(
-			function (i, blocks) {
-				var _p10 = blocks;
-				if (_p10.ctor === '::') {
-					return A3(
-						viewBlockSummary,
-						i,
-						_p10._0,
-						A2(isBeingShown, showBranch, i));
-				} else {
-					return _elm_lang$html$Html$text('');
-				}
-			});
-		var header = A2(
-			_elm_lang$html$Html$tr,
-			{ctor: '[]'},
-			{
-				ctor: '::',
-				_0: A2(
-					_elm_lang$html$Html$th,
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html_Attributes$class('index'),
-						_1: {ctor: '[]'}
-					},
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html$text('index'),
-						_1: {ctor: '[]'}
-					}),
-				_1: {
-					ctor: '::',
-					_0: A2(
-						_elm_lang$html$Html$th,
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$class('hash'),
-							_1: {ctor: '[]'}
-						},
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html$text('hash'),
-							_1: {ctor: '[]'}
-						}),
-					_1: {
-						ctor: '::',
-						_0: A2(
-							_elm_lang$html$Html$th,
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$class('timestamp'),
-								_1: {ctor: '[]'}
-							},
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html$text('timestamp'),
-								_1: {ctor: '[]'}
-							}),
-						_1: {
-							ctor: '::',
-							_0: A2(
-								_elm_lang$html$Html$th,
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$class('fitness'),
-									_1: {ctor: '[]'}
-								},
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html$text('fitness'),
-									_1: {ctor: '[]'}
-								}),
-							_1: {
-								ctor: '::',
-								_0: A2(
-									_elm_lang$html$Html$th,
-									{
-										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$class('level'),
-										_1: {ctor: '[]'}
-									},
-									{
-										ctor: '::',
-										_0: _elm_lang$html$Html$text('level'),
-										_1: {ctor: '[]'}
-									}),
-								_1: {ctor: '[]'}
-							}
-						}
-					}
-				}
-			});
-		return A2(
-			_elm_lang$html$Html$div,
-			{ctor: '[]'},
-			{
-				ctor: '::',
-				_0: A2(
-					_elm_lang$html$Html$h2,
-					{ctor: '[]'},
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html$text('Blockchain heads'),
-						_1: {ctor: '[]'}
-					}),
-				_1: {
-					ctor: '::',
-					_0: A2(
-						_elm_lang$html$Html$div,
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$class('scrollable2 heads'),
-							_1: {ctor: '[]'}
-						},
-						{
-							ctor: '::',
-							_0: A2(
-								_elm_lang$html$Html$table,
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$class('heads'),
-									_1: {ctor: '[]'}
-								},
-								{
-									ctor: '::',
-									_0: A2(
-										_elm_lang$html$Html$thead,
-										{ctor: '[]'},
-										{
-											ctor: '::',
-											_0: header,
-											_1: {ctor: '[]'}
-										}),
-									_1: {
-										ctor: '::',
-										_0: A2(
-											_elm_lang$html$Html$tbody,
-											{ctor: '[]'},
-											A2(_elm_lang$core$List$indexedMap, viewHead, branches)),
-										_1: {ctor: '[]'}
-									}
-								}),
-							_1: {ctor: '[]'}
-						}),
-					_1: {ctor: '[]'}
-				}
-			});
-	});
 var _user$project$View$viewHeader = function (nodeUrl) {
 	return A2(
 		_elm_lang$html$Html$div,
@@ -13025,6 +12805,293 @@ var _user$project$View$viewSchemas = function (schemas) {
 		{ctor: '[]'},
 		A2(_elm_lang$core$List$map, viewSchema, names));
 };
+var _user$project$View$BlockNotFound = function (a) {
+	return {ctor: 'BlockNotFound', _0: a};
+};
+var _user$project$View$BlockFound = function (a) {
+	return {ctor: 'BlockFound', _0: a};
+};
+var _user$project$View$findBlockStatus = F2(
+	function (blocks, blockhash) {
+		var _p11 = A2(_elm_lang$core$Dict$get, blockhash, blocks);
+		if (_p11.ctor === 'Just') {
+			return _user$project$View$BlockFound(_p11._0);
+		} else {
+			return _user$project$View$BlockNotFound(blockhash);
+		}
+	});
+var _user$project$View$viewHeads = function (model) {
+	var isBeingShown = F2(
+		function (showBranch, id) {
+			return A2(
+				_elm_lang$core$Maybe$withDefault,
+				false,
+				A2(
+					_elm_lang$core$Maybe$map,
+					F2(
+						function (x, y) {
+							return _elm_lang$core$Native_Utils.eq(x, y);
+						})(id),
+					showBranch));
+		});
+	var viewBlockSummary = F3(
+		function (i, block, beingShown) {
+			return A2(
+				_elm_lang$html$Html$tr,
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html_Attributes$classList(
+						{
+							ctor: '::',
+							_0: {ctor: '_Tuple2', _0: 'selected', _1: beingShown},
+							_1: {ctor: '[]'}
+						}),
+					_1: {ctor: '[]'}
+				},
+				{
+					ctor: '::',
+					_0: A2(
+						_elm_lang$html$Html$td,
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$class('index'),
+							_1: {ctor: '[]'}
+						},
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html$text(
+								_elm_lang$core$Basics$toString(i)),
+							_1: {ctor: '[]'}
+						}),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$td,
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html_Attributes$class('hash'),
+								_1: {
+									ctor: '::',
+									_0: _elm_lang$html$Html_Events$onClick(
+										_user$project$Update$ShowBranch(block.hash)),
+									_1: {
+										ctor: '::',
+										_0: _elm_lang$html$Html_Attributes$title(block.hash),
+										_1: {ctor: '[]'}
+									}
+								}
+							},
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html$text(
+									_user$project$View$shortHash(block.hash)),
+								_1: {ctor: '[]'}
+							}),
+						_1: {
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$td,
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html_Attributes$class('timestamp'),
+									_1: {ctor: '[]'}
+								},
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html$text(block.timestamp),
+									_1: {ctor: '[]'}
+								}),
+							_1: {
+								ctor: '::',
+								_0: A2(
+									_elm_lang$html$Html$td,
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html_Attributes$class('fitness'),
+										_1: {ctor: '[]'}
+									},
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html$text(
+											_elm_lang$core$Basics$toString(
+												_user$project$View$canonFitness(block.fitness))),
+										_1: {ctor: '[]'}
+									}),
+								_1: {
+									ctor: '::',
+									_0: A2(
+										_elm_lang$html$Html$td,
+										{
+											ctor: '::',
+											_0: _elm_lang$html$Html_Attributes$class('level'),
+											_1: {ctor: '[]'}
+										},
+										{
+											ctor: '::',
+											_0: _elm_lang$html$Html$text(
+												_elm_lang$core$Basics$toString(block.level)),
+											_1: {ctor: '[]'}
+										}),
+									_1: {ctor: '[]'}
+								}
+							}
+						}
+					}
+				});
+		});
+	var viewHead = F2(
+		function (i, blockStatus) {
+			var _p12 = blockStatus;
+			if (_p12.ctor === 'BlockFound') {
+				var _p13 = _p12._0;
+				return A3(
+					viewBlockSummary,
+					i,
+					_p13,
+					A2(isBeingShown, model.showBranch, _p13.hash));
+			} else {
+				return _elm_lang$html$Html$text('');
+			}
+		});
+	var header = A2(
+		_elm_lang$html$Html$tr,
+		{ctor: '[]'},
+		{
+			ctor: '::',
+			_0: A2(
+				_elm_lang$html$Html$th,
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html_Attributes$class('index'),
+					_1: {ctor: '[]'}
+				},
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html$text('index'),
+					_1: {ctor: '[]'}
+				}),
+			_1: {
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$th,
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html_Attributes$class('hash'),
+						_1: {ctor: '[]'}
+					},
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html$text('hash'),
+						_1: {ctor: '[]'}
+					}),
+				_1: {
+					ctor: '::',
+					_0: A2(
+						_elm_lang$html$Html$th,
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$class('timestamp'),
+							_1: {ctor: '[]'}
+						},
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html$text('timestamp'),
+							_1: {ctor: '[]'}
+						}),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$th,
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html_Attributes$class('fitness'),
+								_1: {ctor: '[]'}
+							},
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html$text('fitness'),
+								_1: {ctor: '[]'}
+							}),
+						_1: {
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$th,
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html_Attributes$class('level'),
+									_1: {ctor: '[]'}
+								},
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html$text('level'),
+									_1: {ctor: '[]'}
+								}),
+							_1: {ctor: '[]'}
+						}
+					}
+				}
+			}
+		});
+	var heads = A2(
+		_elm_lang$core$List$map,
+		_user$project$View$findBlockStatus(model.blocks),
+		model.heads);
+	return A2(
+		_elm_lang$html$Html$div,
+		{ctor: '[]'},
+		{
+			ctor: '::',
+			_0: A2(
+				_elm_lang$html$Html$h2,
+				{ctor: '[]'},
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html$text('Blockchain heads'),
+					_1: {ctor: '[]'}
+				}),
+			_1: {
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$div,
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html_Attributes$class('scrollable2 heads'),
+						_1: {ctor: '[]'}
+					},
+					{
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$table,
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html_Attributes$class('heads'),
+								_1: {ctor: '[]'}
+							},
+							{
+								ctor: '::',
+								_0: A2(
+									_elm_lang$html$Html$thead,
+									{ctor: '[]'},
+									{
+										ctor: '::',
+										_0: header,
+										_1: {ctor: '[]'}
+									}),
+								_1: {
+									ctor: '::',
+									_0: A2(
+										_elm_lang$html$Html$tbody,
+										{ctor: '[]'},
+										A2(_elm_lang$core$List$indexedMap, viewHead, heads)),
+									_1: {ctor: '[]'}
+								}
+							}),
+						_1: {ctor: '[]'}
+					}),
+				_1: {ctor: '[]'}
+			}
+		});
+};
 var _user$project$View$view = function (model) {
 	return A2(
 		_elm_lang$html$Html$div,
@@ -13037,13 +13104,13 @@ var _user$project$View$view = function (model) {
 				_0: A2(_user$project$View$viewError, model.nodeUrl, model.errors),
 				_1: {
 					ctor: '::',
-					_0: A2(_user$project$View$viewHeads, model.blocks, model.showBranch),
+					_0: _user$project$View$viewHeads(model),
 					_1: {
 						ctor: '::',
-						_0: A3(_user$project$View$viewShowBranch, model.blocks, model.showBranch, model.showBlock),
+						_0: _user$project$View$viewShowBranch(model),
 						_1: {
 							ctor: '::',
-							_0: A2(_user$project$View$viewShowBlock, model.blocks, model.showBlock),
+							_0: A2(_user$project$View$viewShowBlock, model.blockChains, model.showBlock),
 							_1: {
 								ctor: '::',
 								_0: A2(_user$project$View$viewShowOperation, model.operations, model.showOperation),
@@ -13071,8 +13138,9 @@ var _user$project$Main$init = function (flags) {
 	var schemaQuery2 = '/describe/blocks/head/proto';
 	var schemaQuery1 = '/describe';
 	var model = {
-		blocks: {ctor: '[]'},
+		blockChains: {ctor: '[]'},
 		heads: {ctor: '[]'},
+		blocks: _elm_lang$core$Dict$empty,
 		schemaData: _elm_lang$core$Dict$empty,
 		errors: {ctor: '[]'},
 		nodeUrl: flags.nodeUrl,
@@ -13080,7 +13148,7 @@ var _user$project$Main$init = function (flags) {
 		parsedOperations: _elm_lang$core$Dict$empty,
 		showBlock: _elm_lang$core$Maybe$Nothing,
 		showOperation: _elm_lang$core$Maybe$Nothing,
-		showBranch: _elm_lang$core$Maybe$Just(0),
+		showBranch: _elm_lang$core$Maybe$Nothing,
 		blockOperations: _elm_lang$core$Dict$empty
 	};
 	return {

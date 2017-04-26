@@ -25,8 +25,9 @@ init : Flags -> ( Model, Cmd Msg )
 init flags =
     let
         model =
-            { blocks = []
+            { blockChains = []
             , heads = []
+            , blocks = Dict.empty
             , schemaData = Dict.empty
             , errors = []
             , nodeUrl = flags.nodeUrl
@@ -34,7 +35,7 @@ init flags =
             , parsedOperations = Dict.empty
             , showBlock = Nothing
             , showOperation = Nothing
-            , showBranch = Just 0
+            , showBranch = Nothing
             , blockOperations = Dict.empty
             }
 
