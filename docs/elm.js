@@ -11211,9 +11211,7 @@ var _user$project$Model$Model = function (a) {
 								return function (i) {
 									return function (j) {
 										return function (k) {
-											return function (l) {
-												return {blockChains: a, heads: b, blocks: c, schemaData: d, errors: e, nodeUrl: f, operations: g, parsedOperations: h, blockOperations: i, showBlock: j, showOperation: k, showBranch: l};
-											};
+											return {heads: a, blocks: b, schemaData: c, errors: d, nodeUrl: e, operations: f, parsedOperations: g, blockOperations: h, showBlock: i, showOperation: j, showBranch: k};
 										};
 									};
 								};
@@ -11560,7 +11558,7 @@ var _user$project$Update$loadBlocks = F2(
 			ctor: '_Tuple2',
 			_0: _elm_lang$core$Native_Utils.update(
 				model,
-				{blockChains: blocksData, blocks: blocks}),
+				{blocks: blocks}),
 			_1: _elm_lang$core$Platform_Cmd$none
 		};
 	});
@@ -11699,7 +11697,7 @@ var _user$project$Update$getBlockOperationInfo = F2(
 					A2(
 						_elm_lang$core$Maybe$map,
 						_user$project$Update$getBlockOperationIDs,
-						A2(_user$project$Model$findBlock, model.blockChains, blockhash)))));
+						A2(_elm_lang$core$Dict$get, blockhash, model.blocks)))));
 	});
 var _user$project$Update$getBlocksOperationsDetail = F2(
 	function (model, blockChains) {
@@ -12499,27 +12497,19 @@ var _user$project$View$viewBlock = function (block) {
 		});
 };
 var _user$project$View$viewShowBlock = F2(
-	function (blockChains, blockhashMaybe) {
-		var _p5 = blockhashMaybe;
-		if (_p5.ctor === 'Just') {
-			var _p7 = _p5._0;
-			var _p6 = A2(_user$project$Model$findBlock, blockChains, _p7);
-			if (_p6.ctor === 'Just') {
-				return _user$project$View$viewBlock(_p6._0);
-			} else {
-				return A2(
-					_elm_lang$html$Html$div,
-					{ctor: '[]'},
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html$text(
-							A2(_elm_lang$core$Basics_ops['++'], 'Cannot find block ', _p7)),
-						_1: {ctor: '[]'}
-					});
-			}
-		} else {
-			return _elm_lang$html$Html$text('');
-		}
+	function (blocks, blockhashMaybe) {
+		return A2(
+			_elm_lang$core$Maybe$withDefault,
+			_elm_lang$html$Html$text(''),
+			A2(
+				_elm_lang$core$Maybe$map,
+				_user$project$View$viewBlock,
+				A2(
+					_elm_lang$core$Maybe$andThen,
+					function (hash) {
+						return A2(_elm_lang$core$Dict$get, hash, blocks);
+					},
+					blockhashMaybe)));
 	});
 var _user$project$View$viewBlock2 = F3(
 	function (blockhashMaybe, n, block) {
@@ -12709,12 +12699,12 @@ var _user$project$View$getBranchList = F2(
 				{ctor: '[]'}));
 	});
 var _user$project$View$viewShowBranch = function (model) {
-	var _p8 = model.showBranch;
-	if (_p8.ctor === 'Just') {
+	var _p5 = model.showBranch;
+	if (_p5.ctor === 'Just') {
 		return A2(
 			_user$project$View$viewBranch,
-			_elm_lang$core$Maybe$Nothing,
-			A2(_user$project$View$getBranchList, model.blocks, _p8._0));
+			model.showBlock,
+			A2(_user$project$View$getBranchList, model.blocks, _p5._0));
 	} else {
 		return A2(
 			_elm_lang$html$Html$h4,
@@ -12729,9 +12719,9 @@ var _user$project$View$viewShowBranch = function (model) {
 var _user$project$View$findBranchByHead = F2(
 	function (branches, headid) {
 		var match = function (branch) {
-			var _p9 = branch;
-			if (_p9.ctor === '::') {
-				return _elm_lang$core$Native_Utils.eq(_p9._0.hash, headid);
+			var _p6 = branch;
+			if (_p6.ctor === '::') {
+				return _elm_lang$core$Native_Utils.eq(_p6._0.hash, headid);
 			} else {
 				return false;
 			}
@@ -12747,11 +12737,11 @@ var _user$project$View$canonFitness = function (strings) {
 			})(0),
 		A2(
 			_elm_lang$core$List$map,
-			function (_p10) {
+			function (_p7) {
 				return A2(
 					_elm_lang$core$Result$withDefault,
 					0,
-					_fredcy$elm_parseint$ParseInt$parseIntHex(_p10));
+					_fredcy$elm_parseint$ParseInt$parseIntHex(_p7));
 			},
 			strings));
 };
@@ -12813,9 +12803,9 @@ var _user$project$View$BlockFound = function (a) {
 };
 var _user$project$View$findBlockStatus = F2(
 	function (blocks, blockhash) {
-		var _p11 = A2(_elm_lang$core$Dict$get, blockhash, blocks);
-		if (_p11.ctor === 'Just') {
-			return _user$project$View$BlockFound(_p11._0);
+		var _p8 = A2(_elm_lang$core$Dict$get, blockhash, blocks);
+		if (_p8.ctor === 'Just') {
+			return _user$project$View$BlockFound(_p8._0);
 		} else {
 			return _user$project$View$BlockNotFound(blockhash);
 		}
@@ -12941,14 +12931,14 @@ var _user$project$View$viewHeads = function (model) {
 		});
 	var viewHead = F2(
 		function (i, blockStatus) {
-			var _p12 = blockStatus;
-			if (_p12.ctor === 'BlockFound') {
-				var _p13 = _p12._0;
+			var _p9 = blockStatus;
+			if (_p9.ctor === 'BlockFound') {
+				var _p10 = _p9._0;
 				return A3(
 					viewBlockSummary,
 					i,
-					_p13,
-					A2(isBeingShown, model.showBranch, _p13.hash));
+					_p10,
+					A2(isBeingShown, model.showBranch, _p10.hash));
 			} else {
 				return _elm_lang$html$Html$text('');
 			}
@@ -13110,7 +13100,7 @@ var _user$project$View$view = function (model) {
 						_0: _user$project$View$viewShowBranch(model),
 						_1: {
 							ctor: '::',
-							_0: A2(_user$project$View$viewShowBlock, model.blockChains, model.showBlock),
+							_0: A2(_user$project$View$viewShowBlock, model.blocks, model.showBlock),
 							_1: {
 								ctor: '::',
 								_0: A2(_user$project$View$viewShowOperation, model.operations, model.showOperation),
@@ -13138,7 +13128,6 @@ var _user$project$Main$init = function (flags) {
 	var schemaQuery2 = '/describe/blocks/head/proto';
 	var schemaQuery1 = '/describe';
 	var model = {
-		blockChains: {ctor: '[]'},
 		heads: {ctor: '[]'},
 		blocks: _elm_lang$core$Dict$empty,
 		schemaData: _elm_lang$core$Dict$empty,
@@ -13157,15 +13146,8 @@ var _user$project$Main$init = function (flags) {
 		_1: _elm_lang$core$Platform_Cmd$batch(
 			{
 				ctor: '::',
-				_0: A2(
-					_elm_lang$http$Http$send,
-					_user$project$Update$LoadBlocks,
-					_user$project$Update$getBlocks(model.nodeUrl)),
-				_1: {
-					ctor: '::',
-					_0: _user$project$Update$getHeads(model.nodeUrl),
-					_1: {ctor: '[]'}
-				}
+				_0: _user$project$Update$getHeads(model.nodeUrl),
+				_1: {ctor: '[]'}
 			})
 	};
 };

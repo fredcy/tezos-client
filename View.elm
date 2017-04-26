@@ -19,7 +19,7 @@ view model =
         , viewError model.nodeUrl model.errors
         , viewHeads model
         , viewShowBranch model
-        , viewShowBlock model.blockChains model.showBlock
+        , viewShowBlock model.blocks model.showBlock
         , viewShowOperation model.operations model.showOperation
         , viewParse model.parsedOperations model.showOperation
         , viewSchemas model.schemaData
@@ -155,7 +155,7 @@ viewShowBranch model =
     case model.showBranch of
         Just hash ->
             getBranchList model.blocks hash
-                 |> viewBranch Nothing
+                |> viewBranch model.showBlock
 
         Nothing ->
             H.h4 [] [ H.text "no branch selected" ]
@@ -252,19 +252,12 @@ viewBlock block =
             ]
 
 
-viewShowBlock : List (List Block) -> Maybe BlockID -> Html Msg
-viewShowBlock blockChains blockhashMaybe =
-    case blockhashMaybe of
-        Just blockhash ->
-            case findBlock blockChains blockhash of
-                Just block ->
-                    viewBlock block
-
-                Nothing ->
-                    H.div [] [ H.text ("Cannot find block " ++ blockhash) ]
-
-        Nothing ->
-            H.text ""
+viewShowBlock : Dict BlockID Block -> Maybe BlockID -> Html Msg
+viewShowBlock blocks blockhashMaybe =
+    blockhashMaybe
+        |> Maybe.andThen (\hash -> Dict.get hash blocks)
+        |> Maybe.map viewBlock
+        |> Maybe.withDefault (H.text "")
 
 
 viewShowOperation : Dict OperationID Operation -> Maybe OperationID -> Html Msg

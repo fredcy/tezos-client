@@ -25,8 +25,7 @@ init : Flags -> ( Model, Cmd Msg )
 init flags =
     let
         model =
-            { blockChains = []
-            , heads = []
+            { heads = []
             , blocks = Dict.empty
             , schemaData = Dict.empty
             , errors = []
@@ -47,8 +46,7 @@ init flags =
     in
         ( model
         , Cmd.batch
-            [ Http.send LoadBlocks (getBlocks model.nodeUrl)
-            , getHeads model.nodeUrl
+            [ getHeads model.nodeUrl
               --, Http.send (LoadSchema schemaQuery1) (getSchema model.nodeUrl schemaQuery1)
               --, Http.send (LoadSchema schemaQuery2) (getSchema model.nodeUrl schemaQuery2)
             ]

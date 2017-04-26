@@ -102,8 +102,7 @@ type alias SchemaName =
 
 
 type alias Model =
-    { blockChains : List (List Block)
-    , heads : List BlockID
+    { heads : List BlockID
     , blocks : Dict BlockID Block
     , schemaData : Dict SchemaName Schema.SchemaData
     , errors : List Http.Error

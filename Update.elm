@@ -192,7 +192,7 @@ loadBlocks model blocksData =
         blocks =
             List.foldl addChainBlocks model.blocks blocksData
     in
-        ( { model | blockChains = blocksData, blocks = blocks }
+        ( { model | blocks = blocks }
           --, getBlocksOperationsDetail model blockChains
         , Cmd.none
         )
@@ -432,7 +432,7 @@ getBlockOperationIDs block =
 
 getBlockOperationInfo : Model -> BlockID -> Cmd Msg
 getBlockOperationInfo model blockhash =
-    findBlock model.blockChains blockhash
+    Dict.get blockhash model.blocks
         |> Maybe.map getBlockOperationIDs
         |> Maybe.map (List.map (getOperationIfNew model.nodeUrl model.operations))
         |> Maybe.map Cmd.batch
