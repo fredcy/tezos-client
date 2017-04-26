@@ -4,7 +4,7 @@ import Html
 import Http
 import Dict
 import Model exposing (..)
-import Update exposing (update, Msg(..), getBlocks, getSchema)
+import Update exposing (update, Msg(..), getBlocks, getSchema, getHeads)
 import View exposing (view)
 
 
@@ -26,6 +26,7 @@ init flags =
     let
         model =
             { blocks = []
+            , heads = []
             , schemaData = Dict.empty
             , errors = []
             , nodeUrl = flags.nodeUrl
@@ -46,6 +47,7 @@ init flags =
         ( model
         , Cmd.batch
             [ Http.send LoadBlocks (getBlocks model.nodeUrl)
+            , getHeads model.nodeUrl
               --, Http.send (LoadSchema schemaQuery1) (getSchema model.nodeUrl schemaQuery1)
               --, Http.send (LoadSchema schemaQuery2) (getSchema model.nodeUrl schemaQuery2)
             ]

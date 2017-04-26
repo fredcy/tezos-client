@@ -5,8 +5,13 @@ import Json.Decode as Decode
 import Json.Encode as Encode
 import Json.Decode.Pipeline as Decode
 import Http
+import List.Extra as List
 import Model exposing (..)
 import Schema exposing (SchemaData, decodeSchema, collapseTrees)
+
+
+type alias HeadsResponse =
+    List BlockID
 
 
 type Msg
@@ -19,6 +24,7 @@ type Msg
     | ShowBlock BlockID
     | ShowOperation OperationID
     | ShowBranch Int
+    | LoadHeads (Result Http.Error BlocksData)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -90,6 +96,14 @@ update msg model =
         LoadBlockOperations blockhash result ->
             ( model, Cmd.none )
 
+        LoadHeads headsResult ->
+            case headsResult of
+                Ok heads ->
+                    loadHeads model heads
+
+                Err error ->
+                    ( { model | errors = error :: model.errors }, Cmd.none )
+
         ShowBlock blockhash ->
             ( { model | showBlock = Just blockhash }
             , getBlockOperationDetails model.nodeUrl blockhash
@@ -102,7 +116,9 @@ update msg model =
             )
 
         ShowBranch index ->
-            ( { model | showBranch = Just index }, Cmd.none )
+            ( { model | showBranch = Just index }
+            , getBranch model.nodeUrl model.blocks index
+            )
 
 
 emptyJsonBody : Http.Body
@@ -116,11 +132,64 @@ getBlocks : String -> Http.Request BlocksData
 getBlocks nodeUrl =
     let
         maxBlocksToGet =
-            20
+            1
 
         body =
             [ ( "include_ops", Encode.bool True )
             , ( "length", Encode.int maxBlocksToGet )
+            ]
+                |> Encode.object
+                |> Http.jsonBody
+
+        url =
+            nodeUrl ++ "/blocks"
+    in
+        Http.post url body decodeBlocks
+
+
+getHeads : String -> Cmd Msg
+getHeads nodeUrl =
+    let
+        body =
+            -- TODO: stop gettng operations data for this
+            [ ( "include_ops", Encode.bool True ) ]
+                |> Encode.object
+                |> Http.jsonBody
+
+        url =
+            nodeUrl ++ "/blocks"
+    in
+        Http.post url body decodeBlocks |> Http.send LoadHeads
+
+
+loadHeads : Model -> BlocksData -> ( Model, Cmd Msg )
+loadHeads model headsData =
+    let
+        heads =
+            List.map List.head headsData
+                |> List.filterMap identity
+                |> List.map .hash
+    in
+        ( { model | heads = heads }, Cmd.none )
+
+
+getBranch : URL -> List (List Block) -> Int -> Cmd Msg
+getBranch nodeUrl branches branchIndex =
+    List.getAt branchIndex branches
+        |> Maybe.andThen List.head
+        |> Maybe.map .hash
+        |> Maybe.map (getChainStartingAt nodeUrl 20)
+        |> Maybe.map (Http.send LoadBlocks)
+        |> Maybe.withDefault Cmd.none
+
+
+getChainStartingAt : URL -> Int -> BlockID -> Http.Request BlocksData
+getChainStartingAt nodeUrl length blockhash =
+    let
+        body =
+            [ ( "include_ops", Encode.bool True )
+            , ( "length", Encode.int length )
+            , ( "heads", Encode.list [ Encode.string blockhash ] )
             ]
                 |> Encode.object
                 |> Http.jsonBody
@@ -152,6 +221,16 @@ decodeTimestamp : Decode.Decoder Timestamp
 decodeTimestamp =
     -- TODO
     Decode.string
+
+
+decodeHeads : Decode.Decoder HeadsResponse
+decodeHeads =
+    Decode.field "blocks" (Decode.list (Decode.list (Decode.field "hash" Decode.string)))
+        |> Decode.andThen
+            (\branches ->
+                -- get first element of each sublist list (should be exactly one in each)
+                List.map List.head branches |> List.filterMap identity |> Decode.succeed
+            )
 
 
 getOperations : String -> BlockID -> Http.Request (List Operation)

@@ -103,6 +103,7 @@ type alias SchemaName =
 
 type alias Model =
     { blocks : List (List Block)
+    , heads : List BlockID
     , schemaData : Dict SchemaName Schema.SchemaData
     , errors : List Http.Error
     , nodeUrl : String

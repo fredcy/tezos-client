@@ -11210,7 +11210,9 @@ var _user$project$Model$Model = function (a) {
 							return function (h) {
 								return function (i) {
 									return function (j) {
-										return {blocks: a, schemaData: b, errors: c, nodeUrl: d, operations: e, parsedOperations: f, blockOperations: g, showBlock: h, showOperation: i, showBranch: j};
+										return function (k) {
+											return {blocks: a, heads: b, schemaData: c, errors: d, nodeUrl: e, operations: f, parsedOperations: g, blockOperations: h, showBlock: i, showOperation: j, showBranch: k};
+										};
 									};
 								};
 							};
@@ -11433,6 +11435,21 @@ var _user$project$Update$getOperations = F2(
 			body,
 			_user$project$Update$decodeOperations);
 	});
+var _user$project$Update$decodeHeads = A2(
+	_elm_lang$core$Json_Decode$andThen,
+	function (branches) {
+		return _elm_lang$core$Json_Decode$succeed(
+			A2(
+				_elm_lang$core$List$filterMap,
+				_elm_lang$core$Basics$identity,
+				A2(_elm_lang$core$List$map, _elm_lang$core$List$head, branches)));
+	},
+	A2(
+		_elm_lang$core$Json_Decode$field,
+		'blocks',
+		_elm_lang$core$Json_Decode$list(
+			_elm_lang$core$Json_Decode$list(
+				A2(_elm_lang$core$Json_Decode$field, 'hash', _elm_lang$core$Json_Decode$string)))));
 var _user$project$Update$decodeTimestamp = _elm_lang$core$Json_Decode$string;
 var _user$project$Update$decodeBlock = A3(
 	_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
@@ -11469,9 +11486,65 @@ var _user$project$Update$decodeBlocks = A2(
 	'blocks',
 	_elm_lang$core$Json_Decode$list(
 		_elm_lang$core$Json_Decode$list(_user$project$Update$decodeBlock)));
+var _user$project$Update$getChainStartingAt = F3(
+	function (nodeUrl, length, blockhash) {
+		var url = A2(_elm_lang$core$Basics_ops['++'], nodeUrl, '/blocks');
+		var body = _elm_lang$http$Http$jsonBody(
+			_elm_lang$core$Json_Encode$object(
+				{
+					ctor: '::',
+					_0: {
+						ctor: '_Tuple2',
+						_0: 'include_ops',
+						_1: _elm_lang$core$Json_Encode$bool(true)
+					},
+					_1: {
+						ctor: '::',
+						_0: {
+							ctor: '_Tuple2',
+							_0: 'length',
+							_1: _elm_lang$core$Json_Encode$int(length)
+						},
+						_1: {
+							ctor: '::',
+							_0: {
+								ctor: '_Tuple2',
+								_0: 'heads',
+								_1: _elm_lang$core$Json_Encode$list(
+									{
+										ctor: '::',
+										_0: _elm_lang$core$Json_Encode$string(blockhash),
+										_1: {ctor: '[]'}
+									})
+							},
+							_1: {ctor: '[]'}
+						}
+					}
+				}));
+		return A3(_elm_lang$http$Http$post, url, body, _user$project$Update$decodeBlocks);
+	});
+var _user$project$Update$loadHeads = F2(
+	function (model, headsData) {
+		var heads = A2(
+			_elm_lang$core$List$map,
+			function (_) {
+				return _.hash;
+			},
+			A2(
+				_elm_lang$core$List$filterMap,
+				_elm_lang$core$Basics$identity,
+				A2(_elm_lang$core$List$map, _elm_lang$core$List$head, headsData)));
+		return {
+			ctor: '_Tuple2',
+			_0: _elm_lang$core$Native_Utils.update(
+				model,
+				{heads: heads}),
+			_1: _elm_lang$core$Platform_Cmd$none
+		};
+	});
 var _user$project$Update$getBlocks = function (nodeUrl) {
 	var url = A2(_elm_lang$core$Basics_ops['++'], nodeUrl, '/blocks');
-	var maxBlocksToGet = 20;
+	var maxBlocksToGet = 1;
 	var body = _elm_lang$http$Http$jsonBody(
 		_elm_lang$core$Json_Encode$object(
 			{
@@ -11496,6 +11569,27 @@ var _user$project$Update$getBlocks = function (nodeUrl) {
 var _user$project$Update$emptyJsonBody = _elm_lang$http$Http$jsonBody(
 	_elm_lang$core$Json_Encode$object(
 		{ctor: '[]'}));
+var _user$project$Update$LoadHeads = function (a) {
+	return {ctor: 'LoadHeads', _0: a};
+};
+var _user$project$Update$getHeads = function (nodeUrl) {
+	var url = A2(_elm_lang$core$Basics_ops['++'], nodeUrl, '/blocks');
+	var body = _elm_lang$http$Http$jsonBody(
+		_elm_lang$core$Json_Encode$object(
+			{
+				ctor: '::',
+				_0: {
+					ctor: '_Tuple2',
+					_0: 'include_ops',
+					_1: _elm_lang$core$Json_Encode$bool(true)
+				},
+				_1: {ctor: '[]'}
+			}));
+	return A2(
+		_elm_lang$http$Http$send,
+		_user$project$Update$LoadHeads,
+		A3(_elm_lang$http$Http$post, url, body, _user$project$Update$decodeBlocks));
+};
 var _user$project$Update$ShowBranch = function (a) {
 	return {ctor: 'ShowBranch', _0: a};
 };
@@ -11568,162 +11662,6 @@ var _user$project$Update$getOperationIfNew = F3(
 			_user$project$Update$LoadOperation,
 			A2(_user$project$Update$getOperation, nodeUrl, operationId));
 	});
-var _user$project$Update$update = F2(
-	function (msg, model) {
-		var _p2 = A2(_elm_lang$core$Debug$log, 'msg', msg);
-		switch (_p2.ctor) {
-			case 'LoadBlocks':
-				var _p3 = _p2._0;
-				if (_p3.ctor === 'Ok') {
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Native_Utils.update(
-							model,
-							{blocks: _p3._0}),
-						_1: _elm_lang$core$Platform_Cmd$none
-					};
-				} else {
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Native_Utils.update(
-							model,
-							{
-								errors: {ctor: '::', _0: _p3._0, _1: model.errors}
-							}),
-						_1: _elm_lang$core$Platform_Cmd$none
-					};
-				}
-			case 'LoadSchema':
-				var _p4 = _p2._1;
-				if (_p4.ctor === 'Ok') {
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Native_Utils.update(
-							model,
-							{
-								schemaData: A3(
-									_elm_lang$core$Dict$insert,
-									_p2._0,
-									_user$project$Schema$collapseTrees(_p4._0),
-									model.schemaData)
-							}),
-						_1: _elm_lang$core$Platform_Cmd$none
-					};
-				} else {
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Native_Utils.update(
-							model,
-							{
-								errors: {ctor: '::', _0: _p4._0, _1: model.errors}
-							}),
-						_1: _elm_lang$core$Platform_Cmd$none
-					};
-				}
-			case 'SchemaMsg':
-				var _p7 = _p2._0;
-				var newSchemaMaybe = A2(
-					_elm_lang$core$Maybe$map,
-					_user$project$Schema$update(_p2._1),
-					A2(_elm_lang$core$Dict$get, _p7, model.schemaData));
-				var _p5 = newSchemaMaybe;
-				if (_p5.ctor === 'Just') {
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Native_Utils.update(
-							model,
-							{
-								schemaData: A3(_elm_lang$core$Dict$insert, _p7, _p5._0, model.schemaData)
-							}),
-						_1: _elm_lang$core$Platform_Cmd$none
-					};
-				} else {
-					var _p6 = A2(_elm_lang$core$Debug$log, 'Failed to find schema', _p7);
-					return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
-				}
-			case 'LoadOperation':
-				var _p8 = _p2._0;
-				if (_p8.ctor === 'Ok') {
-					var _p9 = _p8._0;
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Native_Utils.update(
-							model,
-							{
-								operations: A3(_elm_lang$core$Dict$insert, _p9.hash, _p9, model.operations)
-							}),
-						_1: _elm_lang$core$Platform_Cmd$none
-					};
-				} else {
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Native_Utils.update(
-							model,
-							{
-								errors: {ctor: '::', _0: _p8._0, _1: model.errors}
-							}),
-						_1: _elm_lang$core$Platform_Cmd$none
-					};
-				}
-			case 'LoadParsedOperation':
-				var _p10 = _p2._1;
-				if (_p10.ctor === 'Ok') {
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Native_Utils.update(
-							model,
-							{
-								parsedOperations: A3(_elm_lang$core$Dict$insert, _p2._0, _p10._0, model.parsedOperations)
-							}),
-						_1: _elm_lang$core$Platform_Cmd$none
-					};
-				} else {
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Native_Utils.update(
-							model,
-							{
-								errors: {ctor: '::', _0: _p10._0, _1: model.errors}
-							}),
-						_1: _elm_lang$core$Platform_Cmd$none
-					};
-				}
-			case 'LoadBlockOperations':
-				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
-			case 'ShowBlock':
-				var _p11 = _p2._0;
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{
-							showBlock: _elm_lang$core$Maybe$Just(_p11)
-						}),
-					_1: A2(_user$project$Update$getBlockOperationDetails, model.nodeUrl, _p11)
-				};
-			case 'ShowOperation':
-				var _p12 = _p2._0;
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{
-							showOperation: _elm_lang$core$Maybe$Just(_p12)
-						}),
-					_1: A3(_user$project$Update$getOperationIfNew, model.nodeUrl, model.operations, _p12)
-				};
-			default:
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{
-							showBranch: _elm_lang$core$Maybe$Just(_p2._0)
-						}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-		}
-	});
 var _user$project$Update$getBlockOperationInfo = F2(
 	function (model, blockhash) {
 		return A2(
@@ -11747,12 +11685,12 @@ var _user$project$Update$getBlocksOperationsDetail = F2(
 			return _elm_lang$core$Platform_Cmd$batch(
 				A2(
 					_elm_lang$core$List$map,
-					function (_p13) {
+					function (_p2) {
 						return _elm_lang$core$Platform_Cmd$batch(
 							A2(
 								_elm_lang$core$List$map,
 								A2(_user$project$Update$getOperationIfNew, model.nodeUrl, model.operations),
-								_user$project$Update$getBlockOperationIDs(_p13)));
+								_user$project$Update$getBlockOperationIDs(_p2)));
 					},
 					blocks));
 		};
@@ -11766,6 +11704,199 @@ var _user$project$Update$LoadSchema = F2(
 var _user$project$Update$LoadBlocks = function (a) {
 	return {ctor: 'LoadBlocks', _0: a};
 };
+var _user$project$Update$getBranch = F3(
+	function (nodeUrl, branches, branchIndex) {
+		return A2(
+			_elm_lang$core$Maybe$withDefault,
+			_elm_lang$core$Platform_Cmd$none,
+			A2(
+				_elm_lang$core$Maybe$map,
+				_elm_lang$http$Http$send(_user$project$Update$LoadBlocks),
+				A2(
+					_elm_lang$core$Maybe$map,
+					A2(_user$project$Update$getChainStartingAt, nodeUrl, 20),
+					A2(
+						_elm_lang$core$Maybe$map,
+						function (_) {
+							return _.hash;
+						},
+						A2(
+							_elm_lang$core$Maybe$andThen,
+							_elm_lang$core$List$head,
+							A2(_elm_community$list_extra$List_Extra$getAt, branchIndex, branches))))));
+	});
+var _user$project$Update$update = F2(
+	function (msg, model) {
+		var _p3 = A2(_elm_lang$core$Debug$log, 'msg', msg);
+		switch (_p3.ctor) {
+			case 'LoadBlocks':
+				var _p4 = _p3._0;
+				if (_p4.ctor === 'Ok') {
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{blocks: _p4._0}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				} else {
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								errors: {ctor: '::', _0: _p4._0, _1: model.errors}
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				}
+			case 'LoadSchema':
+				var _p5 = _p3._1;
+				if (_p5.ctor === 'Ok') {
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								schemaData: A3(
+									_elm_lang$core$Dict$insert,
+									_p3._0,
+									_user$project$Schema$collapseTrees(_p5._0),
+									model.schemaData)
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				} else {
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								errors: {ctor: '::', _0: _p5._0, _1: model.errors}
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				}
+			case 'SchemaMsg':
+				var _p8 = _p3._0;
+				var newSchemaMaybe = A2(
+					_elm_lang$core$Maybe$map,
+					_user$project$Schema$update(_p3._1),
+					A2(_elm_lang$core$Dict$get, _p8, model.schemaData));
+				var _p6 = newSchemaMaybe;
+				if (_p6.ctor === 'Just') {
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								schemaData: A3(_elm_lang$core$Dict$insert, _p8, _p6._0, model.schemaData)
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				} else {
+					var _p7 = A2(_elm_lang$core$Debug$log, 'Failed to find schema', _p8);
+					return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+				}
+			case 'LoadOperation':
+				var _p9 = _p3._0;
+				if (_p9.ctor === 'Ok') {
+					var _p10 = _p9._0;
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								operations: A3(_elm_lang$core$Dict$insert, _p10.hash, _p10, model.operations)
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				} else {
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								errors: {ctor: '::', _0: _p9._0, _1: model.errors}
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				}
+			case 'LoadParsedOperation':
+				var _p11 = _p3._1;
+				if (_p11.ctor === 'Ok') {
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								parsedOperations: A3(_elm_lang$core$Dict$insert, _p3._0, _p11._0, model.parsedOperations)
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				} else {
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								errors: {ctor: '::', _0: _p11._0, _1: model.errors}
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				}
+			case 'LoadBlockOperations':
+				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+			case 'LoadHeads':
+				var _p12 = _p3._0;
+				if (_p12.ctor === 'Ok') {
+					return A2(_user$project$Update$loadHeads, model, _p12._0);
+				} else {
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								errors: {ctor: '::', _0: _p12._0, _1: model.errors}
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				}
+			case 'ShowBlock':
+				var _p13 = _p3._0;
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							showBlock: _elm_lang$core$Maybe$Just(_p13)
+						}),
+					_1: A2(_user$project$Update$getBlockOperationDetails, model.nodeUrl, _p13)
+				};
+			case 'ShowOperation':
+				var _p14 = _p3._0;
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							showOperation: _elm_lang$core$Maybe$Just(_p14)
+						}),
+					_1: A3(_user$project$Update$getOperationIfNew, model.nodeUrl, model.operations, _p14)
+				};
+			default:
+				var _p15 = _p3._0;
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							showBranch: _elm_lang$core$Maybe$Just(_p15)
+						}),
+					_1: A3(_user$project$Update$getBranch, model.nodeUrl, model.blocks, _p15)
+				};
+		}
+	});
 
 var _user$project$View$viewParse = F2(
 	function (parsedOperations, operationIdMaybe) {
@@ -12855,7 +12986,7 @@ var _user$project$View$viewHeader = function (nodeUrl) {
 				{ctor: '[]'},
 				{
 					ctor: '::',
-					_0: _elm_lang$html$Html$text('Tezos client'),
+					_0: _elm_lang$html$Html$text('Tezos client 3'),
 					_1: {ctor: '[]'}
 				}),
 			_1: {
@@ -12941,6 +13072,7 @@ var _user$project$Main$init = function (flags) {
 	var schemaQuery1 = '/describe';
 	var model = {
 		blocks: {ctor: '[]'},
+		heads: {ctor: '[]'},
 		schemaData: _elm_lang$core$Dict$empty,
 		errors: {ctor: '[]'},
 		nodeUrl: flags.nodeUrl,
@@ -12961,7 +13093,11 @@ var _user$project$Main$init = function (flags) {
 					_elm_lang$http$Http$send,
 					_user$project$Update$LoadBlocks,
 					_user$project$Update$getBlocks(model.nodeUrl)),
-				_1: {ctor: '[]'}
+				_1: {
+					ctor: '::',
+					_0: _user$project$Update$getHeads(model.nodeUrl),
+					_1: {ctor: '[]'}
+				}
 			})
 	};
 };

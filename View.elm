@@ -23,6 +23,7 @@ view model =
         , viewShowOperation model.operations model.showOperation
         , viewParse model.parsedOperations model.showOperation
         , viewSchemas model.schemaData
+          --, viewDebug model
         ]
 
 
@@ -43,7 +44,7 @@ viewSchemas schemas =
 viewHeader : String -> Html Msg
 viewHeader nodeUrl =
     H.div []
-        [ H.h1 [] [ H.text "Tezos client" ]
+        [ H.h1 [] [ H.text "Tezos client 3" ]
         , H.div [] [ H.text ("Connecting to Tezos RPC server " ++ nodeUrl) ]
         ]
 
