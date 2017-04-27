@@ -47,9 +47,7 @@ type alias Block =
     { hash : BlockID
     , predecessor : BlockID
     , fitness : List Fitness
-    , timestamp :
-        String
-        -- TODO convert to date value
+    , timestamp : String
     , operations : List (List OperationID)
     , net_id : NetID
     , level : Level
@@ -120,26 +118,15 @@ type alias BlockOperations =
     List (List ParsedOperation)
 
 
-findInChain : List Block -> BlockID -> Maybe Block
-findInChain blockChains hash =
-    List.find (\block -> block.hash == hash) blockChains
-
-
-findBlock : List (List Block) -> BlockID -> Maybe Block
-findBlock blockchains hash =
-    case blockchains of
-        [] ->
-            Nothing
-
-        hd :: tl ->
-            case findInChain hd hash of
-                Just block ->
-                    Just block
-
-                Nothing ->
-                    findBlock tl hash
-
-
-findOperation : List Operation -> OperationID -> Maybe Operation
-findOperation operations operationId =
-    List.find (\operation -> operation.hash == operationId) operations
+{-| Get list of saved blocks starting with the block with given hash and
+following predecessor links. This only finds blocks already in the dict.
+-}
+getBranchList : Dict BlockID Block -> BlockID -> List Block
+getBranchList blocks blockhash =
+    let
+        helper hash blockList =
+            Dict.get hash blocks
+                |> Maybe.map (\block -> helper block.predecessor (block :: blockList))
+                |> Maybe.withDefault blockList
+    in
+        helper blockhash [] |> List.reverse

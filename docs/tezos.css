@@ -185,3 +185,12 @@ td.predecessor, div.predecessor {
 tr.selected {
     background-color: yellow;
 }
+
+table.operations td,
+table.operations th {
+    padding: .5em 1em;
+}
+
+table.operations td ul {
+    margin: 0;
+}

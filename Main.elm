@@ -3,6 +3,7 @@ module Main exposing (main)
 import Html
 import Http
 import Dict
+import Time
 import Model exposing (..)
 import Update exposing (update, Msg(..), getBlocks, getSchema, getHeads)
 import View exposing (view)
@@ -55,4 +56,4 @@ init flags =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    Time.every (60 * Time.second) Tick

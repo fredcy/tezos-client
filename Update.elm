@@ -6,6 +6,8 @@ import Json.Encode as Encode
 import Json.Decode.Pipeline as Decode
 import Http
 import List.Extra as List
+import Set
+import Time exposing (Time)
 import Model exposing (..)
 import Schema exposing (SchemaData, decodeSchema, collapseTrees)
 
@@ -22,9 +24,9 @@ type Msg
     | LoadParsedOperation OperationID (Result Http.Error ParsedOperation)
     | SchemaMsg SchemaName Schema.Msg
     | ShowBlock BlockID
-    | ShowOperation OperationID
     | ShowBranch BlockID
     | LoadHeads (Result Http.Error BlocksData)
+    | Tick Time
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -91,7 +93,16 @@ update msg model =
                     ( { model | errors = error :: model.errors }, Cmd.none )
 
         LoadBlockOperations blockhash result ->
-            ( model, Cmd.none )
+            case result of
+                Ok operationListList ->
+                    let
+                        blockOperations =
+                            Dict.insert blockhash (List.concat operationListList) model.blockOperations
+                    in
+                        ( { model | blockOperations = blockOperations }, Cmd.none )
+
+                Err error ->
+                    ( { model | errors = error :: model.errors }, Cmd.none )
 
         LoadHeads headsResult ->
             case headsResult of
@@ -103,19 +114,16 @@ update msg model =
 
         ShowBlock blockhash ->
             ( { model | showBlock = Just blockhash }
-            , getBlockOperationDetails model.nodeUrl blockhash
-            )
-
-        ShowOperation operationhash ->
-            ( { model | showOperation = Just operationhash }
-            , getOperationIfNew model.nodeUrl model.operations operationhash
-              -- get details of operations, anticipating user request to view those details
+            , getBlockOperationDetails model blockhash
             )
 
         ShowBranch hash ->
             ( { model | showBranch = Just hash }
             , getBranch model hash
             )
+
+        Tick _ ->
+            ( model, getHeads model.nodeUrl )
 
 
 emptyJsonBody : Http.Body
@@ -181,8 +189,18 @@ loadHeads model headsData =
         blocks : Dict BlockID Block
         blocks =
             List.foldl addChainBlocks model.blocks headsData
+
+        showBranch : Maybe BlockID
+        showBranch =
+            if model.showBranch == Nothing then
+                -- default to displaying first branch
+                List.head heads
+            else
+                model.showBranch
     in
-        ( { model | heads = heads, blocks = blocks }, Cmd.none )
+        ( { model | heads = heads, blocks = blocks, showBranch = showBranch }
+        , showBranch |> Maybe.map (getBranch model) |> Maybe.withDefault Cmd.none
+        )
 
 
 loadBlocks : Model -> BlocksData -> ( Model, Cmd Msg )
@@ -193,25 +211,31 @@ loadBlocks model blocksData =
             List.foldl addChainBlocks model.blocks blocksData
     in
         ( { model | blocks = blocks }
-          --, getBlocksOperationsDetail model blockChains
-        , Cmd.none
+        , getAllBlocksOperations model
         )
 
 
+{-| Request chain starting at given block (hash) if necessary. If we already have some blocks stored, request only what is needed to get to some target length.
+-}
 getBranch : Model -> BlockID -> Cmd Msg
 getBranch model blockhash =
-    getChainStartingAt model.nodeUrl 20 blockhash
-        |> Http.send LoadBlocks
+    let
+        branchList =
+            getBranchList model.blocks blockhash
 
+        desiredLength =
+            200
 
-getBranchXXX : URL -> List (List Block) -> Int -> Cmd Msg
-getBranchXXX nodeUrl branches branchIndex =
-    List.getAt branchIndex branches
-        |> Maybe.andThen List.head
-        |> Maybe.map .hash
-        |> Maybe.map (getChainStartingAt nodeUrl 20)
-        |> Maybe.map (Http.send LoadBlocks)
-        |> Maybe.withDefault Cmd.none
+        toGet =
+            desiredLength - List.length branchList
+
+        startHash =
+            List.reverse branchList |> List.head |> Maybe.map .predecessor |> Maybe.withDefault blockhash
+    in
+        if toGet > 0 then
+            getChainStartingAt model.nodeUrl toGet startHash |> Http.send LoadBlocks
+        else
+            Cmd.none
 
 
 getChainStartingAt : URL -> Int -> BlockID -> Http.Request BlocksData
@@ -262,18 +286,6 @@ decodeHeads =
                 -- get first element of each sublist list (should be exactly one in each)
                 List.map List.head branches |> List.filterMap identity |> Decode.succeed
             )
-
-
-getOperations : String -> BlockID -> Http.Request (List Operation)
-getOperations nodeUrl blockId =
-    let
-        body =
-            [] |> Encode.object |> Http.jsonBody
-
-        query =
-            "/blocks/" ++ blockId ++ "/proto/operations"
-    in
-        Http.post (nodeUrl ++ query) body decodeOperations
 
 
 getOperation : String -> OperationID -> Http.Request Operation
@@ -430,49 +442,37 @@ getBlockOperationIDs block =
     List.concatMap identity block.operations
 
 
-getBlockOperationInfo : Model -> BlockID -> Cmd Msg
-getBlockOperationInfo model blockhash =
-    Dict.get blockhash model.blocks
-        |> Maybe.map getBlockOperationIDs
-        |> Maybe.map (List.map (getOperationIfNew model.nodeUrl model.operations))
-        |> Maybe.map Cmd.batch
-        |> Maybe.withDefault Cmd.none
-
-
-getBlockOperationDetails : URL -> BlockID -> Cmd Msg
-getBlockOperationDetails nodeUrl blockHash =
+getBlockOperationDetails : Model -> BlockID -> Cmd Msg
+getBlockOperationDetails model blockHash =
     let
         url =
-            nodeUrl ++ "/blocks/" ++ blockHash ++ "/proto/operations"
+            model.nodeUrl ++ "/blocks/" ++ blockHash ++ "/proto/operations"
     in
-        Http.post url emptyJsonBody decodeBlockOperationDetails
-            |> Http.send (LoadBlockOperations blockHash)
+        case Dict.get blockHash model.blockOperations of
+            Nothing ->
+                Http.post url emptyJsonBody decodeBlockOperationDetails
+                    |> Http.send (LoadBlockOperations blockHash)
+
+            _ ->
+                Cmd.none
+
+
+getAllBlocksOperations : Model -> Cmd Msg
+getAllBlocksOperations model =
+    let
+        blockHashSet =
+            Dict.toList model.blocks |> List.map Tuple.first |> Set.fromList
+
+        blockOperHashSet =
+            Dict.toList model.blockOperations |> List.map Tuple.first |> Set.fromList
+
+        blocksToGet =
+            Set.diff blockHashSet blockOperHashSet |> Set.toList |> Debug.log "blocksToGet"
+    in
+        Cmd.batch (List.map (getBlockOperationDetails model) blocksToGet)
 
 
 decodeBlockOperationDetails : Decode.Decoder BlockOperations
 decodeBlockOperationDetails =
     -- I don't understand why the RPC response data has two levels of lists. Anyway...
     Decode.field "ok" (Decode.list (Decode.list decodeParsedOperation))
-
-
-{-| Form command to get details of all operations in the (potentially
-multi-headed) blockchain.
--}
-getBlocksOperationsDetail : Model -> List (List Block) -> Cmd Msg
-getBlocksOperationsDetail model blockChains =
-    let
-        doChain : List Block -> Cmd Msg
-        doChain blocks =
-            blocks
-                |> List.map (getBlockOperationIDs >> List.map (getOperationIfNew model.nodeUrl model.operations) >> Cmd.batch)
-                |> Cmd.batch
-    in
-        Cmd.batch (List.map doChain blockChains)
-
-
-getOperationIfNew : String -> Dict OperationID Operation -> OperationID -> Cmd Msg
-getOperationIfNew nodeUrl operations operationId =
-    if Dict.member operationId operations then
-        Cmd.none
-    else
-        Http.send LoadOperation (getOperation nodeUrl operationId)
