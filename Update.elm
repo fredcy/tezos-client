@@ -156,10 +156,7 @@ getHeads : String -> Cmd Msg
 getHeads nodeUrl =
     let
         body =
-            -- TODO: stop gettng operations data for this
-            [ ( "include_ops", Encode.bool True ) ]
-                |> Encode.object
-                |> Http.jsonBody
+            [] |> Encode.object |> Http.jsonBody
 
         url =
             nodeUrl ++ "/blocks"
@@ -224,7 +221,7 @@ getBranch model blockhash =
             getBranchList model.blocks blockhash
 
         desiredLength =
-            200
+            20
 
         toGet =
             desiredLength - List.length branchList
@@ -267,7 +264,7 @@ decodeBlock =
         |> Decode.required "predecessor" Decode.string
         |> Decode.required "fitness" (Decode.list Decode.string)
         |> Decode.required "timestamp" decodeTimestamp
-        |> Decode.required "operations" (Decode.list (Decode.list Decode.string))
+        |> Decode.optional "operations" (Decode.list (Decode.list Decode.string)) [ [] ]
         |> Decode.required "net_id" Decode.string
         |> Decode.required "level" Decode.int
 

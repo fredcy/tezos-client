@@ -11428,11 +11428,16 @@ var _user$project$Update$decodeBlock = A3(
 		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
 		'net_id',
 		_elm_lang$core$Json_Decode$string,
-		A3(
-			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+		A4(
+			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$optional,
 			'operations',
 			_elm_lang$core$Json_Decode$list(
 				_elm_lang$core$Json_Decode$list(_elm_lang$core$Json_Decode$string)),
+			{
+				ctor: '::',
+				_0: {ctor: '[]'},
+				_1: {ctor: '[]'}
+			},
 			A3(
 				_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
 				'timestamp',
@@ -11537,15 +11542,7 @@ var _user$project$Update$getHeads = function (nodeUrl) {
 	var url = A2(_elm_lang$core$Basics_ops['++'], nodeUrl, '/blocks');
 	var body = _elm_lang$http$Http$jsonBody(
 		_elm_lang$core$Json_Encode$object(
-			{
-				ctor: '::',
-				_0: {
-					ctor: '_Tuple2',
-					_0: 'include_ops',
-					_1: _elm_lang$core$Json_Encode$bool(true)
-				},
-				_1: {ctor: '[]'}
-			}));
+			{ctor: '[]'}));
 	return A2(
 		_elm_lang$http$Http$send,
 		_user$project$Update$LoadHeads,
@@ -11660,7 +11657,7 @@ var _user$project$Update$LoadBlocks = function (a) {
 };
 var _user$project$Update$getBranch = F2(
 	function (model, blockhash) {
-		var desiredLength = 200;
+		var desiredLength = 20;
 		var branchList = A2(_user$project$Model$getBranchList, model.blocks, blockhash);
 		var toGet = desiredLength - _elm_lang$core$List$length(branchList);
 		var startHash = A2(
