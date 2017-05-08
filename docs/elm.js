@@ -15547,6 +15547,8 @@ var _user$project$Main$Flags = F2(
 	function (a, b) {
 		return {nodeUrl: a, now: b};
 	});
+var _user$project$Main$Home = {ctor: 'Home'};
+var _user$project$Main$Blank = {ctor: 'Blank'};
 
 var Elm = {};
 Elm['Main'] = Elm['Main'] || {};

@@ -1,7 +1,9 @@
+SRC = $(shell find src -name '*.elm')
+
 build: elm.js
 
-elm.js: Main.elm Model.elm Schema.elm Update.elm View.elm
-	elm make Main.elm --output=$@
+elm.js: $(SRC)
+	elm make src/Main.elm --output=$@
 
 ###
 

@@ -10,6 +10,11 @@ import Update exposing (update, Msg(..), getBlocks, getSchema, getHeads)
 import View exposing (view)
 
 
+type Page
+    = Blank
+    | Home
+
+
 main =
     Html.programWithFlags
         { init = init
