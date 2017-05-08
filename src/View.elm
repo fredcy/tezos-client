@@ -10,7 +10,8 @@ import Dict exposing (Dict)
 import List.Extra as List
 import ParseInt
 import Date.Format
-import Schema
+import Data.Chain exposing (BlockID, Block, ParsedOperation, Base58CheckEncodedSHA256, SubOperation(..), getBranchList)
+import Data.Schema as Schema
 import Model exposing (..)
 import Update exposing (Msg(..))
 
@@ -22,8 +23,8 @@ view model =
         , viewError model.nodeUrl model.errors
         , viewHeads model
         , viewShowBranch model
-        , viewShowBlock model.blocks model.showBlock
-        , viewShowBlockOperations model.blockOperations model.showBlock
+        , viewShowBlock model.chain.blocks model.showBlock
+        , viewShowBlockOperations model.chain.blockOperations model.showBlock
         , viewAllOperations model
         , viewSchemas model.schemaData
           --, viewDebug model
@@ -78,7 +79,7 @@ viewHeads model =
     let
         heads : List BlockStatus
         heads =
-            List.map (findBlockStatus model.blocks) model.heads
+            List.map (findBlockStatus model.chain.blocks) model.chain.heads
 
         header =
             H.tr []
@@ -132,7 +133,7 @@ viewShowBranch : Model -> Html Msg
 viewShowBranch model =
     case model.showBranch of
         Just hash ->
-            getBranchList model.blocks hash
+            getBranchList model.chain hash
                 |> viewBranch 4 model.now model.showBlock
 
         Nothing ->
@@ -298,7 +299,11 @@ viewAllOperations : Model -> Html Msg
 viewAllOperations model =
     H.div []
         [ H.h3 [] [ H.text "All Operations" ]
-        , Dict.toList model.blockOperations |> List.map Tuple.second |> List.concat |> List.sortBy .hash |> viewOperationsTable
+        , Dict.toList model.chain.blockOperations
+            |> List.map Tuple.second
+            |> List.concat
+            |> List.sortBy .hash
+            |> viewOperationsTable
         ]
 
 

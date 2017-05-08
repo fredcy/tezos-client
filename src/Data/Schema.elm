@@ -1,4 +1,4 @@
-module Schema exposing (Msg, SchemaData, decodeSchema, update, viewSchemaDataTop, collapseTrees)
+module Data.Schema exposing (Msg, SchemaData, decodeSchema, update, viewSchemaDataTop, collapseTrees)
 
 import Char
 import Dict exposing (Dict)

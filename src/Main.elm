@@ -5,9 +5,12 @@ import Http
 import Date
 import Dict
 import Time
+import Data.Chain
 import Model exposing (..)
-import Update exposing (update, Msg(..), getBlocks, getSchema, getHeads)
+import Update exposing (update, Msg(..))
 import View exposing (view)
+import Request.Block
+import Request.Schema exposing (getSchema)
 
 
 type Page
@@ -34,17 +37,13 @@ init : Flags -> ( Model, Cmd Msg )
 init flags =
     let
         model =
-            { heads = []
-            , blocks = Dict.empty
-            , schemaData = Dict.empty
+            { schemaData = Dict.empty
             , errors = []
             , nodeUrl = flags.nodeUrl
-            , operations = Dict.empty
-            , parsedOperations = Dict.empty
             , showBlock = Nothing
             , showOperation = Nothing
             , showBranch = Nothing
-            , blockOperations = Dict.empty
+            , chain = Data.Chain.init
             , now = Date.fromTime flags.now
             }
 
@@ -56,7 +55,7 @@ init flags =
     in
         ( model
         , Cmd.batch
-            [ getHeads model.nodeUrl
+            [ Request.Block.getHeads model.nodeUrl |> Http.send LoadHeads
               --, Http.send (LoadSchema schemaQuery1) (getSchema model.nodeUrl schemaQuery1)
               --, Http.send (LoadSchema schemaQuery2) (getSchema model.nodeUrl schemaQuery2)
             ]
