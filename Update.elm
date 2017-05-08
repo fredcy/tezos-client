@@ -1,5 +1,6 @@
 module Update exposing (..)
 
+import Date
 import Dict exposing (Dict)
 import Json.Decode as Decode
 import Json.Encode as Encode
@@ -122,8 +123,8 @@ update msg model =
             , getBranch model hash
             )
 
-        Tick _ ->
-            ( model, getHeads model.nodeUrl )
+        Tick time ->
+            ( { model | now = Date.fromTime time }, getHeads model.nodeUrl )
 
 
 emptyJsonBody : Http.Body
@@ -225,12 +226,16 @@ getBranch model blockhash =
 
         toGet =
             desiredLength - List.length branchList
-
-        startHash =
-            List.reverse branchList |> List.head |> Maybe.map .predecessor |> Maybe.withDefault blockhash
     in
         if toGet > 0 then
-            getChainStartingAt model.nodeUrl toGet startHash |> Http.send LoadBlocks
+            let
+                startHash =
+                    List.reverse branchList
+                        |> List.head
+                        |> Maybe.map .predecessor
+                        |> Maybe.withDefault blockhash
+            in
+                getChainStartingAt model.nodeUrl toGet startHash |> Http.send LoadBlocks
         else
             Cmd.none
 
@@ -271,8 +276,9 @@ decodeBlock =
 
 decodeTimestamp : Decode.Decoder Timestamp
 decodeTimestamp =
-    -- TODO
     Decode.string
+        |> Decode.map Date.fromString
+        |> Decode.map (Result.withDefault (Date.fromTime 0))
 
 
 decodeHeads : Decode.Decoder HeadsResponse

@@ -1,5 +1,7 @@
 module View exposing (view)
 
+import Date exposing (Date)
+import Date.Distance
 import Html as H exposing (Html)
 import Html.Attributes as HA
 import Html.Events as HE
@@ -7,6 +9,7 @@ import Http
 import Dict exposing (Dict)
 import List.Extra as List
 import ParseInt
+import Date.Format
 import Schema
 import Model exposing (..)
 import Update exposing (Msg(..))
@@ -96,7 +99,7 @@ viewHeads model =
                     , HA.title block.hash
                     ]
                     [ H.text (shortHash block.hash) ]
-                , H.td [ HA.class "timestamp" ] [ H.text block.timestamp ]
+                , H.td [ HA.class "timestamp" ] [ H.text (formatDate block.timestamp) ]
                 , H.td [ HA.class "fitness" ] [ H.text (toString (canonFitness block.fitness)) ]
                 , H.td [ HA.class "level" ] [ H.text (toString block.level) ]
                 ]
@@ -116,7 +119,7 @@ viewHeads model =
     in
         H.div []
             [ H.h2 [] [ H.text "Blockchain heads" ]
-            , H.div [ HA.class "scrollable2 heads" ]
+            , H.div [ HA.class "heads" ]
                 [ H.table [ HA.class "heads" ]
                     [ H.thead [] [ header ]
                     , H.tbody [] (List.indexedMap viewHead heads)
@@ -130,47 +133,55 @@ viewShowBranch model =
     case model.showBranch of
         Just hash ->
             getBranchList model.blocks hash
-                |> viewBranch model.showBlock
+                |> viewBranch 4 model.now model.showBlock
 
         Nothing ->
             H.h4 [] [ H.text "no branch selected" ]
 
 
-viewBranch : Maybe BlockID -> List Block -> Html Msg
-viewBranch blockhashMaybe branch =
+viewBranch : Int -> Date -> Maybe BlockID -> List Block -> Html Msg
+viewBranch howMany now blockhashMaybe branch =
     let
         tableHeader =
             H.tr []
-                [ H.th [] [ H.text "hash" ]
-                , H.th [ HA.class "timestamp" ] [ H.text "timestamp" ]
+                [ H.th [] [ H.text "level" ]
+                , H.th [] [ H.text "hash" ]
+                , H.th [ HA.class "timestamp" ] [ H.text "age" ]
+                , H.th [] [ H.text "operations" ]
                 ]
+
+        branchToShow =
+            List.take howMany branch
     in
         H.div []
             [ H.h3 [] [ H.text ("branch") ]
-            , H.div [ HA.class "branch scrollable" ]
+            , H.div [ HA.class "branch" ]
                 [ H.table [ HA.class "blockchain" ]
                     [ H.thead [] [ tableHeader ]
-                    , H.tbody [] (List.indexedMap (viewBlock2 blockhashMaybe) branch)
+                    , H.tbody [] (List.indexedMap (viewBlock2 now blockhashMaybe) branchToShow)
                     ]
                 ]
             ]
 
 
-viewBlock2 : Maybe BlockID -> Int -> Block -> Html Msg
-viewBlock2 blockhashMaybe n block =
+viewBlock2 : Date -> Maybe BlockID -> Int -> Block -> Html Msg
+viewBlock2 now blockhashMaybe n block =
     H.tr
         [ HA.classList
             [ ( "block", True )
             , ( "selected", Maybe.map ((==) block.hash) blockhashMaybe |> Maybe.withDefault False )
             ]
         ]
-        [ H.td
+        [ H.td [] [ H.text (toString block.level) ]
+        , H.td
             [ HA.class "hash"
             , HA.title block.hash
             , HE.onClick (ShowBlock block.hash)
             ]
             [ H.text (shortHash block.hash) ]
-        , H.td [ HA.class "timestamp" ] [ H.text block.timestamp ]
+        , H.td [ HA.class "timestamp" ] [ H.text (Date.Distance.inWords now block.timestamp) ]
+        , H.td [ HA.class "operation-count" ]
+            [ List.concat block.operations |> List.length |> toString |> H.text ]
         ]
 
 
@@ -202,12 +213,17 @@ viewBlock block =
             , H.div [ HA.class "property-list" ]
                 [ viewPropertyString "hash" block.hash
                 , viewPropertyString "predecessor" block.predecessor
-                , viewPropertyString "timestamp" block.timestamp
+                , viewPropertyString "timestamp" (formatDate block.timestamp)
                 , viewPropertyList "fitness" block.fitness
                 , viewPropertyString "net_id" block.net_id
                 , viewPropertyList "operations" (List.concat block.operations |> List.map shortHash)
                 ]
             ]
+
+
+formatDate : Date -> String
+formatDate date =
+    Date.Format.format "%Y-%m-%d %H:%M:%S" date
 
 
 viewShowBlock : Dict BlockID Block -> Maybe BlockID -> Html Msg

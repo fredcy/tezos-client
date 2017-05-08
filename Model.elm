@@ -1,9 +1,9 @@
 module Model exposing (..)
 
+import Date exposing (Date)
 import Dict exposing (Dict)
 import Http
 import Json.Decode as Decode
-import List.Extra as List
 import Schema
 
 
@@ -36,7 +36,7 @@ type alias Fitness =
 
 
 type alias Timestamp =
-    String
+    Date
 
 
 type alias URL =
@@ -47,7 +47,7 @@ type alias Block =
     { hash : BlockID
     , predecessor : BlockID
     , fitness : List Fitness
-    , timestamp : String
+    , timestamp : Timestamp
     , operations : List (List OperationID)
     , net_id : NetID
     , level : Level
@@ -111,6 +111,7 @@ type alias Model =
     , showBlock : Maybe BlockID
     , showOperation : Maybe OperationID
     , showBranch : Maybe BlockID
+    , now : Date
     }
 
 

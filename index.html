@@ -9,8 +9,10 @@
     <body>
         <script src="elm.js"></script>
         <script type="text/javascript">
+         var d = new Date();
          var flags = {
-             nodeUrl: "http://localhost:8732"
+             nodeUrl: "http://localhost:8732",
+             now: d.getTime()
          };
          Elm.Main.fullscreen(flags)
         </script>

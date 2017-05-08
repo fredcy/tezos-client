@@ -101,11 +101,6 @@ TR.head TD {
 
 /* scrollable table */
 
-.scrollable2.heads {
-    height: 300px;
-    width: 38em;
-}
-
 .scrollable.branch {
     height: 300px;
     width: 25em;
@@ -193,4 +188,8 @@ table.operations th {
 
 table.operations td ul {
     margin: 0;
+}
+
+.operation-count {
+    text-align: right;
 }

@@ -2,6 +2,7 @@ module Main exposing (main)
 
 import Html
 import Http
+import Date
 import Dict
 import Time
 import Model exposing (..)
@@ -19,7 +20,9 @@ main =
 
 
 type alias Flags =
-    { nodeUrl : String }
+    { nodeUrl : String
+    , now : Float
+    }
 
 
 init : Flags -> ( Model, Cmd Msg )
@@ -37,6 +40,7 @@ init flags =
             , showOperation = Nothing
             , showBranch = Nothing
             , blockOperations = Dict.empty
+            , now = Date.fromTime flags.now
             }
 
         schemaQuery1 =
