@@ -1,4 +1,4 @@
-module Update exposing (..)
+module Update exposing (update, Msg(..))
 
 import Date
 import Dict exposing (Dict)
@@ -15,10 +15,7 @@ import Data.Chain as Chain exposing (Block, BlockID, Operation, OperationID)
 import Data.Request exposing (URL)
 import Request.Block
 import Request.Operation
-
-
-type alias HeadsResponse =
-    List BlockID
+import Route exposing (Route)
 
 
 type Msg
@@ -32,12 +29,18 @@ type Msg
     | ShowBranch BlockID
     | LoadHeads (Result Http.Error Chain.BlocksData)
     | Tick Time
+    | SetRoute (Maybe Route)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg |> Debug.log "msg" of
-        LoadBlocks blocksMaybe ->
+    updatePage (getPage model.pageState) msg model
+
+
+updatePage : Page -> Msg -> Model -> ( Model, Cmd Msg )
+updatePage page msg model =
+    case ( msg, page ) |> Debug.log "update" of
+        ( LoadBlocks blocksMaybe, _ ) ->
             case blocksMaybe of
                 Ok blockChains ->
                     loadBlocks model blockChains
@@ -45,7 +48,7 @@ update msg model =
                 Err error ->
                     ( { model | errors = error :: model.errors }, Cmd.none )
 
-        LoadSchema schemaName schemaMaybe ->
+        ( LoadSchema schemaName schemaMaybe, _ ) ->
             case schemaMaybe of
                 Ok schemaData ->
                     ( { model | schemaData = Dict.insert schemaName (collapseTrees schemaData) model.schemaData }
@@ -55,7 +58,7 @@ update msg model =
                 Err error ->
                     ( { model | errors = error :: model.errors }, Cmd.none )
 
-        SchemaMsg name msg ->
+        ( SchemaMsg name msg, _ ) ->
             let
                 newSchemaMaybe : Maybe SchemaData
                 newSchemaMaybe =
@@ -72,7 +75,7 @@ update msg model =
                         in
                             ( model, Cmd.none )
 
-        LoadOperation operationResult ->
+        ( LoadOperation operationResult, _ ) ->
             case operationResult of
                 Ok operation ->
                     let
@@ -84,7 +87,7 @@ update msg model =
                 Err error ->
                     ( { model | errors = error :: model.errors }, Cmd.none )
 
-        LoadParsedOperation operationId parseResult ->
+        ( LoadParsedOperation operationId parseResult, _ ) ->
             case parseResult of
                 Ok parse ->
                     let
@@ -96,7 +99,7 @@ update msg model =
                 Err error ->
                     ( { model | errors = error :: model.errors }, Cmd.none )
 
-        LoadBlockOperations blockhash result ->
+        ( LoadBlockOperations blockhash result, _ ) ->
             case result of
                 Ok operationListList ->
                     ( { model | chain = Chain.addBlockOperations model.chain blockhash operationListList }
@@ -106,7 +109,7 @@ update msg model =
                 Err error ->
                     ( { model | errors = error :: model.errors }, Cmd.none )
 
-        LoadHeads headsResult ->
+        ( LoadHeads headsResult, _ ) ->
             case headsResult of
                 Ok heads ->
                     loadHeads model heads
@@ -114,20 +117,36 @@ update msg model =
                 Err error ->
                     ( { model | errors = error :: model.errors }, Cmd.none )
 
-        ShowBlock blockhash ->
+        ( ShowBlock blockhash, _ ) ->
             ( { model | showBlock = Just blockhash }
             , getBlockOperationDetails model blockhash
             )
 
-        ShowBranch hash ->
+        ( ShowBranch hash, _ ) ->
             ( { model | showBranch = Just hash }
             , getBranch model hash
             )
 
-        Tick time ->
+        ( Tick time, _ ) ->
             ( { model | now = Date.fromTime time }
             , Request.Block.getHeads model.nodeUrl |> Http.send LoadHeads
             )
+
+        ( SetRoute route, _ ) ->
+            setRoute route model
+
+
+setRoute : Maybe Route -> Model -> ( Model, Cmd Msg )
+setRoute routeMaybe model =
+    case routeMaybe of
+        Nothing ->
+            ( { model | pageState = Loaded NotFound }, Cmd.none )
+
+        Just (Route.Home) ->
+            ( { model | pageState = Loaded Home }, Cmd.none )
+
+        Just (Route.Schema) ->
+            ( { model | pageState = Loaded Schema }, Cmd.none )
 
 
 loadHeads : Model -> Chain.BlocksData -> ( Model, Cmd Msg )

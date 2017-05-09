@@ -12,6 +12,17 @@ type alias SchemaName =
     String
 
 
+type Page
+    = Blank
+    | NotFound
+    | Home
+    | Schema
+
+
+type PageState
+    = Loaded Page
+
+
 type alias Model =
     { schemaData : Dict SchemaName Schema.SchemaData
     , errors : List Http.Error
@@ -21,5 +32,10 @@ type alias Model =
     , showBranch : Maybe BlockID
     , now : Date
     , chain : Data.Chain.Model
+    , pageState : PageState
     }
 
+
+getPage : PageState -> Page
+getPage (Loaded page) =
+    page

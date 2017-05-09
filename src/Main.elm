@@ -4,6 +4,8 @@ import Html
 import Http
 import Date
 import Dict
+import Navigation
+import Route exposing (Route)
 import Time
 import Data.Chain
 import Model exposing (..)
@@ -13,13 +15,9 @@ import Request.Block
 import Request.Schema exposing (getSchema)
 
 
-type Page
-    = Blank
-    | Home
-
-
+main : Program Flags Model Msg
 main =
-    Html.programWithFlags
+    Navigation.programWithFlags (Route.fromLocation >> SetRoute)
         { init = init
         , update = update
         , view = view
@@ -33,8 +31,8 @@ type alias Flags =
     }
 
 
-init : Flags -> ( Model, Cmd Msg )
-init flags =
+init : Flags -> Navigation.Location -> ( Model, Cmd Msg )
+init flags location =
     let
         model =
             { schemaData = Dict.empty
@@ -45,6 +43,7 @@ init flags =
             , showBranch = Nothing
             , chain = Data.Chain.init
             , now = Date.fromTime flags.now
+            , pageState = Loaded Blank
             }
 
         schemaQuery1 =
