@@ -15284,7 +15284,7 @@ var _user$project$View$viewError = F2(
 		}
 	});
 var _user$project$View$shortHash = function (hash) {
-	return A2(_elm_lang$core$String$left, 12, hash);
+	return A2(_elm_lang$core$String$left, 14, hash);
 };
 var _user$project$View$viewSuboperation = function (suboperation) {
 	var _p3 = suboperation;

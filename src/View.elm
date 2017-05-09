@@ -309,7 +309,7 @@ viewAllOperations model =
 
 shortHash : Base58CheckEncodedSHA256 -> String
 shortHash hash =
-    String.left 12 hash
+    String.left 14 hash
 
 
 viewError : String -> List Http.Error -> Html Msg
