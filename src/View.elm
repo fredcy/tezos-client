@@ -13,6 +13,7 @@ import Date.Format
 import Data.Chain exposing (BlockID, Block, ParsedOperation, Base58CheckEncodedSHA256, SubOperation(..), getBranchList)
 import Data.Schema as Schema
 import Model exposing (..)
+import Page
 import Update exposing (Msg(..))
 import View.Page
 
@@ -20,17 +21,25 @@ import View.Page
 view : Model -> Html Msg
 view model =
     case model.pageState of
-        Loaded Blank ->
+        Loaded (Page.Blank) ->
             H.text "" |> View.Page.frame
 
-        Loaded Operations ->
+        Loaded (Page.Operations) ->
             viewAllOperations model |> View.Page.frame
 
-        Loaded Schema ->
+        Loaded (Page.Schema) ->
             viewSchemas model.schemaData |> View.Page.frame
 
-        Loaded Debug ->
+        Loaded (Page.Debug) ->
             viewDebug model |> View.Page.frame
+
+        Loaded (Page.Block hash) ->
+            case Dict.get hash model.chain.blocks of
+                Just block ->
+                    viewBlock block |> View.Page.frame
+
+                Nothing ->
+                    H.text "block not found" |> View.Page.frame
 
         _ ->
             viewHome model |> View.Page.frame
@@ -39,9 +48,7 @@ view model =
 viewHome : Model -> Html Msg
 viewHome model =
     H.div []
-        [ viewHeader model.nodeUrl
-        , H.div [] [ H.text (toString model.pageState) ]
-        , viewError model.nodeUrl model.errors
+        [ viewError model.nodeUrl model.errors
         , viewHeads model
         , viewShowBranch model
         , viewShowBlock model.chain.blocks model.showBlock
@@ -66,7 +73,7 @@ viewSchemas schemas =
 viewHeader : String -> Html Msg
 viewHeader nodeUrl =
     H.div []
-        [ H.h1 [] [ H.text "Tezos client 3" ]
+        [ H.h1 [] [ H.text "Tezos client" ]
         , H.div [] [ H.text ("Connecting to Tezos RPC server " ++ nodeUrl) ]
         ]
 
@@ -204,6 +211,11 @@ viewBlock2 now blockhashMaybe n block =
         ]
 
 
+blockFullLink : BlockID -> Html Msg
+blockFullLink hash =
+    H.span [ HA.class "hash link", HE.onClick (ShowBlock hash) ] [ H.text hash ]
+
+
 {-| View details of a single block.
 -}
 viewBlock : Block -> Html Msg
@@ -232,6 +244,7 @@ viewBlock block =
             , H.div [ HA.class "property-list" ]
                 [ viewPropertyString "hash" block.hash
                 , viewPropertyString "predecessor" block.predecessor
+                , viewProperty "pred2" (blockFullLink block.predecessor)
                 , viewPropertyString "timestamp" (formatDate block.timestamp)
                 , viewPropertyList "fitness" block.fitness
                 , viewPropertyString "net_id" block.net_id

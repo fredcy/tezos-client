@@ -1,13 +1,15 @@
-module Route exposing (Route(..), fromLocation, href, modifyUrl)
+module Route exposing (Route(..), fromLocation, href, modifyUrl, newUrl)
 
 import Html as H
 import Html.Attributes as HA
 import UrlParser as Url exposing (parseHash, s, (</>), string, oneOf, Parser)
 import Navigation exposing (Location)
+import Data.Chain as Chain exposing (BlockID)
 
 
 type Route
     = Home
+    | Block BlockID
     | Operations
     | Schema
     | Debug
@@ -18,6 +20,7 @@ route =
     Url.oneOf
         [ Url.map Home (s "")
         , Url.map Home (s "home")
+        , Url.map Block (s "block" </> Url.string)
         , Url.map Operations (s "operations")
         , Url.map Schema (s "schema")
         , Url.map Debug (s "debug")
@@ -31,6 +34,9 @@ routeToString route =
             case route of
                 Home ->
                     []
+
+                Block hash ->
+                    [ "block", hash ]
 
                 Operations ->
                     [ "operations" ]
@@ -52,6 +58,11 @@ href route =
 modifyUrl : Route -> Cmd msg
 modifyUrl =
     routeToString >> Navigation.modifyUrl
+
+
+newUrl : Route -> Cmd msg
+newUrl =
+    routeToString >> Navigation.newUrl
 
 
 fromLocation : Location -> Maybe Route

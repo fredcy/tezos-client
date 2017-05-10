@@ -161,17 +161,19 @@ td.timestamp {
 /* make block hash values look like link */
 
 table.blockchain tr.block td.hash,
-table.heads td.hash {
+table.heads td.hash,
+.link {
     color: blue;
 }
 
 table.blockchain tr.block td.hash:hover,
-table.heads td.hash:hover {
+table.heads td.hash:hover,
+.link:hover {
     color: red;
     text-decoration: underline;
 }
 
-td.hash, div.hash,
+td.hash, div.hash, span.hash,
 td.predecessor, div.predecessor {
     font-family: Andale Mono, Courier New, monospace;
 }

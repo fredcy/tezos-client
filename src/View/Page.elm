@@ -17,7 +17,8 @@ frame content =
 viewHeader : Html msg
 viewHeader =
     H.div [ HA.class "page-header" ]
-        [ navLinks
+        [ H.h1 [] [ H.text "Tezos client" ]
+        , navLinks
         , H.hr [] []
         ]
 

@@ -14645,6 +14645,16 @@ var _user$project$Route$routeToString = function (route) {
 		switch (_p0.ctor) {
 			case 'Home':
 				return {ctor: '[]'};
+			case 'Block':
+				return {
+					ctor: '::',
+					_0: 'block',
+					_1: {
+						ctor: '::',
+						_0: _p0._0,
+						_1: {ctor: '[]'}
+					}
+				};
 			case 'Operations':
 				return {
 					ctor: '::',
@@ -14678,9 +14688,16 @@ var _user$project$Route$modifyUrl = function (_p1) {
 	return _elm_lang$navigation$Navigation$modifyUrl(
 		_user$project$Route$routeToString(_p1));
 };
+var _user$project$Route$newUrl = function (_p2) {
+	return _elm_lang$navigation$Navigation$newUrl(
+		_user$project$Route$routeToString(_p2));
+};
 var _user$project$Route$Debug = {ctor: 'Debug'};
 var _user$project$Route$Schema = {ctor: 'Schema'};
 var _user$project$Route$Operations = {ctor: 'Operations'};
+var _user$project$Route$Block = function (a) {
+	return {ctor: 'Block', _0: a};
+};
 var _user$project$Route$Home = {ctor: 'Home'};
 var _user$project$Route$route = _evancz$url_parser$UrlParser$oneOf(
 	{
@@ -14699,21 +14716,31 @@ var _user$project$Route$route = _evancz$url_parser$UrlParser$oneOf(
 				ctor: '::',
 				_0: A2(
 					_evancz$url_parser$UrlParser$map,
-					_user$project$Route$Operations,
-					_evancz$url_parser$UrlParser$s('operations')),
+					_user$project$Route$Block,
+					A2(
+						_evancz$url_parser$UrlParser_ops['</>'],
+						_evancz$url_parser$UrlParser$s('block'),
+						_evancz$url_parser$UrlParser$string)),
 				_1: {
 					ctor: '::',
 					_0: A2(
 						_evancz$url_parser$UrlParser$map,
-						_user$project$Route$Schema,
-						_evancz$url_parser$UrlParser$s('schema')),
+						_user$project$Route$Operations,
+						_evancz$url_parser$UrlParser$s('operations')),
 					_1: {
 						ctor: '::',
 						_0: A2(
 							_evancz$url_parser$UrlParser$map,
-							_user$project$Route$Debug,
-							_evancz$url_parser$UrlParser$s('debug')),
-						_1: {ctor: '[]'}
+							_user$project$Route$Schema,
+							_evancz$url_parser$UrlParser$s('schema')),
+						_1: {
+							ctor: '::',
+							_0: A2(
+								_evancz$url_parser$UrlParser$map,
+								_user$project$Route$Debug,
+								_evancz$url_parser$UrlParser$s('debug')),
+							_1: {ctor: '[]'}
+						}
 					}
 				}
 			}
@@ -14723,6 +14750,16 @@ var _user$project$Route$fromLocation = function (location) {
 	return _elm_lang$core$String$isEmpty(location.hash) ? _elm_lang$core$Maybe$Just(_user$project$Route$Home) : A2(_evancz$url_parser$UrlParser$parseHash, _user$project$Route$route, location);
 };
 
+var _user$project$Page$Debug = {ctor: 'Debug'};
+var _user$project$Page$Operations = {ctor: 'Operations'};
+var _user$project$Page$Schema = {ctor: 'Schema'};
+var _user$project$Page$Block = function (a) {
+	return {ctor: 'Block', _0: a};
+};
+var _user$project$Page$Home = {ctor: 'Home'};
+var _user$project$Page$NotFound = {ctor: 'NotFound'};
+var _user$project$Page$Blank = {ctor: 'Blank'};
+
 var _user$project$Model$getPage = function (_p0) {
 	var _p1 = _p0;
 	return _p1._0;
@@ -14731,12 +14768,6 @@ var _user$project$Model$Model = F9(
 	function (a, b, c, d, e, f, g, h, i) {
 		return {schemaData: a, errors: b, nodeUrl: c, showBlock: d, showOperation: e, showBranch: f, now: g, chain: h, pageState: i};
 	});
-var _user$project$Model$Debug = {ctor: 'Debug'};
-var _user$project$Model$Operations = {ctor: 'Operations'};
-var _user$project$Model$Schema = {ctor: 'Schema'};
-var _user$project$Model$Home = {ctor: 'Home'};
-var _user$project$Model$NotFound = {ctor: 'NotFound'};
-var _user$project$Model$Blank = {ctor: 'Blank'};
 var _user$project$Model$Loaded = function (a) {
 	return {ctor: 'Loaded', _0: a};
 };
@@ -14915,7 +14946,7 @@ var _user$project$Update$setRoute = F2(
 				_0: _elm_lang$core$Native_Utils.update(
 					model,
 					{
-						pageState: _user$project$Model$Loaded(_user$project$Model$NotFound)
+						pageState: _user$project$Model$Loaded(_user$project$Page$NotFound)
 					}),
 				_1: _elm_lang$core$Platform_Cmd$none
 			};
@@ -14927,7 +14958,18 @@ var _user$project$Update$setRoute = F2(
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								pageState: _user$project$Model$Loaded(_user$project$Model$Home)
+								pageState: _user$project$Model$Loaded(_user$project$Page$Home)
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				case 'Block':
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								pageState: _user$project$Model$Loaded(
+									_user$project$Page$Block(_p0._0._0))
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
@@ -14937,7 +14979,7 @@ var _user$project$Update$setRoute = F2(
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								pageState: _user$project$Model$Loaded(_user$project$Model$Operations)
+								pageState: _user$project$Model$Loaded(_user$project$Page$Operations)
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
@@ -14949,7 +14991,7 @@ var _user$project$Update$setRoute = F2(
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								pageState: _user$project$Model$Loaded(_user$project$Model$Schema)
+								pageState: _user$project$Model$Loaded(_user$project$Page$Schema)
 							}),
 						_1: _elm_lang$core$Platform_Cmd$batch(
 							{
@@ -14974,7 +15016,7 @@ var _user$project$Update$setRoute = F2(
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								pageState: _user$project$Model$Loaded(_user$project$Model$Debug)
+								pageState: _user$project$Model$Loaded(_user$project$Page$Debug)
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
@@ -15187,7 +15229,17 @@ var _user$project$Update$updatePage = F3(
 						{
 							showBlock: _elm_lang$core$Maybe$Just(_p11)
 						}),
-					_1: A2(_user$project$Update$getBlockOperationDetails, model, _p11)
+					_1: _elm_lang$core$Platform_Cmd$batch(
+						{
+							ctor: '::',
+							_0: A2(_user$project$Update$getBlockOperationDetails, model, _p11),
+							_1: {
+								ctor: '::',
+								_0: _user$project$Route$newUrl(
+									_user$project$Route$Block(_p11)),
+								_1: {ctor: '[]'}
+							}
+						})
 				};
 			case 'ShowBranch':
 				var _p12 = _p1._0._0;
@@ -15284,14 +15336,25 @@ var _user$project$View_Page$viewHeader = A2(
 	},
 	{
 		ctor: '::',
-		_0: _user$project$View_Page$navLinks,
+		_0: A2(
+			_elm_lang$html$Html$h1,
+			{ctor: '[]'},
+			{
+				ctor: '::',
+				_0: _elm_lang$html$Html$text('Tezos client'),
+				_1: {ctor: '[]'}
+			}),
 		_1: {
 			ctor: '::',
-			_0: A2(
-				_elm_lang$html$Html$hr,
-				{ctor: '[]'},
-				{ctor: '[]'}),
-			_1: {ctor: '[]'}
+			_0: _user$project$View_Page$navLinks,
+			_1: {
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$hr,
+					{ctor: '[]'},
+					{ctor: '[]'}),
+				_1: {ctor: '[]'}
+			}
 		}
 	});
 var _user$project$View_Page$frame = function (content) {
@@ -15747,6 +15810,25 @@ var _user$project$View$viewShowBlockOperations = F2(
 var _user$project$View$formatDate = function (date) {
 	return A2(_mgold$elm_date_format$Date_Format$format, '%Y-%m-%d %H:%M:%S', date);
 };
+var _user$project$View$blockFullLink = function (hash) {
+	return A2(
+		_elm_lang$html$Html$span,
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html_Attributes$class('hash link'),
+			_1: {
+				ctor: '::',
+				_0: _elm_lang$html$Html_Events$onClick(
+					_user$project$Update$ShowBlock(hash)),
+				_1: {ctor: '[]'}
+			}
+		},
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html$text(hash),
+			_1: {ctor: '[]'}
+		});
+};
 var _user$project$View$viewBlock = function (block) {
 	var viewProperty = F2(
 		function (label, value) {
@@ -15856,25 +15938,32 @@ var _user$project$View$viewBlock = function (block) {
 							_1: {
 								ctor: '::',
 								_0: A2(
-									viewPropertyString,
-									'timestamp',
-									_user$project$View$formatDate(block.timestamp)),
+									viewProperty,
+									'pred2',
+									_user$project$View$blockFullLink(block.predecessor)),
 								_1: {
 									ctor: '::',
-									_0: A2(viewPropertyList, 'fitness', block.fitness),
+									_0: A2(
+										viewPropertyString,
+										'timestamp',
+										_user$project$View$formatDate(block.timestamp)),
 									_1: {
 										ctor: '::',
-										_0: A2(viewPropertyString, 'net_id', block.net_id),
+										_0: A2(viewPropertyList, 'fitness', block.fitness),
 										_1: {
 											ctor: '::',
-											_0: A2(
-												viewPropertyList,
-												'operations',
-												A2(
-													_elm_lang$core$List$map,
-													_user$project$View$shortHash,
-													_elm_lang$core$List$concat(block.operations))),
-											_1: {ctor: '[]'}
+											_0: A2(viewPropertyString, 'net_id', block.net_id),
+											_1: {
+												ctor: '::',
+												_0: A2(
+													viewPropertyList,
+													'operations',
+													A2(
+														_elm_lang$core$List$map,
+														_user$project$View$shortHash,
+														_elm_lang$core$List$concat(block.operations))),
+												_1: {ctor: '[]'}
+											}
 										}
 									}
 								}
@@ -16166,7 +16255,7 @@ var _user$project$View$viewHeader = function (nodeUrl) {
 				{ctor: '[]'},
 				{
 					ctor: '::',
-					_0: _elm_lang$html$Html$text('Tezos client 3'),
+					_0: _elm_lang$html$Html$text('Tezos client'),
 					_1: {ctor: '[]'}
 				}),
 			_1: {
@@ -16499,36 +16588,20 @@ var _user$project$View$viewHome = function (model) {
 		{ctor: '[]'},
 		{
 			ctor: '::',
-			_0: _user$project$View$viewHeader(model.nodeUrl),
+			_0: A2(_user$project$View$viewError, model.nodeUrl, model.errors),
 			_1: {
 				ctor: '::',
-				_0: A2(
-					_elm_lang$html$Html$div,
-					{ctor: '[]'},
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html$text(
-							_elm_lang$core$Basics$toString(model.pageState)),
-						_1: {ctor: '[]'}
-					}),
+				_0: _user$project$View$viewHeads(model),
 				_1: {
 					ctor: '::',
-					_0: A2(_user$project$View$viewError, model.nodeUrl, model.errors),
+					_0: _user$project$View$viewShowBranch(model),
 					_1: {
 						ctor: '::',
-						_0: _user$project$View$viewHeads(model),
+						_0: A2(_user$project$View$viewShowBlock, model.chain.blocks, model.showBlock),
 						_1: {
 							ctor: '::',
-							_0: _user$project$View$viewShowBranch(model),
-							_1: {
-								ctor: '::',
-								_0: A2(_user$project$View$viewShowBlock, model.chain.blocks, model.showBlock),
-								_1: {
-									ctor: '::',
-									_0: A2(_user$project$View$viewShowBlockOperations, model.chain.blockOperations, model.showBlock),
-									_1: {ctor: '[]'}
-								}
-							}
+							_0: A2(_user$project$View$viewShowBlockOperations, model.chain.blockOperations, model.showBlock),
+							_1: {ctor: '[]'}
 						}
 					}
 				}
@@ -16550,6 +16623,15 @@ var _user$project$View$view = function (model) {
 		case 'Debug':
 			return _user$project$View_Page$frame(
 				_user$project$View$viewDebug(model));
+		case 'Block':
+			var _p11 = A2(_elm_lang$core$Dict$get, _p10._0._0, model.chain.blocks);
+			if (_p11.ctor === 'Just') {
+				return _user$project$View_Page$frame(
+					_user$project$View$viewBlock(_p11._0));
+			} else {
+				return _user$project$View_Page$frame(
+					_elm_lang$html$Html$text('block not found'));
+			}
 		default:
 			return _user$project$View_Page$frame(
 				_user$project$View$viewHome(model));
@@ -16570,7 +16652,7 @@ var _user$project$Main$init = F2(
 			showBranch: _elm_lang$core$Maybe$Nothing,
 			chain: _user$project$Data_Chain$init,
 			now: _elm_lang$core$Date$fromTime(flags.now),
-			pageState: _user$project$Model$Loaded(_user$project$Model$Blank)
+			pageState: _user$project$Model$Loaded(_user$project$Page$Blank)
 		};
 		var _p0 = A2(
 			_user$project$Update$setRoute,

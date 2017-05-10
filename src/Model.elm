@@ -5,16 +5,7 @@ import Dict exposing (Dict)
 import Http
 import Data.Schema as Schema
 import Data.Chain as Chain exposing (BlockID, OperationID)
-
-
-
-type Page
-    = Blank
-    | NotFound
-    | Home
-    | Schema
-    | Operations
-    | Debug
+import Page exposing (Page)
 
 
 type PageState

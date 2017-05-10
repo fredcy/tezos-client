@@ -13,6 +13,7 @@ import Model exposing (..)
 import Data.Schema as Schema exposing (SchemaData, SchemaName, decodeSchema, collapseTrees)
 import Data.Chain as Chain exposing (Block, BlockID, Operation, OperationID)
 import Data.Request exposing (URL)
+import Page exposing (Page)
 import Request.Block
 import Request.Operation
 import Request.Schema exposing (getSchema)
@@ -120,7 +121,10 @@ updatePage page msg model =
 
         ( ShowBlock blockhash, _ ) ->
             ( { model | showBlock = Just blockhash }
-            , getBlockOperationDetails model blockhash
+            , Cmd.batch
+                [ getBlockOperationDetails model blockhash
+                , Route.newUrl (Route.Block blockhash)
+                ]
             )
 
         ( ShowBranch hash, _ ) ->
@@ -141,13 +145,16 @@ setRoute : Maybe Route -> Model -> ( Model, Cmd Msg )
 setRoute routeMaybe model =
     case routeMaybe of
         Nothing ->
-            ( { model | pageState = Loaded NotFound }, Cmd.none )
+            ( { model | pageState = Loaded Page.NotFound }, Cmd.none )
 
         Just (Route.Home) ->
-            ( { model | pageState = Loaded Home }, Cmd.none )
+            ( { model | pageState = Loaded Page.Home }, Cmd.none )
+
+        Just (Route.Block hash) ->
+            ( { model | pageState = Loaded (Page.Block hash) }, Cmd.none )
 
         Just (Route.Operations) ->
-            ( { model | pageState = Loaded Operations }, Cmd.none )
+            ( { model | pageState = Loaded Page.Operations }, Cmd.none )
 
         Just (Route.Schema) ->
             let
@@ -157,7 +164,7 @@ setRoute routeMaybe model =
                 schemaQuery2 =
                     "/describe/blocks/head/proto"
             in
-                ( { model | pageState = Loaded Schema }
+                ( { model | pageState = Loaded Page.Schema }
                 , Cmd.batch
                     [ getSchema model.nodeUrl schemaQuery1 |> Http.send (LoadSchema schemaQuery1)
                     , getSchema model.nodeUrl schemaQuery2 |> Http.send (LoadSchema schemaQuery2)
@@ -165,7 +172,7 @@ setRoute routeMaybe model =
                 )
 
         Just (Route.Debug) ->
-            ( { model | pageState = Loaded Debug }, Cmd.none )
+            ( { model | pageState = Loaded Page.Debug }, Cmd.none )
 
 
 loadHeads : Model -> Chain.BlocksData -> ( Model, Cmd Msg )

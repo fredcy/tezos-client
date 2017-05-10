@@ -9,6 +9,7 @@ import Route exposing (Route)
 import Time
 import Data.Chain
 import Model exposing (..)
+import Page
 import Update exposing (update, Msg(..))
 import View exposing (view)
 import Request.Block
@@ -42,7 +43,7 @@ init flags location =
             , showBranch = Nothing
             , chain = Data.Chain.init
             , now = Date.fromTime flags.now
-            , pageState = Loaded Blank
+            , pageState = Loaded Page.Blank
             }
 
         ( routedModel, routeCmd ) =
