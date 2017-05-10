@@ -1,4 +1,4 @@
-module Update exposing (update, Msg(..))
+module Update exposing (update, Msg(..), setRoute)
 
 import Date
 import Dict exposing (Dict)
@@ -10,11 +10,12 @@ import List.Extra as List
 import Set
 import Time exposing (Time)
 import Model exposing (..)
-import Data.Schema as Schema exposing (SchemaData, decodeSchema, collapseTrees)
+import Data.Schema as Schema exposing (SchemaData, SchemaName, decodeSchema, collapseTrees)
 import Data.Chain as Chain exposing (Block, BlockID, Operation, OperationID)
 import Data.Request exposing (URL)
 import Request.Block
 import Request.Operation
+import Request.Schema exposing (getSchema)
 import Route exposing (Route)
 
 
@@ -145,8 +146,26 @@ setRoute routeMaybe model =
         Just (Route.Home) ->
             ( { model | pageState = Loaded Home }, Cmd.none )
 
+        Just (Route.Operations) ->
+            ( { model | pageState = Loaded Operations }, Cmd.none )
+
         Just (Route.Schema) ->
-            ( { model | pageState = Loaded Schema }, Cmd.none )
+            let
+                schemaQuery1 =
+                    "/describe"
+
+                schemaQuery2 =
+                    "/describe/blocks/head/proto"
+            in
+                ( { model | pageState = Loaded Schema }
+                , Cmd.batch
+                    [ getSchema model.nodeUrl schemaQuery1 |> Http.send (LoadSchema schemaQuery1)
+                    , getSchema model.nodeUrl schemaQuery2 |> Http.send (LoadSchema schemaQuery2)
+                    ]
+                )
+
+        Just (Route.Debug) ->
+            ( { model | pageState = Loaded Debug }, Cmd.none )
 
 
 loadHeads : Model -> Chain.BlocksData -> ( Model, Cmd Msg )

@@ -14,24 +14,42 @@ import Data.Chain exposing (BlockID, Block, ParsedOperation, Base58CheckEncodedS
 import Data.Schema as Schema
 import Model exposing (..)
 import Update exposing (Msg(..))
+import View.Page
 
 
 view : Model -> Html Msg
 view model =
+    case model.pageState of
+        Loaded Blank ->
+            H.text "" |> View.Page.frame
+
+        Loaded Operations ->
+            viewAllOperations model |> View.Page.frame
+
+        Loaded Schema ->
+            viewSchemas model.schemaData |> View.Page.frame
+
+        Loaded Debug ->
+            viewDebug model |> View.Page.frame
+
+        _ ->
+            viewHome model |> View.Page.frame
+
+
+viewHome : Model -> Html Msg
+viewHome model =
     H.div []
         [ viewHeader model.nodeUrl
+        , H.div [] [ H.text (toString model.pageState) ]
         , viewError model.nodeUrl model.errors
         , viewHeads model
         , viewShowBranch model
         , viewShowBlock model.chain.blocks model.showBlock
         , viewShowBlockOperations model.chain.blockOperations model.showBlock
-        , viewAllOperations model
-        , viewSchemas model.schemaData
-          --, viewDebug model
         ]
 
 
-viewSchemas : Dict SchemaName Schema.SchemaData -> Html Msg
+viewSchemas : Dict Schema.SchemaName Schema.SchemaData -> Html Msg
 viewSchemas schemas =
     let
         names =

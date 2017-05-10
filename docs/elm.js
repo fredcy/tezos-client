@@ -14639,7 +14639,48 @@ var _user$project$Data_Schema$viewSchemaDataTop = F2(
 			});
 	});
 
+var _user$project$Route$routeToString = function (route) {
+	var pieces = function () {
+		var _p0 = route;
+		switch (_p0.ctor) {
+			case 'Home':
+				return {ctor: '[]'};
+			case 'Operations':
+				return {
+					ctor: '::',
+					_0: 'operations',
+					_1: {ctor: '[]'}
+				};
+			case 'Schema':
+				return {
+					ctor: '::',
+					_0: 'schema',
+					_1: {ctor: '[]'}
+				};
+			default:
+				return {
+					ctor: '::',
+					_0: 'debug',
+					_1: {ctor: '[]'}
+				};
+		}
+	}();
+	return A2(
+		_elm_lang$core$Basics_ops['++'],
+		'#/',
+		A2(_elm_lang$core$String$join, '/', pieces));
+};
+var _user$project$Route$href = function (route) {
+	return _elm_lang$html$Html_Attributes$href(
+		_user$project$Route$routeToString(route));
+};
+var _user$project$Route$modifyUrl = function (_p1) {
+	return _elm_lang$navigation$Navigation$modifyUrl(
+		_user$project$Route$routeToString(_p1));
+};
+var _user$project$Route$Debug = {ctor: 'Debug'};
 var _user$project$Route$Schema = {ctor: 'Schema'};
+var _user$project$Route$Operations = {ctor: 'Operations'};
 var _user$project$Route$Home = {ctor: 'Home'};
 var _user$project$Route$route = _evancz$url_parser$UrlParser$oneOf(
 	{
@@ -14652,9 +14693,30 @@ var _user$project$Route$route = _evancz$url_parser$UrlParser$oneOf(
 			ctor: '::',
 			_0: A2(
 				_evancz$url_parser$UrlParser$map,
-				_user$project$Route$Schema,
-				_evancz$url_parser$UrlParser$s('schema')),
-			_1: {ctor: '[]'}
+				_user$project$Route$Home,
+				_evancz$url_parser$UrlParser$s('home')),
+			_1: {
+				ctor: '::',
+				_0: A2(
+					_evancz$url_parser$UrlParser$map,
+					_user$project$Route$Operations,
+					_evancz$url_parser$UrlParser$s('operations')),
+				_1: {
+					ctor: '::',
+					_0: A2(
+						_evancz$url_parser$UrlParser$map,
+						_user$project$Route$Schema,
+						_evancz$url_parser$UrlParser$s('schema')),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_evancz$url_parser$UrlParser$map,
+							_user$project$Route$Debug,
+							_evancz$url_parser$UrlParser$s('debug')),
+						_1: {ctor: '[]'}
+					}
+				}
+			}
 		}
 	});
 var _user$project$Route$fromLocation = function (location) {
@@ -14669,6 +14731,8 @@ var _user$project$Model$Model = F9(
 	function (a, b, c, d, e, f, g, h, i) {
 		return {schemaData: a, errors: b, nodeUrl: c, showBlock: d, showOperation: e, showBranch: f, now: g, chain: h, pageState: i};
 	});
+var _user$project$Model$Debug = {ctor: 'Debug'};
+var _user$project$Model$Operations = {ctor: 'Operations'};
 var _user$project$Model$Schema = {ctor: 'Schema'};
 var _user$project$Model$Home = {ctor: 'Home'};
 var _user$project$Model$NotFound = {ctor: 'NotFound'};
@@ -14755,43 +14819,23 @@ var _user$project$Request_Operation$getBlockOperations = F2(
 		return A3(_elm_lang$http$Http$post, url, _user$project$Data_Request$emptyJsonBody, _user$project$Data_Chain$decodeBlockOperationDetails);
 	});
 
-var _user$project$Update$setRoute = F2(
-	function (routeMaybe, model) {
-		var _p0 = routeMaybe;
-		if (_p0.ctor === 'Nothing') {
-			return {
-				ctor: '_Tuple2',
-				_0: _elm_lang$core$Native_Utils.update(
-					model,
-					{
-						pageState: _user$project$Model$Loaded(_user$project$Model$NotFound)
-					}),
-				_1: _elm_lang$core$Platform_Cmd$none
-			};
-		} else {
-			if (_p0._0.ctor === 'Home') {
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{
-							pageState: _user$project$Model$Loaded(_user$project$Model$Home)
-						}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-			} else {
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{
-							pageState: _user$project$Model$Loaded(_user$project$Model$Schema)
-						}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-			}
-		}
+var _user$project$Request_Schema$getSchema = F2(
+	function (nodeUrl, schemaQuery) {
+		var url = A2(_elm_lang$core$Basics_ops['++'], nodeUrl, schemaQuery);
+		var body = _elm_lang$http$Http$jsonBody(
+			_elm_lang$core$Json_Encode$object(
+				{
+					ctor: '::',
+					_0: {
+						ctor: '_Tuple2',
+						_0: 'recursive',
+						_1: _elm_lang$core$Json_Encode$bool(true)
+					},
+					_1: {ctor: '[]'}
+				}));
+		return A3(_elm_lang$http$Http$post, url, body, _user$project$Data_Schema$decodeSchema);
 	});
+
 var _user$project$Update$SetRoute = function (a) {
 	return {ctor: 'SetRoute', _0: a};
 };
@@ -14861,6 +14905,81 @@ var _user$project$Update$LoadOperation = function (a) {
 var _user$project$Update$LoadSchema = F2(
 	function (a, b) {
 		return {ctor: 'LoadSchema', _0: a, _1: b};
+	});
+var _user$project$Update$setRoute = F2(
+	function (routeMaybe, model) {
+		var _p0 = routeMaybe;
+		if (_p0.ctor === 'Nothing') {
+			return {
+				ctor: '_Tuple2',
+				_0: _elm_lang$core$Native_Utils.update(
+					model,
+					{
+						pageState: _user$project$Model$Loaded(_user$project$Model$NotFound)
+					}),
+				_1: _elm_lang$core$Platform_Cmd$none
+			};
+		} else {
+			switch (_p0._0.ctor) {
+				case 'Home':
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								pageState: _user$project$Model$Loaded(_user$project$Model$Home)
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				case 'Operations':
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								pageState: _user$project$Model$Loaded(_user$project$Model$Operations)
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				case 'Schema':
+					var schemaQuery2 = '/describe/blocks/head/proto';
+					var schemaQuery1 = '/describe';
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								pageState: _user$project$Model$Loaded(_user$project$Model$Schema)
+							}),
+						_1: _elm_lang$core$Platform_Cmd$batch(
+							{
+								ctor: '::',
+								_0: A2(
+									_elm_lang$http$Http$send,
+									_user$project$Update$LoadSchema(schemaQuery1),
+									A2(_user$project$Request_Schema$getSchema, model.nodeUrl, schemaQuery1)),
+								_1: {
+									ctor: '::',
+									_0: A2(
+										_elm_lang$http$Http$send,
+										_user$project$Update$LoadSchema(schemaQuery2),
+										A2(_user$project$Request_Schema$getSchema, model.nodeUrl, schemaQuery2)),
+									_1: {ctor: '[]'}
+								}
+							})
+					};
+				default:
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								pageState: _user$project$Model$Loaded(_user$project$Model$Debug)
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+			}
+		}
 	});
 var _user$project$Update$LoadBlocks = function (a) {
 	return {ctor: 'LoadBlocks', _0: a};
@@ -15106,6 +15225,93 @@ var _user$project$Update$update = F2(
 			msg,
 			model);
 	});
+
+var _user$project$View_Page$links = {
+	ctor: '::',
+	_0: {ctor: '_Tuple2', _0: 'Home', _1: _user$project$Route$Home},
+	_1: {
+		ctor: '::',
+		_0: {ctor: '_Tuple2', _0: 'Operations', _1: _user$project$Route$Operations},
+		_1: {
+			ctor: '::',
+			_0: {ctor: '_Tuple2', _0: 'Schemas', _1: _user$project$Route$Schema},
+			_1: {
+				ctor: '::',
+				_0: {ctor: '_Tuple2', _0: 'Debug', _1: _user$project$Route$Debug},
+				_1: {ctor: '[]'}
+			}
+		}
+	}
+};
+var _user$project$View_Page$navLinks = function () {
+	var makeNavLink = function (_p0) {
+		var _p1 = _p0;
+		return A2(
+			_elm_lang$html$Html$li,
+			{ctor: '[]'},
+			{
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$a,
+					{
+						ctor: '::',
+						_0: _user$project$Route$href(_p1._1),
+						_1: {ctor: '[]'}
+					},
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html$text(_p1._0),
+						_1: {ctor: '[]'}
+					}),
+				_1: {ctor: '[]'}
+			});
+	};
+	return A2(
+		_elm_lang$html$Html$ul,
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html_Attributes$class('nav-links'),
+			_1: {ctor: '[]'}
+		},
+		A2(_elm_lang$core$List$map, makeNavLink, _user$project$View_Page$links));
+}();
+var _user$project$View_Page$viewHeader = A2(
+	_elm_lang$html$Html$div,
+	{
+		ctor: '::',
+		_0: _elm_lang$html$Html_Attributes$class('page-header'),
+		_1: {ctor: '[]'}
+	},
+	{
+		ctor: '::',
+		_0: _user$project$View_Page$navLinks,
+		_1: {
+			ctor: '::',
+			_0: A2(
+				_elm_lang$html$Html$hr,
+				{ctor: '[]'},
+				{ctor: '[]'}),
+			_1: {ctor: '[]'}
+		}
+	});
+var _user$project$View_Page$frame = function (content) {
+	return A2(
+		_elm_lang$html$Html$div,
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html_Attributes$class('page-frame'),
+			_1: {ctor: '[]'}
+		},
+		{
+			ctor: '::',
+			_0: _user$project$View_Page$viewHeader,
+			_1: {
+				ctor: '::',
+				_0: content,
+				_1: {ctor: '[]'}
+			}
+		});
+};
 
 var _user$project$View$viewDebug = function (model) {
 	return A2(
@@ -16287,7 +16493,7 @@ var _user$project$View$viewHeads = function (model) {
 			}
 		});
 };
-var _user$project$View$view = function (model) {
+var _user$project$View$viewHome = function (model) {
 	return A2(
 		_elm_lang$html$Html$div,
 		{ctor: '[]'},
@@ -16296,27 +16502,31 @@ var _user$project$View$view = function (model) {
 			_0: _user$project$View$viewHeader(model.nodeUrl),
 			_1: {
 				ctor: '::',
-				_0: A2(_user$project$View$viewError, model.nodeUrl, model.errors),
+				_0: A2(
+					_elm_lang$html$Html$div,
+					{ctor: '[]'},
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html$text(
+							_elm_lang$core$Basics$toString(model.pageState)),
+						_1: {ctor: '[]'}
+					}),
 				_1: {
 					ctor: '::',
-					_0: _user$project$View$viewHeads(model),
+					_0: A2(_user$project$View$viewError, model.nodeUrl, model.errors),
 					_1: {
 						ctor: '::',
-						_0: _user$project$View$viewShowBranch(model),
+						_0: _user$project$View$viewHeads(model),
 						_1: {
 							ctor: '::',
-							_0: A2(_user$project$View$viewShowBlock, model.chain.blocks, model.showBlock),
+							_0: _user$project$View$viewShowBranch(model),
 							_1: {
 								ctor: '::',
-								_0: A2(_user$project$View$viewShowBlockOperations, model.chain.blockOperations, model.showBlock),
+								_0: A2(_user$project$View$viewShowBlock, model.chain.blocks, model.showBlock),
 								_1: {
 									ctor: '::',
-									_0: _user$project$View$viewAllOperations(model),
-									_1: {
-										ctor: '::',
-										_0: _user$project$View$viewSchemas(model.schemaData),
-										_1: {ctor: '[]'}
-									}
+									_0: A2(_user$project$View$viewShowBlockOperations, model.chain.blockOperations, model.showBlock),
+									_1: {ctor: '[]'}
 								}
 							}
 						}
@@ -16325,32 +16535,33 @@ var _user$project$View$view = function (model) {
 			}
 		});
 };
-
-var _user$project$Request_Schema$getSchema = F2(
-	function (nodeUrl, schemaQuery) {
-		var url = A2(_elm_lang$core$Basics_ops['++'], nodeUrl, schemaQuery);
-		var body = _elm_lang$http$Http$jsonBody(
-			_elm_lang$core$Json_Encode$object(
-				{
-					ctor: '::',
-					_0: {
-						ctor: '_Tuple2',
-						_0: 'recursive',
-						_1: _elm_lang$core$Json_Encode$bool(true)
-					},
-					_1: {ctor: '[]'}
-				}));
-		return A3(_elm_lang$http$Http$post, url, body, _user$project$Data_Schema$decodeSchema);
-	});
+var _user$project$View$view = function (model) {
+	var _p10 = model.pageState;
+	switch (_p10._0.ctor) {
+		case 'Blank':
+			return _user$project$View_Page$frame(
+				_elm_lang$html$Html$text(''));
+		case 'Operations':
+			return _user$project$View_Page$frame(
+				_user$project$View$viewAllOperations(model));
+		case 'Schema':
+			return _user$project$View_Page$frame(
+				_user$project$View$viewSchemas(model.schemaData));
+		case 'Debug':
+			return _user$project$View_Page$frame(
+				_user$project$View$viewDebug(model));
+		default:
+			return _user$project$View_Page$frame(
+				_user$project$View$viewHome(model));
+	}
+};
 
 var _user$project$Main$subscriptions = function (model) {
 	return A2(_elm_lang$core$Time$every, 60 * _elm_lang$core$Time$second, _user$project$Update$Tick);
 };
 var _user$project$Main$init = F2(
 	function (flags, location) {
-		var schemaQuery2 = '/describe/blocks/head/proto';
-		var schemaQuery1 = '/describe';
-		var model = {
+		var initModel = {
 			schemaData: _elm_lang$core$Dict$empty,
 			errors: {ctor: '[]'},
 			nodeUrl: flags.nodeUrl,
@@ -16361,25 +16572,35 @@ var _user$project$Main$init = F2(
 			now: _elm_lang$core$Date$fromTime(flags.now),
 			pageState: _user$project$Model$Loaded(_user$project$Model$Blank)
 		};
+		var _p0 = A2(
+			_user$project$Update$setRoute,
+			_user$project$Route$fromLocation(location),
+			initModel);
+		var routedModel = _p0._0;
+		var routeCmd = _p0._1;
 		return {
 			ctor: '_Tuple2',
-			_0: model,
+			_0: routedModel,
 			_1: _elm_lang$core$Platform_Cmd$batch(
 				{
 					ctor: '::',
 					_0: A2(
 						_elm_lang$http$Http$send,
 						_user$project$Update$LoadHeads,
-						_user$project$Request_Block$getHeads(model.nodeUrl)),
-					_1: {ctor: '[]'}
+						_user$project$Request_Block$getHeads(routedModel.nodeUrl)),
+					_1: {
+						ctor: '::',
+						_0: routeCmd,
+						_1: {ctor: '[]'}
+					}
 				})
 		};
 	});
 var _user$project$Main$main = A2(
 	_elm_lang$navigation$Navigation$programWithFlags,
-	function (_p0) {
+	function (_p1) {
 		return _user$project$Update$SetRoute(
-			_user$project$Route$fromLocation(_p0));
+			_user$project$Route$fromLocation(_p1));
 	},
 	{init: _user$project$Main$init, update: _user$project$Update$update, view: _user$project$View$view, subscriptions: _user$project$Main$subscriptions})(
 	A2(

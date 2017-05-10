@@ -1,4 +1,4 @@
-module Data.Schema exposing (Msg, SchemaData, decodeSchema, update, viewSchemaDataTop, collapseTrees)
+module Data.Schema exposing (Msg, Model, SchemaData, SchemaName, decodeSchema, update, viewSchemaDataTop, collapseTrees)
 
 import Char
 import Dict exposing (Dict)
@@ -6,6 +6,10 @@ import Html as H exposing (Html)
 import Html.Attributes as HA
 import Html.Events as HE
 import Json.Decode as Decode
+
+
+type alias SchemaName =
+    String
 
 
 type Msg
@@ -32,6 +36,10 @@ type ContextItem
 
 type alias Context =
     List ContextItem
+
+
+type alias Model =
+    Dict SchemaName SchemaData
 
 
 decodeSchema : Decode.Decoder SchemaData

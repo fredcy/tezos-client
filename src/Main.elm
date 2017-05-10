@@ -12,7 +12,6 @@ import Model exposing (..)
 import Update exposing (update, Msg(..))
 import View exposing (view)
 import Request.Block
-import Request.Schema exposing (getSchema)
 
 
 main : Program Flags Model Msg
@@ -34,7 +33,7 @@ type alias Flags =
 init : Flags -> Navigation.Location -> ( Model, Cmd Msg )
 init flags location =
     let
-        model =
+        initModel =
             { schemaData = Dict.empty
             , errors = []
             , nodeUrl = flags.nodeUrl
@@ -46,17 +45,13 @@ init flags location =
             , pageState = Loaded Blank
             }
 
-        schemaQuery1 =
-            "/describe"
-
-        schemaQuery2 =
-            "/describe/blocks/head/proto"
+        ( routedModel, routeCmd ) =
+            Update.setRoute (Route.fromLocation location) initModel
     in
-        ( model
+        ( routedModel
         , Cmd.batch
-            [ Request.Block.getHeads model.nodeUrl |> Http.send LoadHeads
-              --, Http.send (LoadSchema schemaQuery1) (getSchema model.nodeUrl schemaQuery1)
-              --, Http.send (LoadSchema schemaQuery2) (getSchema model.nodeUrl schemaQuery2)
+            [ Request.Block.getHeads routedModel.nodeUrl |> Http.send LoadHeads
+            , routeCmd
             ]
         )
 

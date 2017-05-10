@@ -3,13 +3,9 @@ module Model exposing (..)
 import Date exposing (Date)
 import Dict exposing (Dict)
 import Http
-import Json.Decode as Decode
 import Data.Schema as Schema
-import Data.Chain exposing (Block, BlockID, OperationID, ParsedOperation)
+import Data.Chain as Chain exposing (BlockID, OperationID)
 
-
-type alias SchemaName =
-    String
 
 
 type Page
@@ -17,6 +13,8 @@ type Page
     | NotFound
     | Home
     | Schema
+    | Operations
+    | Debug
 
 
 type PageState
@@ -24,14 +22,14 @@ type PageState
 
 
 type alias Model =
-    { schemaData : Dict SchemaName Schema.SchemaData
+    { schemaData : Schema.Model
     , errors : List Http.Error
     , nodeUrl : String
     , showBlock : Maybe BlockID
     , showOperation : Maybe OperationID
     , showBranch : Maybe BlockID
     , now : Date
-    , chain : Data.Chain.Model
+    , chain : Chain.Model
     , pageState : PageState
     }
 
