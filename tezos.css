@@ -203,16 +203,30 @@ table.operations td ul {
 
 .nav-links li {
     display: inline;
-    padding: .5em .5em;
     border-right: 1px solid #bbb;
 }
 
 .nav-links a {
     color: white;
+    padding: .5em .5em;
     text-decoration: none;
 }
 
 .nav-links a:hover {
-    text-decoration: underline;
-    color: red;
+    background-color: gray;
+}
+
+.error-count {
+    display: none;
+}
+
+.error-count.have-errors {
+    display: block;
+}
+
+.error-count a {
+    color: white;
+    background-color: red;
+    padding: 3px;
+    text-decoration: none;
 }

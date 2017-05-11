@@ -13,6 +13,7 @@ type Route
     | Operations
     | Schema
     | Heads
+    | Errors
     | Debug
 
 
@@ -26,6 +27,7 @@ route =
         , Url.map Operations (s "operations")
         , Url.map Schema (s "schema")
         , Url.map Debug (s "debug")
+        , Url.map Errors (s "errors")
         ]
 
 
@@ -51,6 +53,9 @@ routeToString route =
 
                 Debug ->
                     [ "debug" ]
+
+                Errors ->
+                    [ "errors" ]
     in
         "#/" ++ (String.join "/" pieces)
 

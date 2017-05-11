@@ -11,4 +11,5 @@ type Page
     | Block BlockID
     | Schema
     | Operations
+    | Errors
     | Debug

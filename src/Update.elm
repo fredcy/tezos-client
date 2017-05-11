@@ -177,6 +177,9 @@ setRoute routeMaybe model =
         Just (Route.Debug) ->
             ( { model | pageState = Loaded Page.Debug }, Cmd.none )
 
+        Just (Route.Errors) ->
+            ( { model | pageState = Loaded Page.Errors }, Cmd.none )
+
 
 loadHeads : Model -> Chain.BlocksData -> ( Model, Cmd Msg )
 loadHeads model headsData =

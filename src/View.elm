@@ -22,7 +22,10 @@ view : Model -> Html Msg
 view model =
     let
         context =
-            { pageState = model.pageState, now = model.now }
+            { pageState = model.pageState
+            , now = model.now
+            , errorCount = List.length model.errors
+            }
 
         content =
             case model.pageState of
@@ -52,6 +55,9 @@ view model =
                         Nothing ->
                             H.text "block not found"
 
+                Loaded Page.Errors ->
+                    viewError model.nodeUrl model.errors
+
                 Loaded Page.NotFound ->
                     H.text "page not found"
     in
@@ -60,13 +66,18 @@ view model =
 
 viewHome : Model -> Html Msg
 viewHome model =
-    H.div []
-        [ viewError model.nodeUrl model.errors
-        , viewShowBranch model
+    let
+        headMaybe =
+            List.head model.chain.heads
+    in
+        case headMaybe of
+            Just head ->
+                -- TODO fix kludgey re-use of old functions below
+                getBranchList model.chain head
+                    |> viewBranch 8 model.now (Just head)
 
-        --, viewShowBlock model.chain.blocks model.showBlock
-        --, viewShowBlockOperations model.chain.blockOperations model.showBlock
-        ]
+            Nothing ->
+                H.text "no head found"
 
 
 viewSchemas : Dict Schema.SchemaName Schema.SchemaData -> Html Msg
@@ -138,7 +149,7 @@ viewHeads model =
                     , HA.title block.hash
                     ]
                     [ H.text (shortHash block.hash) ]
-                , H.td [ HA.class "timestamp" ] [ H.text (formatDate block.timestamp) ]
+                , H.td [ HA.class "timestamp" ] [ H.text (formatTimestamp model.now block.timestamp) ]
                 , H.td [ HA.class "fitness" ] [ H.text (toString (canonFitness block.fitness)) ]
                 , H.td [ HA.class "level" ] [ H.text (toString block.level) ]
                 ]
@@ -203,6 +214,18 @@ viewBranch howMany now blockhashMaybe branch =
             ]
 
 
+formatTimestamp : Date -> Date -> String
+formatTimestamp now date =
+    let
+        distance =
+            Date.Distance.inWords now date
+
+        iso =
+            Date.Format.formatISO8601 date
+    in
+        iso ++ " (" ++ distance ++ ")"
+
+
 viewBlock2 : Date -> Maybe BlockID -> Int -> Block -> Html Msg
 viewBlock2 now blockhashMaybe n block =
     H.tr
@@ -218,7 +241,8 @@ viewBlock2 now blockhashMaybe n block =
             , HE.onClick (ShowBlock block.hash)
             ]
             [ H.text (shortHash block.hash) ]
-        , H.td [ HA.class "timestamp" ] [ H.text (Date.Distance.inWords now block.timestamp) ]
+        , H.td [ HA.class "timestamp" ]
+            [ H.text (formatTimestamp now block.timestamp) ]
         , H.td [ HA.class "operation-count" ]
             [ List.concat block.operations |> List.length |> toString |> H.text ]
         ]
@@ -358,15 +382,10 @@ shortHash hash =
 
 viewError : String -> List Http.Error -> Html Msg
 viewError nodeUrl errors =
-    case errors of
-        [] ->
-            H.text ""
-
-        errors ->
-            H.div [ HA.class "error" ]
-                [ H.h1 [] [ H.text "Errors" ]
-                , H.div [] (List.map (viewErrorInfo nodeUrl) errors)
-                ]
+    H.div [ HA.class "error" ]
+        [ H.h1 [] [ H.text "Errors" ]
+        , H.div [] (List.map (viewErrorInfo nodeUrl) errors)
+        ]
 
 
 viewErrorInfo nodeUrl error =

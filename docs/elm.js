@@ -14673,10 +14673,16 @@ var _user$project$Route$routeToString = function (route) {
 					_0: 'heads',
 					_1: {ctor: '[]'}
 				};
-			default:
+			case 'Debug':
 				return {
 					ctor: '::',
 					_0: 'debug',
+					_1: {ctor: '[]'}
+				};
+			default:
+				return {
+					ctor: '::',
+					_0: 'errors',
 					_1: {ctor: '[]'}
 				};
 		}
@@ -14699,6 +14705,7 @@ var _user$project$Route$newUrl = function (_p2) {
 		_user$project$Route$routeToString(_p2));
 };
 var _user$project$Route$Debug = {ctor: 'Debug'};
+var _user$project$Route$Errors = {ctor: 'Errors'};
 var _user$project$Route$Heads = {ctor: 'Heads'};
 var _user$project$Route$Schema = {ctor: 'Schema'};
 var _user$project$Route$Operations = {ctor: 'Operations'};
@@ -14752,7 +14759,14 @@ var _user$project$Route$route = _evancz$url_parser$UrlParser$oneOf(
 									_evancz$url_parser$UrlParser$map,
 									_user$project$Route$Debug,
 									_evancz$url_parser$UrlParser$s('debug')),
-								_1: {ctor: '[]'}
+								_1: {
+									ctor: '::',
+									_0: A2(
+										_evancz$url_parser$UrlParser$map,
+										_user$project$Route$Errors,
+										_evancz$url_parser$UrlParser$s('errors')),
+									_1: {ctor: '[]'}
+								}
 							}
 						}
 					}
@@ -14765,6 +14779,7 @@ var _user$project$Route$fromLocation = function (location) {
 };
 
 var _user$project$Page$Debug = {ctor: 'Debug'};
+var _user$project$Page$Errors = {ctor: 'Errors'};
 var _user$project$Page$Operations = {ctor: 'Operations'};
 var _user$project$Page$Schema = {ctor: 'Schema'};
 var _user$project$Page$Block = function (a) {
@@ -15035,13 +15050,23 @@ var _user$project$Update$setRoute = F2(
 								}
 							})
 					};
-				default:
+				case 'Debug':
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
 								pageState: _user$project$Model$Loaded(_user$project$Page$Debug)
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				default:
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								pageState: _user$project$Model$Loaded(_user$project$Page$Errors)
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
@@ -15303,6 +15328,45 @@ var _user$project$Update$update = F2(
 			model);
 	});
 
+var _user$project$View_Page$viewErrorCount = function (count) {
+	return A2(
+		_elm_lang$html$Html$div,
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html_Attributes$classList(
+				{
+					ctor: '::',
+					_0: {ctor: '_Tuple2', _0: 'error-count', _1: true},
+					_1: {
+						ctor: '::',
+						_0: {
+							ctor: '_Tuple2',
+							_0: 'have-errors',
+							_1: _elm_lang$core$Native_Utils.cmp(count, 0) > 0
+						},
+						_1: {ctor: '[]'}
+					}
+				}),
+			_1: {ctor: '[]'}
+		},
+		{
+			ctor: '::',
+			_0: A2(
+				_elm_lang$html$Html$a,
+				{
+					ctor: '::',
+					_0: _user$project$Route$href(_user$project$Route$Errors),
+					_1: {ctor: '[]'}
+				},
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html$text(
+						_elm_lang$core$Basics$toString(count)),
+					_1: {ctor: '[]'}
+				}),
+			_1: {ctor: '[]'}
+		});
+};
 var _user$project$View_Page$links = {
 	ctor: '::',
 	_0: {ctor: '_Tuple2', _0: 'Home', _1: _user$project$Route$Home},
@@ -15352,6 +15416,26 @@ var _user$project$View_Page$navLinks = function () {
 		},
 		A2(_elm_lang$core$List$map, makeNavLink, _user$project$View_Page$links));
 }();
+var _user$project$View_Page$viewNow = function (now) {
+	return A2(
+		_elm_lang$html$Html$div,
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html_Attributes$class('now'),
+			_1: {
+				ctor: '::',
+				_0: _elm_lang$html$Html_Attributes$title(
+					A2(_mgold$elm_date_format$Date_Format$format, '%Y/%m/%d %H:%M:%S', now)),
+				_1: {ctor: '[]'}
+			}
+		},
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html$text(
+				A2(_mgold$elm_date_format$Date_Format$format, '%H:%M', now)),
+			_1: {ctor: '[]'}
+		});
+};
 var _user$project$View_Page$viewHeader = function (context) {
 	return A2(
 		_elm_lang$html$Html$div,
@@ -15372,25 +15456,21 @@ var _user$project$View_Page$viewHeader = function (context) {
 				}),
 			_1: {
 				ctor: '::',
-				_0: _user$project$View_Page$navLinks,
+				_0: _user$project$View_Page$viewNow(context.now),
 				_1: {
 					ctor: '::',
-					_0: A2(
-						_elm_lang$html$Html$div,
-						{ctor: '[]'},
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html$text(
-								_elm_lang$core$Basics$toString(context)),
-							_1: {ctor: '[]'}
-						}),
+					_0: _user$project$View_Page$viewErrorCount(context.errorCount),
 					_1: {
 						ctor: '::',
-						_0: A2(
-							_elm_lang$html$Html$hr,
-							{ctor: '[]'},
-							{ctor: '[]'}),
-						_1: {ctor: '[]'}
+						_0: _user$project$View_Page$navLinks,
+						_1: {
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$hr,
+								{ctor: '[]'},
+								{ctor: '[]'}),
+							_1: {ctor: '[]'}
+						}
 					}
 				}
 			}
@@ -15415,9 +15495,9 @@ var _user$project$View_Page$frame = F2(
 				}
 			});
 	});
-var _user$project$View_Page$Context = F2(
-	function (a, b) {
-		return {pageState: a, now: b};
+var _user$project$View_Page$Context = F3(
+	function (a, b, c) {
+		return {pageState: a, now: b, errorCount: c};
 	});
 
 var _user$project$View$viewDebug = function (model) {
@@ -15561,58 +15641,53 @@ var _user$project$View$viewErrorInfo = F2(
 	});
 var _user$project$View$viewError = F2(
 	function (nodeUrl, errors) {
-		var _p2 = errors;
-		if (_p2.ctor === '[]') {
-			return _elm_lang$html$Html$text('');
-		} else {
-			return A2(
-				_elm_lang$html$Html$div,
-				{
-					ctor: '::',
-					_0: _elm_lang$html$Html_Attributes$class('error'),
-					_1: {ctor: '[]'}
-				},
-				{
+		return A2(
+			_elm_lang$html$Html$div,
+			{
+				ctor: '::',
+				_0: _elm_lang$html$Html_Attributes$class('error'),
+				_1: {ctor: '[]'}
+			},
+			{
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$h1,
+					{ctor: '[]'},
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html$text('Errors'),
+						_1: {ctor: '[]'}
+					}),
+				_1: {
 					ctor: '::',
 					_0: A2(
-						_elm_lang$html$Html$h1,
+						_elm_lang$html$Html$div,
 						{ctor: '[]'},
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html$text('Errors'),
-							_1: {ctor: '[]'}
-						}),
-					_1: {
-						ctor: '::',
-						_0: A2(
-							_elm_lang$html$Html$div,
-							{ctor: '[]'},
-							A2(
-								_elm_lang$core$List$map,
-								_user$project$View$viewErrorInfo(nodeUrl),
-								_p2)),
-						_1: {ctor: '[]'}
-					}
-				});
-		}
+						A2(
+							_elm_lang$core$List$map,
+							_user$project$View$viewErrorInfo(nodeUrl),
+							errors)),
+					_1: {ctor: '[]'}
+				}
+			});
 	});
 var _user$project$View$shortHash = function (hash) {
 	return A2(_elm_lang$core$String$left, 14, hash);
 };
 var _user$project$View$viewSuboperation = function (suboperation) {
-	var _p3 = suboperation;
-	if (_p3.ctor === 'Endorsement') {
+	var _p2 = suboperation;
+	if (_p2.ctor === 'Endorsement') {
 		return _elm_lang$html$Html$text(
 			A2(
 				_elm_lang$core$Basics_ops['++'],
 				'Endorsement of ',
 				A2(
 					_elm_lang$core$Basics_ops['++'],
-					_user$project$View$shortHash(_p3._0),
+					_user$project$View$shortHash(_p2._0),
 					A2(
 						_elm_lang$core$Basics_ops['++'],
 						', ',
-						_elm_lang$core$Basics$toString(_p3._1)))));
+						_elm_lang$core$Basics$toString(_p2._1)))));
 	} else {
 		return _elm_lang$html$Html$text(
 			_elm_lang$core$Basics$toString(suboperation));
@@ -15838,15 +15913,15 @@ var _user$project$View$viewOperation = function (operation) {
 };
 var _user$project$View$viewShowBlockOperations = F2(
 	function (blockOperations, hashMaybe) {
-		var _p4 = hashMaybe;
-		if (_p4.ctor === 'Just') {
+		var _p3 = hashMaybe;
+		if (_p3.ctor === 'Just') {
 			return A2(
 				_elm_lang$core$Maybe$withDefault,
 				_elm_lang$html$Html$text(''),
 				A2(
 					_elm_lang$core$Maybe$map,
 					_user$project$View$viewOperations,
-					A2(_elm_lang$core$Dict$get, _p4._0, blockOperations)));
+					A2(_elm_lang$core$Dict$get, _p3._0, blockOperations)));
 		} else {
 			return _elm_lang$html$Html$text('');
 		}
@@ -16033,6 +16108,18 @@ var _user$project$View$viewShowBlock = F2(
 					},
 					blockhashMaybe)));
 	});
+var _user$project$View$formatTimestamp = F2(
+	function (now, date) {
+		var iso = _mgold$elm_date_format$Date_Format$formatISO8601(date);
+		var distance = A2(_alpacaaa$elm_date_distance$Date_Distance$inWords, now, date);
+		return A2(
+			_elm_lang$core$Basics_ops['++'],
+			iso,
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				' (',
+				A2(_elm_lang$core$Basics_ops['++'], distance, ')')));
+	});
 var _user$project$View$viewBlock2 = F4(
 	function (now, blockhashMaybe, n, block) {
 		return A2(
@@ -16111,7 +16198,7 @@ var _user$project$View$viewBlock2 = F4(
 							{
 								ctor: '::',
 								_0: _elm_lang$html$Html$text(
-									A2(_alpacaaa$elm_date_distance$Date_Distance$inWords, now, block.timestamp)),
+									A2(_user$project$View$formatTimestamp, now, block.timestamp)),
 								_1: {ctor: '[]'}
 							}),
 						_1: {
@@ -16252,14 +16339,14 @@ var _user$project$View$viewBranch = F4(
 			});
 	});
 var _user$project$View$viewShowBranch = function (model) {
-	var _p5 = model.showBranch;
-	if (_p5.ctor === 'Just') {
+	var _p4 = model.showBranch;
+	if (_p4.ctor === 'Just') {
 		return A4(
 			_user$project$View$viewBranch,
 			4,
 			model.now,
 			model.showBlock,
-			A2(_user$project$Data_Chain$getBranchList, model.chain, _p5._0));
+			A2(_user$project$Data_Chain$getBranchList, model.chain, _p4._0));
 	} else {
 		return A2(
 			_elm_lang$html$Html$h4,
@@ -16280,11 +16367,11 @@ var _user$project$View$canonFitness = function (strings) {
 			})(0),
 		A2(
 			_elm_lang$core$List$map,
-			function (_p6) {
+			function (_p5) {
 				return A2(
 					_elm_lang$core$Result$withDefault,
 					0,
-					_fredcy$elm_parseint$ParseInt$parseIntHex(_p6));
+					_fredcy$elm_parseint$ParseInt$parseIntHex(_p5));
 			},
 			strings));
 };
@@ -16339,18 +16426,19 @@ var _user$project$View$viewSchemas = function (schemas) {
 		A2(_elm_lang$core$List$map, viewSchema, names));
 };
 var _user$project$View$viewHome = function (model) {
-	return A2(
-		_elm_lang$html$Html$div,
-		{ctor: '[]'},
-		{
-			ctor: '::',
-			_0: A2(_user$project$View$viewError, model.nodeUrl, model.errors),
-			_1: {
-				ctor: '::',
-				_0: _user$project$View$viewShowBranch(model),
-				_1: {ctor: '[]'}
-			}
-		});
+	var headMaybe = _elm_lang$core$List$head(model.chain.heads);
+	var _p6 = headMaybe;
+	if (_p6.ctor === 'Just') {
+		var _p7 = _p6._0;
+		return A4(
+			_user$project$View$viewBranch,
+			8,
+			model.now,
+			_elm_lang$core$Maybe$Just(_p7),
+			A2(_user$project$Data_Chain$getBranchList, model.chain, _p7));
+	} else {
+		return _elm_lang$html$Html$text('no head found');
+	}
 };
 var _user$project$View$BlockNotFound = function (a) {
 	return {ctor: 'BlockNotFound', _0: a};
@@ -16360,9 +16448,9 @@ var _user$project$View$BlockFound = function (a) {
 };
 var _user$project$View$findBlockStatus = F2(
 	function (blocks, blockhash) {
-		var _p7 = A2(_elm_lang$core$Dict$get, blockhash, blocks);
-		if (_p7.ctor === 'Just') {
-			return _user$project$View$BlockFound(_p7._0);
+		var _p8 = A2(_elm_lang$core$Dict$get, blockhash, blocks);
+		if (_p8.ctor === 'Just') {
+			return _user$project$View$BlockFound(_p8._0);
 		} else {
 			return _user$project$View$BlockNotFound(blockhash);
 		}
@@ -16446,7 +16534,7 @@ var _user$project$View$viewHeads = function (model) {
 								{
 									ctor: '::',
 									_0: _elm_lang$html$Html$text(
-										_user$project$View$formatDate(block.timestamp)),
+										A2(_user$project$View$formatTimestamp, model.now, block.timestamp)),
 									_1: {ctor: '[]'}
 								}),
 							_1: {
@@ -16489,14 +16577,14 @@ var _user$project$View$viewHeads = function (model) {
 		});
 	var viewHead = F2(
 		function (i, blockStatus) {
-			var _p8 = blockStatus;
-			if (_p8.ctor === 'BlockFound') {
-				var _p9 = _p8._0;
+			var _p9 = blockStatus;
+			if (_p9.ctor === 'BlockFound') {
+				var _p10 = _p9._0;
 				return A3(
 					viewBlockSummary,
 					i,
-					_p9,
-					A2(isBeingShown, model.showBranch, _p9.hash));
+					_p10,
+					A2(isBeingShown, model.showBranch, _p10.hash));
 			} else {
 				return _elm_lang$html$Html$text('');
 			}
@@ -16642,8 +16730,8 @@ var _user$project$View$viewHeads = function (model) {
 };
 var _user$project$View$view = function (model) {
 	var content = function () {
-		var _p10 = model.pageState;
-		switch (_p10._0.ctor) {
+		var _p11 = model.pageState;
+		switch (_p11._0.ctor) {
 			case 'Home':
 				return _user$project$View$viewHome(model);
 			case 'Blank':
@@ -16657,17 +16745,23 @@ var _user$project$View$view = function (model) {
 			case 'Heads':
 				return _user$project$View$viewHeads(model);
 			case 'Block':
-				var _p11 = A2(_elm_lang$core$Dict$get, _p10._0._0, model.chain.blocks);
-				if (_p11.ctor === 'Just') {
-					return _user$project$View$viewBlock(_p11._0);
+				var _p12 = A2(_elm_lang$core$Dict$get, _p11._0._0, model.chain.blocks);
+				if (_p12.ctor === 'Just') {
+					return _user$project$View$viewBlock(_p12._0);
 				} else {
 					return _elm_lang$html$Html$text('block not found');
 				}
+			case 'Errors':
+				return A2(_user$project$View$viewError, model.nodeUrl, model.errors);
 			default:
 				return _elm_lang$html$Html$text('page not found');
 		}
 	}();
-	var context = {pageState: model.pageState, now: model.now};
+	var context = {
+		pageState: model.pageState,
+		now: model.now,
+		errorCount: _elm_lang$core$List$length(model.errors)
+	};
 	return A2(_user$project$View_Page$frame, context, content);
 };
 
