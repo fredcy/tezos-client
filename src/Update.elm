@@ -156,6 +156,9 @@ setRoute routeMaybe model =
         Just (Route.Operations) ->
             ( { model | pageState = Loaded Page.Operations }, Cmd.none )
 
+        Just Route.Heads ->
+            ( { model | pageState = Loaded Page.Heads }, Cmd.none )
+
         Just (Route.Schema) ->
             let
                 schemaQuery1 =

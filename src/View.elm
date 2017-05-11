@@ -20,39 +20,52 @@ import View.Page
 
 view : Model -> Html Msg
 view model =
-    case model.pageState of
-        Loaded (Page.Blank) ->
-            H.text "" |> View.Page.frame
+    let
+        context =
+            { pageState = model.pageState, now = model.now }
 
-        Loaded (Page.Operations) ->
-            viewAllOperations model |> View.Page.frame
+        content =
+            case model.pageState of
+                Loaded Page.Home ->
+                    viewHome model
 
-        Loaded (Page.Schema) ->
-            viewSchemas model.schemaData |> View.Page.frame
+                Loaded Page.Blank ->
+                    H.text ""
 
-        Loaded (Page.Debug) ->
-            viewDebug model |> View.Page.frame
+                Loaded Page.Operations ->
+                    viewAllOperations model
 
-        Loaded (Page.Block hash) ->
-            case Dict.get hash model.chain.blocks of
-                Just block ->
-                    viewBlock block |> View.Page.frame
+                Loaded Page.Schema ->
+                    viewSchemas model.schemaData
 
-                Nothing ->
-                    H.text "block not found" |> View.Page.frame
+                Loaded Page.Debug ->
+                    viewDebug model
 
-        _ ->
-            viewHome model |> View.Page.frame
+                Loaded Page.Heads ->
+                    viewHeads model
+
+                Loaded (Page.Block hash) ->
+                    case Dict.get hash model.chain.blocks of
+                        Just block ->
+                            viewBlock block
+
+                        Nothing ->
+                            H.text "block not found"
+
+                Loaded Page.NotFound ->
+                    H.text "page not found"
+    in
+        View.Page.frame context content
 
 
 viewHome : Model -> Html Msg
 viewHome model =
     H.div []
         [ viewError model.nodeUrl model.errors
-        , viewHeads model
         , viewShowBranch model
-        , viewShowBlock model.chain.blocks model.showBlock
-        , viewShowBlockOperations model.chain.blockOperations model.showBlock
+
+        --, viewShowBlock model.chain.blocks model.showBlock
+        --, viewShowBlockOperations model.chain.blockOperations model.showBlock
         ]
 
 
@@ -369,7 +382,8 @@ viewErrorInfo nodeUrl error =
                 [ H.h4 [] [ H.text "Bad response status from node" ]
                 , H.div [] [ H.text (toString response.status) ]
                 , H.div [] [ H.text response.url ]
-                  --, H.div [ HA.style [ ( "white-space", "pre" ) ] ] [ H.text (toString response) ]
+
+                --, H.div [ HA.style [ ( "white-space", "pre" ) ] ] [ H.text (toString response) ]
                 ]
 
         Http.NetworkError ->

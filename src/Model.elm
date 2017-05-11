@@ -8,6 +8,9 @@ import Data.Chain as Chain exposing (BlockID, OperationID)
 import Page exposing (Page)
 
 
+{-| This page state comes from elm-spa-example.
+    TODO: Make full use of transition state, or remove.
+-}
 type PageState
     = Loaded Page
 

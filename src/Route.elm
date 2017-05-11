@@ -12,6 +12,7 @@ type Route
     | Block BlockID
     | Operations
     | Schema
+    | Heads
     | Debug
 
 
@@ -20,6 +21,7 @@ route =
     Url.oneOf
         [ Url.map Home (s "")
         , Url.map Home (s "home")
+        , Url.map Heads (s "heads")
         , Url.map Block (s "block" </> Url.string)
         , Url.map Operations (s "operations")
         , Url.map Schema (s "schema")
@@ -43,6 +45,9 @@ routeToString route =
 
                 Schema ->
                     [ "schema" ]
+
+                Heads ->
+                    [ "heads" ]
 
                 Debug ->
                     [ "debug" ]

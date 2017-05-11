@@ -1,24 +1,34 @@
 module View.Page exposing (frame)
 
+import Date exposing (Date)
 import Html as H exposing (Html)
 import Html.Attributes as HA
+import Model
 import Route exposing (Route)
 
 
-frame : Html msg -> Html msg
-frame content =
+type alias Context =
+    { pageState : Model.PageState
+    , now : Date
+    }
+
+
+frame : Context -> Html msg -> Html msg
+frame context content =
     H.div [ HA.class "page-frame" ]
-        [ viewHeader
+        [ viewHeader context
         , content
-          --, viewFooter
+
+        --, viewFooter
         ]
 
 
-viewHeader : Html msg
-viewHeader =
+viewHeader : Context -> Html msg
+viewHeader context =
     H.div [ HA.class "page-header" ]
         [ H.h1 [] [ H.text "Tezos client" ]
         , navLinks
+        , H.div [] [ H.text (toString context) ]
         , H.hr [] []
         ]
 
@@ -26,9 +36,11 @@ viewHeader =
 links : List ( String, Route )
 links =
     [ ( "Home", Route.Home )
+    , ( "Heads", Route.Heads )
     , ( "Operations", Route.Operations )
     , ( "Schemas", Route.Schema )
-    , ( "Debug", Route.Debug )
+
+    --, ( "Debug", Route.Debug )
     ]
 
 

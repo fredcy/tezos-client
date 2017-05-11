@@ -195,3 +195,24 @@ table.operations td ul {
 .operation-count {
     text-align: right;
 }
+
+.nav-links {
+    background-color: #333;
+    padding: .5em 0;
+}
+
+.nav-links li {
+    display: inline;
+    padding: .5em .5em;
+    border-right: 1px solid #bbb;
+}
+
+.nav-links a {
+    color: white;
+    text-decoration: none;
+}
+
+.nav-links a:hover {
+    text-decoration: underline;
+    color: red;
+}
