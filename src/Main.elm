@@ -59,4 +59,4 @@ init flags location =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Time.every (60 * Time.second) Tick
+    Time.every (30 * Time.second) Tick

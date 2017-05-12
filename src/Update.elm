@@ -151,12 +151,14 @@ setRoute routeMaybe model =
             ( { model | pageState = Loaded Page.Home }, Cmd.none )
 
         Just (Route.Block hash) ->
-            ( { model | pageState = Loaded (Page.Block hash) }, Cmd.none )
+            ( { model | pageState = Loaded (Page.Block hash) }
+            , getBlock model hash
+            )
 
         Just (Route.Operations) ->
             ( { model | pageState = Loaded Page.Operations }, Cmd.none )
 
-        Just Route.Heads ->
+        Just (Route.Heads) ->
             ( { model | pageState = Loaded Page.Heads }, Cmd.none )
 
         Just (Route.Schema) ->
@@ -208,6 +210,18 @@ loadBlocks model blocksData =
             Chain.loadBlocks model.chain blocksData
     in
         ( { model | chain = newChain }, getAllBlocksOperations model )
+
+
+getBlock : Model -> BlockID -> Cmd Msg
+getBlock model hash =
+    case Dict.get hash model.chain.blocks of
+        Nothing ->
+            -- request block and some predecessors in anticipation of user following the chain
+            Request.Block.getChainStartingAt model.nodeUrl 4 hash
+                |> Http.send LoadBlocks
+
+        _ ->
+            Cmd.none
 
 
 {-| Request chain starting at given block (hash) if necessary. If we already have some blocks stored, request only what is needed to get to some target length.

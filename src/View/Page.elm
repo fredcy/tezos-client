@@ -32,9 +32,6 @@ viewHeader context =
         , viewNow context.now
         , viewErrorCount context.errorCount
         , navLinks
-
-        --, H.div [] [ H.text (toString context) ]
-        , H.hr [] []
         ]
 
 

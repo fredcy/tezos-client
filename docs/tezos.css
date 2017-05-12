@@ -230,3 +230,16 @@ table.operations td ul {
     padding: 3px;
     text-decoration: none;
 }
+
+.page-header h1 {
+    float: left;
+    margin: 0.25em;
+}
+
+.page-header .now {
+    float: right;
+}
+
+.page-header .nav-links {
+    clear: both;
+}

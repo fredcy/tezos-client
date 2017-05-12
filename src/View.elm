@@ -53,7 +53,7 @@ view model =
                             viewBlock block
 
                         Nothing ->
-                            H.text "block not found"
+                            H.text "loading block ..."
 
                 Loaded Page.Errors ->
                     viewError model.nodeUrl model.errors
@@ -72,9 +72,11 @@ viewHome model =
     in
         case headMaybe of
             Just head ->
-                -- TODO fix kludgey re-use of old functions below
-                getBranchList model.chain head
-                    |> viewBranch 8 model.now (Just head)
+                H.div []
+                    [ H.h2 [] [ H.text "Newest blocks" ]
+                    , getBranchList model.chain head
+                        |> viewBranch 8 model.now (Just head)
+                    ]
 
             Nothing ->
                 H.text "no head found"
@@ -145,7 +147,7 @@ viewHeads model =
                 [ H.td [ HA.class "index" ] [ H.text (toString i) ]
                 , H.td
                     [ HA.class "hash"
-                    , HE.onClick (ShowBranch block.hash)
+                    , HE.onClick (ShowBlock block.hash)
                     , HA.title block.hash
                     ]
                     [ H.text (shortHash block.hash) ]
@@ -204,8 +206,7 @@ viewBranch howMany now blockhashMaybe branch =
             List.take howMany branch
     in
         H.div []
-            [ H.h3 [] [ H.text ("branch") ]
-            , H.div [ HA.class "branch" ]
+            [ H.div [ HA.class "branch" ]
                 [ H.table [ HA.class "blockchain" ]
                     [ H.thead [] [ tableHeader ]
                     , H.tbody [] (List.indexedMap (viewBlock2 now blockhashMaybe) branchToShow)
@@ -280,8 +281,7 @@ viewBlock block =
                 ]
             , H.div [ HA.class "property-list" ]
                 [ viewPropertyString "hash" block.hash
-                , viewPropertyString "predecessor" block.predecessor
-                , viewProperty "pred2" (blockFullLink block.predecessor)
+                , viewProperty "predecessor" (blockFullLink block.predecessor)
                 , viewPropertyString "timestamp" (formatDate block.timestamp)
                 , viewPropertyList "fitness" block.fitness
                 , viewPropertyString "net_id" block.net_id
