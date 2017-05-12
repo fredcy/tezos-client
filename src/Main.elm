@@ -46,6 +46,7 @@ init flags location =
             , pageState = Loaded Page.Blank
             }
 
+        -- set initial route based on location bar
         ( routedModel, routeCmd ) =
             Update.setRoute (Route.fromLocation location) initModel
     in

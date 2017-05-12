@@ -192,11 +192,7 @@ loadHeads model headsData =
 
         showBranch : Maybe BlockID
         showBranch =
-            if model.showBranch == Nothing then
-                -- default to displaying first branch
-                Chain.head newChain
-            else
-                model.showBranch
+            List.head newChain.heads |> Debug.log "showBranch"
     in
         ( { model | chain = newChain, showBranch = showBranch }
         , showBranch |> Maybe.map (getBranch model) |> Maybe.withDefault Cmd.none

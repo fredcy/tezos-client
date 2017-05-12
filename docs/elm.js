@@ -15116,7 +15116,10 @@ var _user$project$Update$getBranch = F2(
 var _user$project$Update$loadHeads = F2(
 	function (model, headsData) {
 		var newChain = A2(_user$project$Data_Chain$loadHeads, model.chain, headsData);
-		var showBranch = _elm_lang$core$Native_Utils.eq(model.showBranch, _elm_lang$core$Maybe$Nothing) ? _user$project$Data_Chain$head(newChain) : model.showBranch;
+		var showBranch = A2(
+			_elm_lang$core$Debug$log,
+			'showBranch',
+			_elm_lang$core$List$head(newChain.heads));
 		return {
 			ctor: '_Tuple2',
 			_0: _elm_lang$core$Native_Utils.update(
