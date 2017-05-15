@@ -32,6 +32,7 @@ type Msg
     | LoadHeads (Result Http.Error Chain.BlocksData)
     | Tick Time
     | SetRoute (Maybe Route)
+    | ClearErrors
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -140,6 +141,9 @@ updatePage page msg model =
         ( SetRoute route, _ ) ->
             setRoute route model
 
+        ( ClearErrors, _ ) ->
+            ( { model | errors = [] }, Cmd.none )
+
 
 setRoute : Maybe Route -> Model -> ( Model, Cmd Msg )
 setRoute routeMaybe model =
@@ -147,7 +151,7 @@ setRoute routeMaybe model =
         Nothing ->
             ( { model | pageState = Loaded Page.NotFound }, Cmd.none )
 
-        Just (Route.Home) ->
+        Just Route.Home ->
             ( { model | pageState = Loaded Page.Home }, Cmd.none )
 
         Just (Route.Block hash) ->
@@ -155,13 +159,13 @@ setRoute routeMaybe model =
             , getBlock model hash
             )
 
-        Just (Route.Operations) ->
+        Just Route.Operations ->
             ( { model | pageState = Loaded Page.Operations }, Cmd.none )
 
-        Just (Route.Heads) ->
+        Just Route.Heads ->
             ( { model | pageState = Loaded Page.Heads }, Cmd.none )
 
-        Just (Route.Schema) ->
+        Just Route.Schema ->
             let
                 schemaQuery1 =
                     "/describe"
@@ -176,10 +180,10 @@ setRoute routeMaybe model =
                     ]
                 )
 
-        Just (Route.Debug) ->
+        Just Route.Debug ->
             ( { model | pageState = Loaded Page.Debug }, Cmd.none )
 
-        Just (Route.Errors) ->
+        Just Route.Errors ->
             ( { model | pageState = Loaded Page.Errors }, Cmd.none )
 
 

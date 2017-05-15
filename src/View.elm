@@ -349,11 +349,15 @@ viewOperationsTable operations =
                     ]
                 ]
 
+        viewSourceMaybe : Maybe Data.Chain.SourceID -> String
+        viewSourceMaybe sourceMaybe =
+            Maybe.map shortHash sourceMaybe |> Maybe.withDefault "[no source]"
+
         tableRow operation =
             H.tr []
                 [ H.td [ HA.class "hash" ] [ H.text (shortHash operation.hash) ]
                 , H.td [ HA.class "hash" ] [ H.text operation.net_id ]
-                , H.td [ HA.class "hash" ] [ H.text (shortHash operation.source) ]
+                , H.td [ HA.class "hash" ] [ H.text (viewSourceMaybe operation.source) ]
                 , H.td [] [ H.ul [] (List.map (\so -> H.li [] [ viewSuboperation so ]) operation.operations) ]
                 ]
     in
@@ -384,6 +388,7 @@ viewError : String -> List Http.Error -> Html Msg
 viewError nodeUrl errors =
     H.div [ HA.class "error" ]
         [ H.h1 [] [ H.text "Errors" ]
+        , H.button [ HE.onClick ClearErrors ] [ H.text "Clear all errors" ]
         , H.div [] (List.map (viewErrorInfo nodeUrl) errors)
         ]
 
@@ -393,7 +398,7 @@ viewErrorInfo nodeUrl error =
         Http.BadPayload message response ->
             H.div []
                 [ H.h4 [] [ H.text "Bad Payload (JSON parsing problem)" ]
-                , H.div [ HA.style [ ( "white-space", "pre" ) ] ] [ H.text message ]
+                , H.div [] [ H.text message ]
                 ]
 
         Http.BadStatus response ->

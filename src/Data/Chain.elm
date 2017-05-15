@@ -31,6 +31,10 @@ type alias Signature =
     Base58CheckEncodedSHA256
 
 
+type alias TransactionID =
+    Base58CheckEncodedSHA256
+
+
 type alias Fitness =
     String
 
@@ -69,14 +73,16 @@ type SubOperation
     = Unknown Decode.Value
     | Endorsement BlockID Int
     | SeedNonceRevelation Level Nonce
+    | Transaction TransactionID Int
+    | Faucet TransactionID Nonce
 
 
 type alias ParsedOperation =
     { hash : OperationID
     , net_id : NetID
-    , source : SourceID
     , operations : List SubOperation
-    , signature : Signature
+    , source : Maybe SourceID
+    , signature : Maybe Signature
     }
 
 
@@ -232,79 +238,11 @@ decodeTimestamp =
         |> Decode.map (Result.withDefault (Date.fromTime 0))
 
 
-decodeBlockOperationDetails : Decode.Decoder BlockOperations
-decodeBlockOperationDetails =
-    -- I don't understand why the RPC response data has two levels of lists. Anyway...
-    Decode.field "ok" (Decode.list (Decode.list decodeParsedOperation))
-
-
-decodeParsedOperation : Decode.Decoder ParsedOperation
-decodeParsedOperation =
-    Decode.succeed ParsedOperation
-        |> Decode.required "hash" Decode.string
-        |> Decode.required "net_id" Decode.string
-        |> Decode.required "source" Decode.string
-        |> Decode.required "operations" (Decode.list decodeSubOperation)
-        |> Decode.required "signature" Decode.string
-
-
-decodeSubOperation : Decode.Decoder SubOperation
-decodeSubOperation =
-    Decode.oneOf
-        [ decodeEndorsement
-        , Decode.map Unknown Decode.value
-        ]
-
-
-decodeEndorsement : Decode.Decoder SubOperation
-decodeEndorsement =
-    Decode.field "kind" Decode.string
-        |> Decode.andThen
-            (\kind ->
-                case kind of
-                    "endorsement" ->
-                        (Decode.map2 Endorsement
-                            (Decode.field "block" Decode.string)
-                            (Decode.field "slot" Decode.int)
-                        )
-
-                    "seed_nonce_revelation" ->
-                        Decode.map2 SeedNonceRevelation
-                            (Decode.field "level" Decode.int)
-                            (Decode.field "nonce" Decode.string)
-
-                    _ ->
-                        decodeDebug "bad kind" |> Decode.map Unknown
-            )
-
-
 decodeLevel : Decode.Decoder Int
 decodeLevel =
     Decode.at [ "ok", "level" ] Decode.int
 
 
-decodeParsedOperationResponse : Decode.Decoder ParsedOperation
-decodeParsedOperationResponse =
-    Decode.field "ok" decodeParsedOperation
-
-
 getBlockOperationIDs : Block -> List OperationID
 getBlockOperationIDs block =
     List.concatMap identity block.operations
-
-
-{-| This decoder is useful for debugging. It is basically the same as just
-`Decode.value` except that it has the side-effect of logging the decoded value
-along with a message.
--}
-decodeDebug : String -> Decode.Decoder Decode.Value
-decodeDebug message =
-    Decode.value
-        |> Decode.andThen
-            (\value ->
-                let
-                    _ =
-                        Debug.log message value
-                in
-                    Decode.value
-            )

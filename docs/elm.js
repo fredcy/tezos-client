@@ -13785,15 +13785,6 @@ var _mgold$elm_date_format$Date_Format$format = F2(
 	});
 var _mgold$elm_date_format$Date_Format$formatISO8601 = _mgold$elm_date_format$Date_Format$format('%Y-%m-%dT%H:%M:%SZ');
 
-var _user$project$Data_Chain$decodeDebug = function (message) {
-	return A2(
-		_elm_lang$core$Json_Decode$andThen,
-		function (value) {
-			var _p0 = A2(_elm_lang$core$Debug$log, message, value);
-			return _elm_lang$core$Json_Decode$value;
-		},
-		_elm_lang$core$Json_Decode$value);
-};
 var _user$project$Data_Chain$getBlockOperationIDs = function (block) {
 	return A2(_elm_lang$core$List$concatMap, _elm_lang$core$Basics$identity, block.operations);
 };
@@ -13971,11 +13962,19 @@ var _user$project$Data_Chain$Operation = F3(
 	});
 var _user$project$Data_Chain$ParsedOperation = F5(
 	function (a, b, c, d, e) {
-		return {hash: a, net_id: b, source: c, operations: d, signature: e};
+		return {hash: a, net_id: b, operations: c, source: d, signature: e};
 	});
 var _user$project$Data_Chain$Model = F5(
 	function (a, b, c, d, e) {
 		return {heads: a, blocks: b, operations: c, parsedOperations: d, blockOperations: e};
+	});
+var _user$project$Data_Chain$Faucet = F2(
+	function (a, b) {
+		return {ctor: 'Faucet', _0: a, _1: b};
+	});
+var _user$project$Data_Chain$Transaction = F2(
+	function (a, b) {
+		return {ctor: 'Transaction', _0: a, _1: b};
 	});
 var _user$project$Data_Chain$SeedNonceRevelation = F2(
 	function (a, b) {
@@ -13988,68 +13987,6 @@ var _user$project$Data_Chain$Endorsement = F2(
 var _user$project$Data_Chain$Unknown = function (a) {
 	return {ctor: 'Unknown', _0: a};
 };
-var _user$project$Data_Chain$decodeEndorsement = A2(
-	_elm_lang$core$Json_Decode$andThen,
-	function (kind) {
-		var _p1 = kind;
-		switch (_p1) {
-			case 'endorsement':
-				return A3(
-					_elm_lang$core$Json_Decode$map2,
-					_user$project$Data_Chain$Endorsement,
-					A2(_elm_lang$core$Json_Decode$field, 'block', _elm_lang$core$Json_Decode$string),
-					A2(_elm_lang$core$Json_Decode$field, 'slot', _elm_lang$core$Json_Decode$int));
-			case 'seed_nonce_revelation':
-				return A3(
-					_elm_lang$core$Json_Decode$map2,
-					_user$project$Data_Chain$SeedNonceRevelation,
-					A2(_elm_lang$core$Json_Decode$field, 'level', _elm_lang$core$Json_Decode$int),
-					A2(_elm_lang$core$Json_Decode$field, 'nonce', _elm_lang$core$Json_Decode$string));
-			default:
-				return A2(
-					_elm_lang$core$Json_Decode$map,
-					_user$project$Data_Chain$Unknown,
-					_user$project$Data_Chain$decodeDebug('bad kind'));
-		}
-	},
-	A2(_elm_lang$core$Json_Decode$field, 'kind', _elm_lang$core$Json_Decode$string));
-var _user$project$Data_Chain$decodeSubOperation = _elm_lang$core$Json_Decode$oneOf(
-	{
-		ctor: '::',
-		_0: _user$project$Data_Chain$decodeEndorsement,
-		_1: {
-			ctor: '::',
-			_0: A2(_elm_lang$core$Json_Decode$map, _user$project$Data_Chain$Unknown, _elm_lang$core$Json_Decode$value),
-			_1: {ctor: '[]'}
-		}
-	});
-var _user$project$Data_Chain$decodeParsedOperation = A3(
-	_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-	'signature',
-	_elm_lang$core$Json_Decode$string,
-	A3(
-		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-		'operations',
-		_elm_lang$core$Json_Decode$list(_user$project$Data_Chain$decodeSubOperation),
-		A3(
-			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-			'source',
-			_elm_lang$core$Json_Decode$string,
-			A3(
-				_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-				'net_id',
-				_elm_lang$core$Json_Decode$string,
-				A3(
-					_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-					'hash',
-					_elm_lang$core$Json_Decode$string,
-					_elm_lang$core$Json_Decode$succeed(_user$project$Data_Chain$ParsedOperation))))));
-var _user$project$Data_Chain$decodeBlockOperationDetails = A2(
-	_elm_lang$core$Json_Decode$field,
-	'ok',
-	_elm_lang$core$Json_Decode$list(
-		_elm_lang$core$Json_Decode$list(_user$project$Data_Chain$decodeParsedOperation)));
-var _user$project$Data_Chain$decodeParsedOperationResponse = A2(_elm_lang$core$Json_Decode$field, 'ok', _user$project$Data_Chain$decodeParsedOperation);
 
 var _user$project$Data_Request$emptyJsonBody = _elm_lang$http$Http$jsonBody(
 	_elm_lang$core$Json_Encode$object(
@@ -14844,6 +14781,91 @@ var _user$project$Request_Block$getHeads = function (nodeUrl) {
 	return A3(_elm_lang$http$Http$post, url, _user$project$Data_Request$emptyJsonBody, _user$project$Data_Chain$decodeBlocks);
 };
 
+var _user$project$Request$decodeDebug = function (message) {
+	return A2(
+		_elm_lang$core$Json_Decode$andThen,
+		function (value) {
+			var _p0 = A2(_elm_lang$core$Debug$log, message, value);
+			return _elm_lang$core$Json_Decode$value;
+		},
+		_elm_lang$core$Json_Decode$value);
+};
+
+var _user$project$Request_Operation$decodeEndorsement = A2(
+	_elm_lang$core$Json_Decode$andThen,
+	function (kind) {
+		var _p0 = kind;
+		switch (_p0) {
+			case 'endorsement':
+				return A3(
+					_elm_lang$core$Json_Decode$map2,
+					_user$project$Data_Chain$Endorsement,
+					A2(_elm_lang$core$Json_Decode$field, 'block', _elm_lang$core$Json_Decode$string),
+					A2(_elm_lang$core$Json_Decode$field, 'slot', _elm_lang$core$Json_Decode$int));
+			case 'seed_nonce_revelation':
+				return A3(
+					_elm_lang$core$Json_Decode$map2,
+					_user$project$Data_Chain$SeedNonceRevelation,
+					A2(_elm_lang$core$Json_Decode$field, 'level', _elm_lang$core$Json_Decode$int),
+					A2(_elm_lang$core$Json_Decode$field, 'nonce', _elm_lang$core$Json_Decode$string));
+			case 'transaction':
+				return A3(
+					_elm_lang$core$Json_Decode$map2,
+					_user$project$Data_Chain$Transaction,
+					A2(_elm_lang$core$Json_Decode$field, 'destination', _elm_lang$core$Json_Decode$string),
+					A2(_elm_lang$core$Json_Decode$field, 'amount', _elm_lang$core$Json_Decode$int));
+			case 'faucet':
+				return A3(
+					_elm_lang$core$Json_Decode$map2,
+					_user$project$Data_Chain$Faucet,
+					A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$string),
+					A2(_elm_lang$core$Json_Decode$field, 'nonce', _elm_lang$core$Json_Decode$string));
+			default:
+				return A2(
+					_elm_lang$core$Json_Decode$map,
+					_user$project$Data_Chain$Unknown,
+					_user$project$Request$decodeDebug('bad kind'));
+		}
+	},
+	A2(_elm_lang$core$Json_Decode$field, 'kind', _elm_lang$core$Json_Decode$string));
+var _user$project$Request_Operation$decodeSubOperation = _elm_lang$core$Json_Decode$oneOf(
+	{
+		ctor: '::',
+		_0: _user$project$Request_Operation$decodeEndorsement,
+		_1: {
+			ctor: '::',
+			_0: A2(_elm_lang$core$Json_Decode$map, _user$project$Data_Chain$Unknown, _elm_lang$core$Json_Decode$value),
+			_1: {ctor: '[]'}
+		}
+	});
+var _user$project$Request_Operation$decodeParsedOperation = A4(
+	_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$optional,
+	'signature',
+	A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$string),
+	_elm_lang$core$Maybe$Nothing,
+	A4(
+		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$optional,
+		'source',
+		A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$string),
+		_elm_lang$core$Maybe$Nothing,
+		A3(
+			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+			'operations',
+			_elm_lang$core$Json_Decode$list(_user$project$Request_Operation$decodeSubOperation),
+			A3(
+				_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+				'net_id',
+				_elm_lang$core$Json_Decode$string,
+				A3(
+					_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+					'hash',
+					_elm_lang$core$Json_Decode$string,
+					_elm_lang$core$Json_Decode$succeed(_user$project$Data_Chain$ParsedOperation))))));
+var _user$project$Request_Operation$decodeBlockOperationDetails = A2(
+	_elm_lang$core$Json_Decode$field,
+	'ok',
+	_elm_lang$core$Json_Decode$list(
+		_elm_lang$core$Json_Decode$list(_user$project$Request_Operation$decodeParsedOperation)));
 var _user$project$Request_Operation$getParsed = F2(
 	function (nodeUrl, operation) {
 		var body = _elm_lang$http$Http$jsonBody(
@@ -14866,7 +14888,7 @@ var _user$project$Request_Operation$getParsed = F2(
 					}
 				}));
 		var url = A2(_elm_lang$core$Basics_ops['++'], nodeUrl, '/blocks/head/proto/helpers/parse/operation');
-		return A3(_elm_lang$http$Http$post, url, body, _user$project$Data_Chain$decodeParsedOperation);
+		return A3(_elm_lang$http$Http$post, url, body, _user$project$Request_Operation$decodeParsedOperation);
 	});
 var _user$project$Request_Operation$getBlockOperations = F2(
 	function (nodeUrl, blockHash) {
@@ -14877,7 +14899,7 @@ var _user$project$Request_Operation$getBlockOperations = F2(
 				_elm_lang$core$Basics_ops['++'],
 				'/blocks/',
 				A2(_elm_lang$core$Basics_ops['++'], blockHash, '/proto/operations')));
-		return A3(_elm_lang$http$Http$post, url, _user$project$Data_Request$emptyJsonBody, _user$project$Data_Chain$decodeBlockOperationDetails);
+		return A3(_elm_lang$http$Http$post, url, _user$project$Data_Request$emptyJsonBody, _user$project$Request_Operation$decodeBlockOperationDetails);
 	});
 
 var _user$project$Request_Schema$getSchema = F2(
@@ -14897,6 +14919,7 @@ var _user$project$Request_Schema$getSchema = F2(
 		return A3(_elm_lang$http$Http$post, url, body, _user$project$Data_Schema$decodeSchema);
 	});
 
+var _user$project$Update$ClearErrors = {ctor: 'ClearErrors'};
 var _user$project$Update$SetRoute = function (a) {
 	return {ctor: 'SetRoute', _0: a};
 };
@@ -15331,8 +15354,18 @@ var _user$project$Update$updatePage = F3(
 						_user$project$Update$LoadHeads,
 						_user$project$Request_Block$getHeads(model.nodeUrl))
 				};
-			default:
+			case 'SetRoute':
 				return A2(_user$project$Update$setRoute, _p3._0._0, model);
+			default:
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							errors: {ctor: '[]'}
+						}),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
 		}
 	});
 var _user$project$Update$update = F2(
@@ -15557,16 +15590,7 @@ var _user$project$View$viewErrorInfo = F2(
 							ctor: '::',
 							_0: A2(
 								_elm_lang$html$Html$div,
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$style(
-										{
-											ctor: '::',
-											_0: {ctor: '_Tuple2', _0: 'white-space', _1: 'pre'},
-											_1: {ctor: '[]'}
-										}),
-									_1: {ctor: '[]'}
-								},
+								{ctor: '[]'},
 								{
 									ctor: '::',
 									_0: _elm_lang$html$Html$text(_p0._0),
@@ -15670,13 +15694,28 @@ var _user$project$View$viewError = F2(
 				_1: {
 					ctor: '::',
 					_0: A2(
-						_elm_lang$html$Html$div,
-						{ctor: '[]'},
-						A2(
-							_elm_lang$core$List$map,
-							_user$project$View$viewErrorInfo(nodeUrl),
-							errors)),
-					_1: {ctor: '[]'}
+						_elm_lang$html$Html$button,
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html_Events$onClick(_user$project$Update$ClearErrors),
+							_1: {ctor: '[]'}
+						},
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html$text('Clear all errors'),
+							_1: {ctor: '[]'}
+						}),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$div,
+							{ctor: '[]'},
+							A2(
+								_elm_lang$core$List$map,
+								_user$project$View$viewErrorInfo(nodeUrl),
+								errors)),
+						_1: {ctor: '[]'}
+					}
 				}
 			});
 	});
@@ -15703,6 +15742,12 @@ var _user$project$View$viewSuboperation = function (suboperation) {
 	}
 };
 var _user$project$View$viewOperationsTable = function (operations) {
+	var viewSourceMaybe = function (sourceMaybe) {
+		return A2(
+			_elm_lang$core$Maybe$withDefault,
+			'[no source]',
+			A2(_elm_lang$core$Maybe$map, _user$project$View$shortHash, sourceMaybe));
+	};
 	var tableRow = function (operation) {
 		return A2(
 			_elm_lang$html$Html$tr,
@@ -15748,7 +15793,7 @@ var _user$project$View$viewOperationsTable = function (operations) {
 							{
 								ctor: '::',
 								_0: _elm_lang$html$Html$text(
-									_user$project$View$shortHash(operation.source)),
+									viewSourceMaybe(operation.source)),
 								_1: {ctor: '[]'}
 							}),
 						_1: {
