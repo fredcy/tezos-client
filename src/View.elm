@@ -53,7 +53,7 @@ view model =
                 Loaded (Page.Block hash) ->
                     case Dict.get hash model.chain.blocks of
                         Just block ->
-                            viewBlock block
+                            viewBlock model block
 
                         Nothing ->
                             H.text "loading block ..."
@@ -144,8 +144,8 @@ viewHeads model =
                 , H.th [ HA.class "level" ] [ H.text "level" ]
                 ]
 
-        viewBlockSummary : Int -> Block -> Bool -> Html Msg
-        viewBlockSummary i block beingShown =
+        viewBlockSummary : Int -> Block -> Html Msg
+        viewBlockSummary i block =
             H.tr []
                 [ H.td [ HA.class "index" ] [ H.text (toString i) ]
                 , H.td
@@ -159,18 +159,14 @@ viewHeads model =
                 , H.td [ HA.class "level" ] [ H.text (toString block.level) ]
                 ]
 
-        isBeingShown : Maybe BlockID -> BlockID -> Bool
-        isBeingShown showBranch id =
-            Maybe.map ((==) id) showBranch |> Maybe.withDefault False
-
         viewHead : Int -> BlockStatus -> Html Msg
         viewHead i blockStatus =
             case blockStatus of
                 BlockFound block ->
-                    viewBlockSummary i block (isBeingShown model.showBranch block.hash)
+                    viewBlockSummary i block
 
-                _ ->
-                    H.text ""
+                BlockNotFound hash ->
+                    H.text ("block " ++ hash ++ " not found")
     in
         H.div []
             [ H.h2 [] [ H.text "Blockchain heads" ]
@@ -181,17 +177,6 @@ viewHeads model =
                     ]
                 ]
             ]
-
-
-viewShowBranch : Model -> Html Msg
-viewShowBranch model =
-    case model.showBranch of
-        Just hash ->
-            getBranchList model.chain hash
-                |> viewBranch 4 model.now model.showBlock
-
-        Nothing ->
-            H.h4 [] [ H.text "no branch selected" ]
 
 
 viewBranch : Int -> Date -> Maybe BlockID -> List Block -> Html Msg
@@ -282,8 +267,8 @@ viewPropertyMaybe label valueMaybe =
 
 {-| View details of a single block.
 -}
-viewBlock : Block -> Html Msg
-viewBlock block =
+viewBlock : Model -> Block -> Html Msg
+viewBlock model block =
     let
         viewPropertyString : String -> String -> Html Msg
         viewPropertyString label value =
@@ -315,20 +300,31 @@ viewBlock block =
                 , viewPropertyString "net_id" block.net_id
                 , viewOperations block
                 ]
+            , H.h4 [] [ H.text "Operations" ]
+            , viewParsedOperations model block.hash
             ]
+
+
+viewParsedOperations : Model -> BlockID -> Html Msg
+viewParsedOperations model blockId =
+    let
+        operationIDs : List OperationID
+        operationIDs =
+            Dict.get blockId model.chain.blockOperations
+                |> Maybe.withDefault []
+
+        operations : List ParsedOperation
+        operations =
+            operationIDs
+                |> List.map (\oid -> Dict.get oid model.chain.parsedOperations)
+                |> List.filterMap identity
+    in
+        viewOperationsTable operations
 
 
 formatDate : Date -> String
 formatDate date =
     Date.Format.format "%Y-%m-%d %H:%M:%S" date
-
-
-viewShowBlock : Dict BlockID Block -> Maybe BlockID -> Html Msg
-viewShowBlock blocks blockhashMaybe =
-    blockhashMaybe
-        |> Maybe.andThen (\hash -> Dict.get hash blocks)
-        |> Maybe.map viewBlock
-        |> Maybe.withDefault (H.text "")
 
 
 viewShowBlockOperations : Dict BlockID (List ParsedOperation) -> Maybe BlockID -> Html Msg
@@ -430,7 +426,6 @@ viewAllOperations model =
         [ H.h3 [] [ H.text "All Operations" ]
         , Dict.toList model.chain.parsedOperations
             |> List.map Tuple.second
-            --            |> List.concat
             |> List.sortBy .hash
             |> viewOperationsTable
         ]

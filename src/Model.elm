@@ -19,9 +19,6 @@ type alias Model =
     { schemaData : Schema.Model
     , errors : List Http.Error
     , nodeUrl : String
-    , showBlock : Maybe BlockID
-    , showOperation : Maybe OperationID
-    , showBranch : Maybe BlockID
     , now : Date
     , chain : Chain.Model
     , pageState : PageState

@@ -122,7 +122,7 @@ updatePage page msg model =
                     ( { model | errors = error :: model.errors }, Cmd.none )
 
         ( ShowBlock blockhash, _ ) ->
-            ( { model | showBlock = Just blockhash }
+            ( model
             , Cmd.batch
                 [ getBlockOperationDetails model blockhash
                 , Route.newUrl (Route.Block blockhash)
@@ -133,7 +133,7 @@ updatePage page msg model =
             ( model, Route.newUrl (Route.Operation operationId) )
 
         ( ShowBranch hash, _ ) ->
-            ( { model | showBranch = Just hash }
+            ( model
             , getBranch model hash
             )
 
@@ -205,7 +205,7 @@ loadHeads model headsData =
         showBranch =
             List.head newChain.heads |> Debug.log "showBranch"
     in
-        ( { model | chain = newChain, showBranch = showBranch }
+        ( { model | chain = newChain }
         , showBranch |> Maybe.map (getBranch model) |> Maybe.withDefault Cmd.none
         )
 
@@ -215,8 +215,11 @@ loadBlocks model blocksData =
     let
         newChain =
             Chain.loadBlocks model.chain blocksData
+
+        newModel =
+            { model | chain = newChain }
     in
-        ( { model | chain = newChain }, getAllBlocksOperations model )
+        ( newModel, getAllBlocksOperations newModel )
 
 
 getBlock : Model -> BlockID -> Cmd Msg
@@ -267,19 +270,11 @@ getBlockOperationDetails model blockHash =
         Cmd.none
 
 
-{-| Obsolete???
--}
-getParseOperationCommand : String -> Operation -> Cmd Msg
-getParseOperationCommand nodeUrl operation =
-    Request.Operation.getParsed nodeUrl operation
-        |> Http.send (LoadParsedOperation operation.hash)
-
-
 getAllBlocksOperations : Model -> Cmd Msg
 getAllBlocksOperations model =
     let
         blocksToGet =
-            Chain.blocksNeedingOperations model.chain
+            Chain.blocksNeedingOperations model.chain |> Debug.log "blocksToGet"
 
         getBlockOperations blockHash =
             Request.Operation.getBlockOperations model.nodeUrl blockHash
