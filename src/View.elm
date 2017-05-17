@@ -146,7 +146,7 @@ viewHeads model =
 
         viewBlockSummary : Int -> Block -> Bool -> Html Msg
         viewBlockSummary i block beingShown =
-            H.tr [ HA.classList [ ( "selected", beingShown ) ] ]
+            H.tr []
                 [ H.td [ HA.class "index" ] [ H.text (toString i) ]
                 , H.td
                     [ HA.class "hash"
@@ -241,9 +241,7 @@ viewBlock2 : Date -> Maybe BlockID -> Int -> Block -> Html Msg
 viewBlock2 now blockhashMaybe n block =
     H.tr
         [ HA.classList
-            [ ( "block", True )
-            , ( "selected", Maybe.map ((==) block.hash) blockhashMaybe |> Maybe.withDefault False )
-            ]
+            [ ( "block", True ) ]
         ]
         [ H.td [] [ H.text (toString block.level) ]
         , H.td
@@ -264,18 +262,29 @@ blockFullLink hash =
     H.span [ HA.class "hash link", HE.onClick (ShowBlock hash) ] [ H.text hash ]
 
 
+viewProperty : String -> Html Msg -> Html Msg
+viewProperty label value =
+    H.div [ HA.class "property" ]
+        [ H.div [ HA.class "label" ] [ H.text label ]
+        , H.div [ HA.class label ] [ value ]
+        ]
+
+
+viewPropertyMaybe : String -> Maybe String -> Html Msg
+viewPropertyMaybe label valueMaybe =
+    case valueMaybe of
+        Just value ->
+            viewProperty label (H.text value)
+
+        Nothing ->
+            H.text ""
+
+
 {-| View details of a single block.
 -}
 viewBlock : Block -> Html Msg
 viewBlock block =
     let
-        viewProperty : String -> Html Msg -> Html Msg
-        viewProperty label value =
-            H.div [ HA.class "property" ]
-                [ H.div [ HA.class "label" ] [ H.text label ]
-                , H.div [ HA.class label ] [ value ]
-                ]
-
         viewPropertyString : String -> String -> Html Msg
         viewPropertyString label value =
             viewProperty label (H.text value)
@@ -335,12 +344,28 @@ viewShowBlockOperations blockOperations hashMaybe =
 viewOperation : Model -> OperationID -> Html Msg
 viewOperation model operationId =
     let
-        operation =
+        operationMaybe =
             Dict.get operationId model.chain.parsedOperations
+
+        viewOperationFields : ParsedOperation -> Html Msg
+        viewOperationFields operation =
+            H.div []
+                [ viewProperty "hash" (H.text operation.hash)
+                , viewProperty "net_id" (H.text operation.net_id)
+                , viewPropertyMaybe "source" operation.source
+                , viewPropertyMaybe "signature" operation.signature
+                , H.h4 [] [ H.text "operations" ]
+                , H.ul [] (List.map (\so -> H.li [] [ viewSuboperation so ]) operation.operations)
+                ]
     in
         H.div []
             [ H.h3 [] [ H.text ("Operation " ++ operationId) ]
-            , H.text (toString operation)
+            , case operationMaybe of
+                Just operation ->
+                    viewOperationFields operation
+
+                Nothing ->
+                    H.text "operation not found"
             ]
 
 
@@ -348,7 +373,11 @@ viewSuboperation : SubOperation -> Html Msg
 viewSuboperation suboperation =
     case suboperation of
         Endorsement blockid int ->
-            H.text ("Endorsement of " ++ shortHash blockid ++ ", " ++ (toString int))
+            H.span []
+                [ H.text "Endorsement of "
+                , H.span [ HA.class "hash" ] [ H.text (shortHash blockid) ]
+                , H.text (", " ++ (toString int))
+                ]
 
         _ ->
             H.text (toString suboperation)
@@ -369,7 +398,6 @@ viewOperationsTable operations =
             H.thead []
                 [ H.tr []
                     [ H.th [] [ H.text "hash" ]
-                    , H.th [] [ H.text "net_id" ]
                     , H.th [] [ H.text "source" ]
                     , H.th [] [ H.text "sub-operations" ]
                     ]
@@ -386,7 +414,6 @@ viewOperationsTable operations =
             H.tr []
                 [ H.td [ HA.class "hash link", HA.title operation.hash, HE.onClick (ShowOperation operation.hash) ]
                     [ H.text (shortHash operation.hash) ]
-                , H.td [ HA.class "hash" ] [ H.text operation.net_id ]
                 , H.td [ HA.class "hash", HA.title (sourceTitle operation.source) ] [ H.text (viewSourceMaybe operation.source) ]
                 , H.td [] [ H.ul [] (List.map (\so -> H.li [] [ viewSuboperation so ]) operation.operations) ]
                 ]
@@ -401,9 +428,9 @@ viewAllOperations : Model -> Html Msg
 viewAllOperations model =
     H.div []
         [ H.h3 [] [ H.text "All Operations" ]
-        , Dict.toList model.chain.blockOperations
+        , Dict.toList model.chain.parsedOperations
             |> List.map Tuple.second
-            |> List.concat
+            --            |> List.concat
             |> List.sortBy .hash
             |> viewOperationsTable
         ]

@@ -99,7 +99,7 @@ type alias Model =
     , blocks : Dict BlockID Block
     , operations : Dict OperationID Operation
     , parsedOperations : Dict OperationID ParsedOperation
-    , blockOperations : Dict BlockID (List ParsedOperation)
+    , blockOperations : Dict BlockID (List OperationID)
     }
 
 
@@ -134,9 +134,15 @@ addBlockOperations : Model -> BlockID -> BlockOperations -> Model
 addBlockOperations model blockhash operations =
     let
         blockOperations =
-            Dict.insert blockhash (List.concat operations) model.blockOperations
+            Dict.insert blockhash (List.concat operations |> List.map .hash) model.blockOperations
+                
+        addOperation operation dict =
+            Dict.insert operation.hash operation dict
+
+        parsedOperations =
+            List.foldr addOperation model.parsedOperations (List.concat operations)
     in
-        { model | blockOperations = blockOperations }
+        { model | blockOperations = blockOperations, parsedOperations = parsedOperations }
 
 
 loadBlocks : Model -> BlocksData -> Model

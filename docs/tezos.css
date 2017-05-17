@@ -174,7 +174,10 @@ table.heads td.hash:hover,
 }
 
 td.hash, div.hash, span.hash,
-td.predecessor, div.predecessor {
+td.predecessor, div.predecessor,
+.property > .net_id,
+.property > .source
+,property > .signature {
     font-family: Andale Mono, Courier New, monospace;
 }
 
