@@ -10,7 +10,7 @@ import Dict exposing (Dict)
 import List.Extra as List
 import ParseInt
 import Date.Format
-import Data.Chain exposing (BlockID, Block, ParsedOperation, Base58CheckEncodedSHA256, SubOperation(..), getBranchList)
+import Data.Chain exposing (BlockID, Block, OperationID, ParsedOperation, Base58CheckEncodedSHA256, SubOperation(..), getBranchList)
 import Data.Schema as Schema
 import Model exposing (..)
 import Page
@@ -37,6 +37,9 @@ view model =
 
                 Loaded Page.Operations ->
                     viewAllOperations model
+
+                Loaded (Page.Operation operationId) ->
+                    viewOperation model operationId
 
                 Loaded Page.Schema ->
                     viewSchemas model.schemaData
@@ -329,9 +332,16 @@ viewShowBlockOperations blockOperations hashMaybe =
             H.text ""
 
 
-viewOperation : ParsedOperation -> Html Msg
-viewOperation operation =
-    H.div [] [ H.text (toString operation) ]
+viewOperation : Model -> OperationID -> Html Msg
+viewOperation model operationId =
+    let
+        operation =
+            Dict.get operationId model.chain.parsedOperations
+    in
+        H.div []
+            [ H.h3 [] [ H.text ("Operation " ++ operationId) ]
+            , H.text (toString operation)
+            ]
 
 
 viewSuboperation : SubOperation -> Html Msg
@@ -374,7 +384,8 @@ viewOperationsTable operations =
 
         tableRow operation =
             H.tr []
-                [ H.td [ HA.class "hash", HA.title operation.hash ] [ H.text (shortHash operation.hash) ]
+                [ H.td [ HA.class "hash link", HA.title operation.hash, HE.onClick (ShowOperation operation.hash) ]
+                    [ H.text (shortHash operation.hash) ]
                 , H.td [ HA.class "hash" ] [ H.text operation.net_id ]
                 , H.td [ HA.class "hash", HA.title (sourceTitle operation.source) ] [ H.text (viewSourceMaybe operation.source) ]
                 , H.td [] [ H.ul [] (List.map (\so -> H.li [] [ viewSuboperation so ]) operation.operations) ]

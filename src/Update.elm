@@ -28,6 +28,7 @@ type Msg
     | LoadParsedOperation OperationID (Result Http.Error Chain.ParsedOperation)
     | SchemaMsg SchemaName Schema.Msg
     | ShowBlock BlockID
+    | ShowOperation OperationID
     | ShowBranch BlockID
     | LoadHeads (Result Http.Error Chain.BlocksData)
     | Tick Time
@@ -128,6 +129,9 @@ updatePage page msg model =
                 ]
             )
 
+        ( ShowOperation operationId, _ ) ->
+            ( model, Route.newUrl (Route.Operation operationId) )
+
         ( ShowBranch hash, _ ) ->
             ( { model | showBranch = Just hash }
             , getBranch model hash
@@ -161,6 +165,9 @@ setRoute routeMaybe model =
 
         Just Route.Operations ->
             ( { model | pageState = Loaded Page.Operations }, Cmd.none )
+
+        Just (Route.Operation operationId) ->
+            ( { model | pageState = Loaded (Page.Operation operationId) }, Cmd.none )
 
         Just Route.Heads ->
             ( { model | pageState = Loaded Page.Heads }, Cmd.none )

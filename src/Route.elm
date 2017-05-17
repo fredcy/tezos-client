@@ -4,13 +4,14 @@ import Html as H
 import Html.Attributes as HA
 import UrlParser as Url exposing (parseHash, s, (</>), string, oneOf, Parser)
 import Navigation exposing (Location)
-import Data.Chain as Chain exposing (BlockID)
+import Data.Chain as Chain exposing (BlockID, OperationID)
 
 
 type Route
     = Home
     | Block BlockID
     | Operations
+    | Operation OperationID
     | Schema
     | Heads
     | Errors
@@ -25,6 +26,7 @@ route =
         , Url.map Heads (s "heads")
         , Url.map Block (s "block" </> Url.string)
         , Url.map Operations (s "operations")
+        , Url.map Operation (s "operation" </> Url.string)
         , Url.map Schema (s "schema")
         , Url.map Debug (s "debug")
         , Url.map Errors (s "errors")
@@ -44,6 +46,9 @@ routeToString route =
 
                 Operations ->
                     [ "operations" ]
+
+                Operation operationId ->
+                    [ "operation", operationId ]
 
                 Schema ->
                     [ "schema" ]

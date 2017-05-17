@@ -14601,6 +14601,16 @@ var _user$project$Route$routeToString = function (route) {
 					_0: 'operations',
 					_1: {ctor: '[]'}
 				};
+			case 'Operation':
+				return {
+					ctor: '::',
+					_0: 'operation',
+					_1: {
+						ctor: '::',
+						_0: _p0._0,
+						_1: {ctor: '[]'}
+					}
+				};
 			case 'Schema':
 				return {
 					ctor: '::',
@@ -14648,6 +14658,9 @@ var _user$project$Route$Debug = {ctor: 'Debug'};
 var _user$project$Route$Errors = {ctor: 'Errors'};
 var _user$project$Route$Heads = {ctor: 'Heads'};
 var _user$project$Route$Schema = {ctor: 'Schema'};
+var _user$project$Route$Operation = function (a) {
+	return {ctor: 'Operation', _0: a};
+};
 var _user$project$Route$Operations = {ctor: 'Operations'};
 var _user$project$Route$Block = function (a) {
 	return {ctor: 'Block', _0: a};
@@ -14691,21 +14704,31 @@ var _user$project$Route$route = _evancz$url_parser$UrlParser$oneOf(
 							ctor: '::',
 							_0: A2(
 								_evancz$url_parser$UrlParser$map,
-								_user$project$Route$Schema,
-								_evancz$url_parser$UrlParser$s('schema')),
+								_user$project$Route$Operation,
+								A2(
+									_evancz$url_parser$UrlParser_ops['</>'],
+									_evancz$url_parser$UrlParser$s('operation'),
+									_evancz$url_parser$UrlParser$string)),
 							_1: {
 								ctor: '::',
 								_0: A2(
 									_evancz$url_parser$UrlParser$map,
-									_user$project$Route$Debug,
-									_evancz$url_parser$UrlParser$s('debug')),
+									_user$project$Route$Schema,
+									_evancz$url_parser$UrlParser$s('schema')),
 								_1: {
 									ctor: '::',
 									_0: A2(
 										_evancz$url_parser$UrlParser$map,
-										_user$project$Route$Errors,
-										_evancz$url_parser$UrlParser$s('errors')),
-									_1: {ctor: '[]'}
+										_user$project$Route$Debug,
+										_evancz$url_parser$UrlParser$s('debug')),
+									_1: {
+										ctor: '::',
+										_0: A2(
+											_evancz$url_parser$UrlParser$map,
+											_user$project$Route$Errors,
+											_evancz$url_parser$UrlParser$s('errors')),
+										_1: {ctor: '[]'}
+									}
 								}
 							}
 						}
@@ -14720,6 +14743,9 @@ var _user$project$Route$fromLocation = function (location) {
 
 var _user$project$Page$Debug = {ctor: 'Debug'};
 var _user$project$Page$Errors = {ctor: 'Errors'};
+var _user$project$Page$Operation = function (a) {
+	return {ctor: 'Operation', _0: a};
+};
 var _user$project$Page$Operations = {ctor: 'Operations'};
 var _user$project$Page$Schema = {ctor: 'Schema'};
 var _user$project$Page$Block = function (a) {
@@ -14935,6 +14961,9 @@ var _user$project$Update$LoadHeads = function (a) {
 var _user$project$Update$ShowBranch = function (a) {
 	return {ctor: 'ShowBranch', _0: a};
 };
+var _user$project$Update$ShowOperation = function (a) {
+	return {ctor: 'ShowOperation', _0: a};
+};
 var _user$project$Update$ShowBlock = function (a) {
 	return {ctor: 'ShowBlock', _0: a};
 };
@@ -15052,6 +15081,17 @@ var _user$project$Update$setRoute = F2(
 							model,
 							{
 								pageState: _user$project$Model$Loaded(_user$project$Page$Operations)
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				case 'Operation':
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								pageState: _user$project$Model$Loaded(
+									_user$project$Page$Operation(_p1._0._0))
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
@@ -15332,6 +15372,13 @@ var _user$project$Update$updatePage = F3(
 								_1: {ctor: '[]'}
 							}
 						})
+				};
+			case 'ShowOperation':
+				return {
+					ctor: '_Tuple2',
+					_0: model,
+					_1: _user$project$Route$newUrl(
+						_user$project$Route$Operation(_p3._0._0))
 				};
 			case 'ShowBranch':
 				var _p14 = _p3._0._0;
@@ -15767,11 +15814,16 @@ var _user$project$View$viewOperationsTable = function (operations) {
 					_elm_lang$html$Html$td,
 					{
 						ctor: '::',
-						_0: _elm_lang$html$Html_Attributes$class('hash'),
+						_0: _elm_lang$html$Html_Attributes$class('hash link'),
 						_1: {
 							ctor: '::',
 							_0: _elm_lang$html$Html_Attributes$title(operation.hash),
-							_1: {ctor: '[]'}
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$html$Html_Events$onClick(
+									_user$project$Update$ShowOperation(operation.hash)),
+								_1: {ctor: '[]'}
+							}
 						}
 					},
 					{
@@ -15972,17 +16024,31 @@ var _user$project$View$viewAllOperations = function (model) {
 			}
 		});
 };
-var _user$project$View$viewOperation = function (operation) {
-	return A2(
-		_elm_lang$html$Html$div,
-		{ctor: '[]'},
-		{
-			ctor: '::',
-			_0: _elm_lang$html$Html$text(
-				_elm_lang$core$Basics$toString(operation)),
-			_1: {ctor: '[]'}
-		});
-};
+var _user$project$View$viewOperation = F2(
+	function (model, operationId) {
+		var operation = A2(_elm_lang$core$Dict$get, operationId, model.chain.parsedOperations);
+		return A2(
+			_elm_lang$html$Html$div,
+			{ctor: '[]'},
+			{
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$h3,
+					{ctor: '[]'},
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html$text(
+							A2(_elm_lang$core$Basics_ops['++'], 'Operation ', operationId)),
+						_1: {ctor: '[]'}
+					}),
+				_1: {
+					ctor: '::',
+					_0: _elm_lang$html$Html$text(
+						_elm_lang$core$Basics$toString(operation)),
+					_1: {ctor: '[]'}
+				}
+			});
+	});
 var _user$project$View$viewShowBlockOperations = F2(
 	function (blockOperations, hashMaybe) {
 		var _p3 = hashMaybe;
@@ -16828,6 +16894,8 @@ var _user$project$View$view = function (model) {
 				return _elm_lang$html$Html$text('');
 			case 'Operations':
 				return _user$project$View$viewAllOperations(model);
+			case 'Operation':
+				return A2(_user$project$View$viewOperation, model, _p13._0._0);
 			case 'Schema':
 				return _user$project$View$viewSchemas(model.schemaData);
 			case 'Debug':

@@ -1,6 +1,6 @@
 module Page exposing (Page(..))
 
-import Data.Chain exposing (BlockID)
+import Data.Chain exposing (BlockID, OperationID)
 
 
 type Page
@@ -11,5 +11,6 @@ type Page
     | Block BlockID
     | Schema
     | Operations
+    | Operation OperationID
     | Errors
     | Debug
