@@ -6,6 +6,10 @@ import Data.Chain as Chain exposing (BlockID)
 import Data.Request exposing (URL, emptyJsonBody)
 
 
+{-| Construct request for all blockchain heads. Since we call this often to
+determine the main head I avoid requesting operation details to keep the
+response size smaller.
+-}
 getHeads : URL -> Http.Request Chain.BlocksData
 getHeads nodeUrl =
     let

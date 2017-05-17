@@ -48,7 +48,7 @@ type alias Block =
     , predecessor : BlockID
     , fitness : List Fitness
     , timestamp : Timestamp
-    , operations : List (List OperationID)
+    , operations : Maybe (List (List OperationID))
     , net_id : NetID
     , level : Level
     }
@@ -185,9 +185,20 @@ getBranchList : Model -> BlockID -> List Block
 getBranchList model blockhash =
     let
         helper hash blockList =
-            Dict.get hash model.blocks
-                |> Maybe.map (\block -> helper block.predecessor (block :: blockList))
-                |> Maybe.withDefault blockList
+            let
+                blockMaybe =
+                    Dict.get hash model.blocks
+            in
+                case blockMaybe of
+                    Just block ->
+                        if block.predecessor == hash then
+                            -- this should happen only for the genesis block
+                            blockList
+                        else
+                            helper block.predecessor (block :: blockList)
+
+                    Nothing ->
+                        blockList
     in
         helper blockhash [] |> List.reverse
 
@@ -226,7 +237,9 @@ decodeBlock =
         |> Decode.required "predecessor" Decode.string
         |> Decode.required "fitness" (Decode.list Decode.string)
         |> Decode.required "timestamp" decodeTimestamp
-        |> Decode.optional "operations" (Decode.list (Decode.list Decode.string)) [ [] ]
+        |> Decode.optional "operations"
+            (Decode.list (Decode.list Decode.string) |> Decode.map Just)
+            Nothing
         |> Decode.required "net_id" Decode.string
         |> Decode.required "level" Decode.int
 
@@ -241,8 +254,3 @@ decodeTimestamp =
 decodeLevel : Decode.Decoder Int
 decodeLevel =
     Decode.at [ "ok", "level" ] Decode.int
-
-
-getBlockOperationIDs : Block -> List OperationID
-getBlockOperationIDs block =
-    List.concatMap identity block.operations

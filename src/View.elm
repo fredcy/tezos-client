@@ -220,11 +220,18 @@ formatTimestamp now date =
     let
         distance =
             Date.Distance.inWords now date
-
-        iso =
-            Date.Format.formatISO8601 date
     in
-        iso ++ " (" ++ distance ++ ")"
+        formatDate date ++ " (" ++ distance ++ ")"
+
+
+blockOperationCount : Block -> String
+blockOperationCount block =
+    case block.operations of
+        Just listList ->
+            List.concat listList |> List.length |> toString
+
+        Nothing ->
+            "unknown"
 
 
 viewBlock2 : Date -> Maybe BlockID -> Int -> Block -> Html Msg
@@ -245,7 +252,7 @@ viewBlock2 now blockhashMaybe n block =
         , H.td [ HA.class "timestamp" ]
             [ H.text (formatTimestamp now block.timestamp) ]
         , H.td [ HA.class "operation-count" ]
-            [ List.concat block.operations |> List.length |> toString |> H.text ]
+            [ H.text (blockOperationCount block) ]
         ]
 
 
@@ -273,6 +280,15 @@ viewBlock block =
         viewPropertyList : String -> List String -> Html Msg
         viewPropertyList label values =
             viewProperty label (List.intersperse ", " values |> String.concat |> H.text)
+
+        viewOperations : Block -> Html Msg
+        viewOperations block =
+            case block.operations of
+                Just operations ->
+                    viewPropertyList "operations" (List.concat operations |> List.map shortHash)
+
+                Nothing ->
+                    viewPropertyString "operations" "[unknown]"
     in
         H.div [ HA.class "block" ]
             [ H.h3 []
@@ -285,7 +301,7 @@ viewBlock block =
                 , viewPropertyString "timestamp" (formatDate block.timestamp)
                 , viewPropertyList "fitness" block.fitness
                 , viewPropertyString "net_id" block.net_id
-                , viewPropertyList "operations" (List.concat block.operations |> List.map shortHash)
+                , viewOperations block
                 ]
             ]
 
@@ -353,11 +369,14 @@ viewOperationsTable operations =
         viewSourceMaybe sourceMaybe =
             Maybe.map shortHash sourceMaybe |> Maybe.withDefault "[no source]"
 
+        sourceTitle sourceMaybe =
+            Maybe.map identity sourceMaybe |> Maybe.withDefault ""
+
         tableRow operation =
             H.tr []
-                [ H.td [ HA.class "hash" ] [ H.text (shortHash operation.hash) ]
+                [ H.td [ HA.class "hash", HA.title operation.hash ] [ H.text (shortHash operation.hash) ]
                 , H.td [ HA.class "hash" ] [ H.text operation.net_id ]
-                , H.td [ HA.class "hash" ] [ H.text (viewSourceMaybe operation.source) ]
+                , H.td [ HA.class "hash", HA.title (sourceTitle operation.source) ] [ H.text (viewSourceMaybe operation.source) ]
                 , H.td [] [ H.ul [] (List.map (\so -> H.li [] [ viewSuboperation so ]) operation.operations) ]
                 ]
     in

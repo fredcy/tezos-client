@@ -13785,9 +13785,6 @@ var _mgold$elm_date_format$Date_Format$format = F2(
 	});
 var _mgold$elm_date_format$Date_Format$formatISO8601 = _mgold$elm_date_format$Date_Format$format('%Y-%m-%dT%H:%M:%SZ');
 
-var _user$project$Data_Chain$getBlockOperationIDs = function (block) {
-	return A2(_elm_lang$core$List$concatMap, _elm_lang$core$Basics$identity, block.operations);
-};
 var _user$project$Data_Chain$decodeLevel = A2(
 	_elm_lang$core$Json_Decode$at,
 	{
@@ -13823,18 +13820,25 @@ var _user$project$Data_Chain$getBranchList = F2(
 	function (model, blockhash) {
 		var helper = F2(
 			function (hash, blockList) {
-				return A2(
-					_elm_lang$core$Maybe$withDefault,
-					blockList,
-					A2(
-						_elm_lang$core$Maybe$map,
-						function (block) {
-							return A2(
-								helper,
-								block.predecessor,
-								{ctor: '::', _0: block, _1: blockList});
-						},
-						A2(_elm_lang$core$Dict$get, hash, model.blocks)));
+				helper:
+				while (true) {
+					var blockMaybe = A2(_elm_lang$core$Dict$get, hash, model.blocks);
+					var _p0 = blockMaybe;
+					if (_p0.ctor === 'Just') {
+						var _p1 = _p0._0;
+						if (_elm_lang$core$Native_Utils.eq(_p1.predecessor, hash)) {
+							return blockList;
+						} else {
+							var _v1 = _p1.predecessor,
+								_v2 = {ctor: '::', _0: _p1, _1: blockList};
+							hash = _v1;
+							blockList = _v2;
+							continue helper;
+						}
+					} else {
+						return blockList;
+					}
+				}
 			});
 		return _elm_lang$core$List$reverse(
 			A2(
@@ -13927,13 +13931,12 @@ var _user$project$Data_Chain$decodeBlock = A3(
 		A4(
 			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$optional,
 			'operations',
-			_elm_lang$core$Json_Decode$list(
-				_elm_lang$core$Json_Decode$list(_elm_lang$core$Json_Decode$string)),
-			{
-				ctor: '::',
-				_0: {ctor: '[]'},
-				_1: {ctor: '[]'}
-			},
+			A2(
+				_elm_lang$core$Json_Decode$map,
+				_elm_lang$core$Maybe$Just,
+				_elm_lang$core$Json_Decode$list(
+					_elm_lang$core$Json_Decode$list(_elm_lang$core$Json_Decode$string))),
+			_elm_lang$core$Maybe$Nothing,
 			A3(
 				_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
 				'timestamp',
@@ -15742,6 +15745,12 @@ var _user$project$View$viewSuboperation = function (suboperation) {
 	}
 };
 var _user$project$View$viewOperationsTable = function (operations) {
+	var sourceTitle = function (sourceMaybe) {
+		return A2(
+			_elm_lang$core$Maybe$withDefault,
+			'',
+			A2(_elm_lang$core$Maybe$map, _elm_lang$core$Basics$identity, sourceMaybe));
+	};
 	var viewSourceMaybe = function (sourceMaybe) {
 		return A2(
 			_elm_lang$core$Maybe$withDefault,
@@ -15759,7 +15768,11 @@ var _user$project$View$viewOperationsTable = function (operations) {
 					{
 						ctor: '::',
 						_0: _elm_lang$html$Html_Attributes$class('hash'),
-						_1: {ctor: '[]'}
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$title(operation.hash),
+							_1: {ctor: '[]'}
+						}
 					},
 					{
 						ctor: '::',
@@ -15788,7 +15801,12 @@ var _user$project$View$viewOperationsTable = function (operations) {
 							{
 								ctor: '::',
 								_0: _elm_lang$html$Html_Attributes$class('hash'),
-								_1: {ctor: '[]'}
+								_1: {
+									ctor: '::',
+									_0: _elm_lang$html$Html_Attributes$title(
+										sourceTitle(operation.source)),
+									_1: {ctor: '[]'}
+								}
 							},
 							{
 								ctor: '::',
@@ -16060,6 +16078,20 @@ var _user$project$View$viewBlock = function (block) {
 					_elm_lang$core$String$concat(
 						A2(_elm_lang$core$List$intersperse, ', ', values))));
 		});
+	var viewOperations = function (block) {
+		var _p4 = block.operations;
+		if (_p4.ctor === 'Just') {
+			return A2(
+				viewPropertyList,
+				'operations',
+				A2(
+					_elm_lang$core$List$map,
+					_user$project$View$shortHash,
+					_elm_lang$core$List$concat(_p4._0)));
+		} else {
+			return A2(viewPropertyString, 'operations', '[unknown]');
+		}
+	};
 	return A2(
 		_elm_lang$html$Html$div,
 		{
@@ -16125,13 +16157,7 @@ var _user$project$View$viewBlock = function (block) {
 										_0: A2(viewPropertyString, 'net_id', block.net_id),
 										_1: {
 											ctor: '::',
-											_0: A2(
-												viewPropertyList,
-												'operations',
-												A2(
-													_elm_lang$core$List$map,
-													_user$project$View$shortHash,
-													_elm_lang$core$List$concat(block.operations))),
+											_0: viewOperations(block),
 											_1: {ctor: '[]'}
 										}
 									}
@@ -16158,13 +16184,22 @@ var _user$project$View$viewShowBlock = F2(
 					},
 					blockhashMaybe)));
 	});
+var _user$project$View$blockOperationCount = function (block) {
+	var _p5 = block.operations;
+	if (_p5.ctor === 'Just') {
+		return _elm_lang$core$Basics$toString(
+			_elm_lang$core$List$length(
+				_elm_lang$core$List$concat(_p5._0)));
+	} else {
+		return 'unknown';
+	}
+};
 var _user$project$View$formatTimestamp = F2(
 	function (now, date) {
-		var iso = _mgold$elm_date_format$Date_Format$formatISO8601(date);
 		var distance = A2(_alpacaaa$elm_date_distance$Date_Distance$inWords, now, date);
 		return A2(
 			_elm_lang$core$Basics_ops['++'],
-			iso,
+			_user$project$View$formatDate(date),
 			A2(
 				_elm_lang$core$Basics_ops['++'],
 				' (',
@@ -16263,9 +16298,7 @@ var _user$project$View$viewBlock2 = F4(
 								{
 									ctor: '::',
 									_0: _elm_lang$html$Html$text(
-										_elm_lang$core$Basics$toString(
-											_elm_lang$core$List$length(
-												_elm_lang$core$List$concat(block.operations)))),
+										_user$project$View$blockOperationCount(block)),
 									_1: {ctor: '[]'}
 								}),
 							_1: {ctor: '[]'}
@@ -16378,14 +16411,14 @@ var _user$project$View$viewBranch = F4(
 			});
 	});
 var _user$project$View$viewShowBranch = function (model) {
-	var _p4 = model.showBranch;
-	if (_p4.ctor === 'Just') {
+	var _p6 = model.showBranch;
+	if (_p6.ctor === 'Just') {
 		return A4(
 			_user$project$View$viewBranch,
 			4,
 			model.now,
 			model.showBlock,
-			A2(_user$project$Data_Chain$getBranchList, model.chain, _p4._0));
+			A2(_user$project$Data_Chain$getBranchList, model.chain, _p6._0));
 	} else {
 		return A2(
 			_elm_lang$html$Html$h4,
@@ -16406,11 +16439,11 @@ var _user$project$View$canonFitness = function (strings) {
 			})(0),
 		A2(
 			_elm_lang$core$List$map,
-			function (_p5) {
+			function (_p7) {
 				return A2(
 					_elm_lang$core$Result$withDefault,
 					0,
-					_fredcy$elm_parseint$ParseInt$parseIntHex(_p5));
+					_fredcy$elm_parseint$ParseInt$parseIntHex(_p7));
 			},
 			strings));
 };
@@ -16466,9 +16499,9 @@ var _user$project$View$viewSchemas = function (schemas) {
 };
 var _user$project$View$viewHome = function (model) {
 	var headMaybe = _elm_lang$core$List$head(model.chain.heads);
-	var _p6 = headMaybe;
-	if (_p6.ctor === 'Just') {
-		var _p7 = _p6._0;
+	var _p8 = headMaybe;
+	if (_p8.ctor === 'Just') {
+		var _p9 = _p8._0;
 		return A2(
 			_elm_lang$html$Html$div,
 			{ctor: '[]'},
@@ -16488,8 +16521,8 @@ var _user$project$View$viewHome = function (model) {
 						_user$project$View$viewBranch,
 						8,
 						model.now,
-						_elm_lang$core$Maybe$Just(_p7),
-						A2(_user$project$Data_Chain$getBranchList, model.chain, _p7)),
+						_elm_lang$core$Maybe$Just(_p9),
+						A2(_user$project$Data_Chain$getBranchList, model.chain, _p9)),
 					_1: {ctor: '[]'}
 				}
 			});
@@ -16505,9 +16538,9 @@ var _user$project$View$BlockFound = function (a) {
 };
 var _user$project$View$findBlockStatus = F2(
 	function (blocks, blockhash) {
-		var _p8 = A2(_elm_lang$core$Dict$get, blockhash, blocks);
-		if (_p8.ctor === 'Just') {
-			return _user$project$View$BlockFound(_p8._0);
+		var _p10 = A2(_elm_lang$core$Dict$get, blockhash, blocks);
+		if (_p10.ctor === 'Just') {
+			return _user$project$View$BlockFound(_p10._0);
 		} else {
 			return _user$project$View$BlockNotFound(blockhash);
 		}
@@ -16634,14 +16667,14 @@ var _user$project$View$viewHeads = function (model) {
 		});
 	var viewHead = F2(
 		function (i, blockStatus) {
-			var _p9 = blockStatus;
-			if (_p9.ctor === 'BlockFound') {
-				var _p10 = _p9._0;
+			var _p11 = blockStatus;
+			if (_p11.ctor === 'BlockFound') {
+				var _p12 = _p11._0;
 				return A3(
 					viewBlockSummary,
 					i,
-					_p10,
-					A2(isBeingShown, model.showBranch, _p10.hash));
+					_p12,
+					A2(isBeingShown, model.showBranch, _p12.hash));
 			} else {
 				return _elm_lang$html$Html$text('');
 			}
@@ -16787,8 +16820,8 @@ var _user$project$View$viewHeads = function (model) {
 };
 var _user$project$View$view = function (model) {
 	var content = function () {
-		var _p11 = model.pageState;
-		switch (_p11._0.ctor) {
+		var _p13 = model.pageState;
+		switch (_p13._0.ctor) {
 			case 'Home':
 				return _user$project$View$viewHome(model);
 			case 'Blank':
@@ -16802,9 +16835,9 @@ var _user$project$View$view = function (model) {
 			case 'Heads':
 				return _user$project$View$viewHeads(model);
 			case 'Block':
-				var _p12 = A2(_elm_lang$core$Dict$get, _p11._0._0, model.chain.blocks);
-				if (_p12.ctor === 'Just') {
-					return _user$project$View$viewBlock(_p12._0);
+				var _p14 = A2(_elm_lang$core$Dict$get, _p13._0._0, model.chain.blocks);
+				if (_p14.ctor === 'Just') {
+					return _user$project$View$viewBlock(_p14._0);
 				} else {
 					return _elm_lang$html$Html$text('loading block ...');
 				}
