@@ -300,5 +300,15 @@ updateMonitor data model =
 
                 Err error ->
                     { model | errors = OtherError error :: model.errors }
+
+        blockHashes =
+            blocksResult
+                |> Result.map (List.concat >> (List.map .hash))
+                |> Result.withDefault []
+
+        cmd =
+            blockHashes
+                |> List.map (getBlockOperationDetails model)
+                |> Cmd.batch
     in
-        ( newModel, Cmd.none )
+        ( newModel, cmd )

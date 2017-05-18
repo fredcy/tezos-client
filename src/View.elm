@@ -77,8 +77,10 @@ viewHome model =
             Just head ->
                 H.div []
                     [ H.h2 [] [ H.text "Newest blocks" ]
+
+                    -- TODO: fix this mess
                     , getBranchList model.chain head
-                        |> viewBranch 8 model.now (Just head)
+                        |> viewBranch 8 model (Just head)
                     ]
 
             Nothing ->
@@ -102,7 +104,7 @@ viewSchemas schemas =
 viewHeader : String -> Html Msg
 viewHeader nodeUrl =
     H.div []
-        [ H.h1 [] [ H.text "Tezos client" ]
+        [ H.h1 [] [ H.text "Tezos Explorer" ]
         , H.div [] [ H.text ("Connecting to Tezos RPC server " ++ nodeUrl) ]
         ]
 
@@ -179,8 +181,8 @@ viewHeads model =
             ]
 
 
-viewBranch : Int -> Date -> Maybe BlockID -> List Block -> Html Msg
-viewBranch howMany now blockhashMaybe branch =
+viewBranch : Int -> Model -> Maybe BlockID -> List Block -> Html Msg
+viewBranch howMany model blockhashMaybe branch =
     let
         tableHeader =
             H.tr []
@@ -197,7 +199,7 @@ viewBranch howMany now blockhashMaybe branch =
             [ H.div [ HA.class "branch" ]
                 [ H.table [ HA.class "blockchain" ]
                     [ H.thead [] [ tableHeader ]
-                    , H.tbody [] (List.indexedMap (viewBlock2 now blockhashMaybe) branchToShow)
+                    , H.tbody [] (List.indexedMap (viewBlock2 model blockhashMaybe) branchToShow)
                     ]
                 ]
             ]
@@ -212,18 +214,19 @@ formatTimestamp now date =
         formatDate date ++ " (" ++ distance ++ ")"
 
 
-blockOperationCount : Block -> String
-blockOperationCount block =
-    case block.operations of
-        Just listList ->
-            List.concat listList |> List.length |> toString
+blockOperationCount : Model -> Block -> String
+blockOperationCount model block =
+    let
+        blockOperationsMaybe =
+            Dict.get block.hash model.chain.blockOperations
+    in
+        blockOperationsMaybe
+            |> Maybe.map (List.length >> toString)
+            |> Maybe.withDefault "unknown"
 
-        Nothing ->
-            "unknown"
 
-
-viewBlock2 : Date -> Maybe BlockID -> Int -> Block -> Html Msg
-viewBlock2 now blockhashMaybe n block =
+viewBlock2 : Model -> Maybe BlockID -> Int -> Block -> Html Msg
+viewBlock2 model blockhashMaybe n block =
     H.tr
         [ HA.classList
             [ ( "block", True ) ]
@@ -236,9 +239,9 @@ viewBlock2 now blockhashMaybe n block =
             ]
             [ H.text (shortHash block.hash) ]
         , H.td [ HA.class "timestamp" ]
-            [ H.text (formatTimestamp now block.timestamp) ]
+            [ H.text (formatTimestamp model.now block.timestamp) ]
         , H.td [ HA.class "operation-count" ]
-            [ H.text (blockOperationCount block) ]
+            [ H.text (blockOperationCount model block) ]
         ]
 
 

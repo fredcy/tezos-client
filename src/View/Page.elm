@@ -28,7 +28,7 @@ frame context content =
 viewHeader : Context -> Html msg
 viewHeader context =
     H.div [ HA.class "page-header" ]
-        [ H.h1 [] [ H.text "Tezos client" ]
+        [ H.h1 [] [ H.text "Tezos Explorer" ]
         , viewNow context.now
         , viewErrorCount context.errorCount
         , navLinks
