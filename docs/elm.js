@@ -15001,6 +15001,9 @@ var _user$project$Request_Schema$getSchema = F2(
 		return A3(_elm_lang$http$Http$post, url, body, _user$project$Data_Schema$decodeSchema);
 	});
 
+var _user$project$Update$Now = function (a) {
+	return {ctor: 'Now', _0: a};
+};
 var _user$project$Update$Monitor = function (a) {
 	return {ctor: 'Monitor', _0: a};
 };
@@ -15513,6 +15516,16 @@ var _user$project$Update$updatePage = F3(
 						_user$project$Update$LoadHeads,
 						_user$project$Request_Block$getHeads(model.nodeUrl))
 				};
+			case 'Now':
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							now: _elm_lang$core$Date$fromTime(_p5._0._0)
+						}),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
 			case 'SetRoute':
 				return A2(_user$project$Update$setRoute, _p5._0._0, model);
 			case 'ClearErrors':
@@ -15526,7 +15539,23 @@ var _user$project$Update$updatePage = F3(
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			default:
-				return A2(_user$project$Update$updateMonitor, _p5._0._0, model);
+				var _p16 = A2(_user$project$Update$updateMonitor, _p5._0._0, model);
+				var newModel = _p16._0;
+				var cmd = _p16._1;
+				return {
+					ctor: '_Tuple2',
+					_0: newModel,
+					_1: _elm_lang$core$Platform_Cmd$batch(
+						{
+							ctor: '::',
+							_0: cmd,
+							_1: {
+								ctor: '::',
+								_0: A2(_elm_lang$core$Task$perform, _user$project$Update$Now, _elm_lang$core$Time$now),
+								_1: {ctor: '[]'}
+							}
+						})
+				};
 		}
 	});
 var _user$project$Update$update = F2(

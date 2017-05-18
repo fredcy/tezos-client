@@ -8,6 +8,7 @@ import Json.Decode.Pipeline as Decode
 import Http
 import List.Extra as List
 import Set
+import Task
 import Time exposing (Time)
 import Model exposing (..)
 import Data.Schema as Schema exposing (SchemaData, SchemaName, decodeSchema, collapseTrees)
@@ -35,6 +36,7 @@ type Msg
     | SetRoute (Maybe Route)
     | ClearErrors
     | Monitor String
+    | Now Time
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -143,6 +145,9 @@ updatePage page msg model =
             , Request.Block.getHeads model.nodeUrl |> Http.send LoadHeads
             )
 
+        ( Now time, _ ) ->
+            ( { model | now = Date.fromTime time }, Cmd.none )
+
         ( SetRoute route, _ ) ->
             setRoute route model
 
@@ -150,7 +155,11 @@ updatePage page msg model =
             ( { model | errors = [] }, Cmd.none )
 
         ( Monitor data, _ ) ->
-            updateMonitor data model
+            let
+                ( newModel, cmd ) =
+                    updateMonitor data model
+            in
+                ( newModel, Cmd.batch [ cmd, Task.perform Now Time.now ] )
 
 
 setRoute : Maybe Route -> Model -> ( Model, Cmd Msg )
