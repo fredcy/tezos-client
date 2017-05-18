@@ -11,7 +11,7 @@ import Set
 import Time exposing (Time)
 import Model exposing (..)
 import Data.Schema as Schema exposing (SchemaData, SchemaName, decodeSchema, collapseTrees)
-import Data.Chain as Chain exposing (Block, BlockID, Operation, OperationID)
+import Data.Chain as Chain exposing (Block, BlockID, Operation, OperationID, decodeBlocks)
 import Data.Request exposing (URL)
 import Page exposing (Page)
 import Request.Block
@@ -34,6 +34,7 @@ type Msg
     | Tick Time
     | SetRoute (Maybe Route)
     | ClearErrors
+    | Monitor String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -43,14 +44,14 @@ update msg model =
 
 updatePage : Page -> Msg -> Model -> ( Model, Cmd Msg )
 updatePage page msg model =
-    case ( msg, page ) |> Debug.log "update" of
+    case ( msg, page ) |> Debug.log "msg" of
         ( LoadBlocks blocksMaybe, _ ) ->
             case blocksMaybe of
                 Ok blockChains ->
                     loadBlocks model blockChains
 
                 Err error ->
-                    ( { model | errors = error :: model.errors }, Cmd.none )
+                    ( { model | errors = HttpError error :: model.errors }, Cmd.none )
 
         ( LoadSchema schemaName schemaMaybe, _ ) ->
             case schemaMaybe of
@@ -60,7 +61,7 @@ updatePage page msg model =
                     )
 
                 Err error ->
-                    ( { model | errors = error :: model.errors }, Cmd.none )
+                    ( { model | errors = HttpError error :: model.errors }, Cmd.none )
 
         ( SchemaMsg name msg, _ ) ->
             let
@@ -89,7 +90,7 @@ updatePage page msg model =
                         ( { model | chain = newChain }, Cmd.none )
 
                 Err error ->
-                    ( { model | errors = error :: model.errors }, Cmd.none )
+                    ( { model | errors = HttpError error :: model.errors }, Cmd.none )
 
         ( LoadParsedOperation operationId parseResult, _ ) ->
             case parseResult of
@@ -101,7 +102,7 @@ updatePage page msg model =
                         ( { model | chain = newChain }, Cmd.none )
 
                 Err error ->
-                    ( { model | errors = error :: model.errors }, Cmd.none )
+                    ( { model | errors = HttpError error :: model.errors }, Cmd.none )
 
         ( LoadBlockOperations blockhash result, _ ) ->
             case result of
@@ -111,7 +112,7 @@ updatePage page msg model =
                     )
 
                 Err error ->
-                    ( { model | errors = error :: model.errors }, Cmd.none )
+                    ( { model | errors = HttpError error :: model.errors }, Cmd.none )
 
         ( LoadHeads headsResult, _ ) ->
             case headsResult of
@@ -119,7 +120,7 @@ updatePage page msg model =
                     loadHeads model heads
 
                 Err error ->
-                    ( { model | errors = error :: model.errors }, Cmd.none )
+                    ( { model | errors = HttpError error :: model.errors }, Cmd.none )
 
         ( ShowBlock blockhash, _ ) ->
             ( model
@@ -147,6 +148,9 @@ updatePage page msg model =
 
         ( ClearErrors, _ ) ->
             ( { model | errors = [] }, Cmd.none )
+
+        ( Monitor data, _ ) ->
+            updateMonitor data model
 
 
 setRoute : Maybe Route -> Model -> ( Model, Cmd Msg )
@@ -203,7 +207,7 @@ loadHeads model headsData =
 
         showBranch : Maybe BlockID
         showBranch =
-            List.head newChain.heads |> Debug.log "showBranch"
+            List.head newChain.heads
     in
         ( { model | chain = newChain }
         , showBranch |> Maybe.map (getBranch model) |> Maybe.withDefault Cmd.none
@@ -274,10 +278,27 @@ getAllBlocksOperations : Model -> Cmd Msg
 getAllBlocksOperations model =
     let
         blocksToGet =
-            Chain.blocksNeedingOperations model.chain |> Debug.log "blocksToGet"
+            Chain.blocksNeedingOperations model.chain
 
         getBlockOperations blockHash =
             Request.Operation.getBlockOperations model.nodeUrl blockHash
                 |> Http.send (LoadBlockOperations blockHash)
     in
         Cmd.batch (List.map getBlockOperations blocksToGet)
+
+
+updateMonitor : String -> Model -> ( Model, Cmd Msg )
+updateMonitor data model =
+    let
+        blocksResult =
+            Decode.decodeString decodeBlocks data |> Debug.log "blocksResult"
+
+        newModel =
+            case blocksResult of
+                Ok blocks ->
+                    { model | chain = Chain.updateMonitor model.chain blocks }
+
+                Err error ->
+                    { model | errors = OtherError error :: model.errors }
+    in
+        ( newModel, Cmd.none )

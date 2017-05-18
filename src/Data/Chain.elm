@@ -135,7 +135,7 @@ addBlockOperations model blockhash operations =
     let
         blockOperations =
             Dict.insert blockhash (List.concat operations |> List.map .hash) model.blockOperations
-                
+
         addOperation operation dict =
             Dict.insert operation.hash operation dict
 
@@ -167,6 +167,27 @@ loadHeads model headsData =
                 |> List.map .hash
     in
         { newModel | heads = heads }
+
+
+updateMonitor : Model -> BlocksData -> Model
+updateMonitor model headsData =
+    let
+        newModel =
+            loadBlocks model headsData
+
+        newHeadHash : Maybe BlockID
+        newHeadHash =
+            List.map List.head headsData
+                |> List.filterMap identity
+                |> List.head
+                |> Maybe.map .hash
+
+        newHeads =
+            newHeadHash
+                |> Maybe.map (\hash -> hash :: (List.tail model.heads |> Maybe.withDefault []))
+                |> Maybe.withDefault model.heads
+    in
+        { newModel | heads = newHeads }
 
 
 addBlock : Block -> Dict BlockID Block -> Dict BlockID Block

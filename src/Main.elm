@@ -1,4 +1,4 @@
-module Main exposing (main)
+port module Main exposing (main)
 
 import Html
 import Http
@@ -57,4 +57,10 @@ init flags location =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Time.every (30 * Time.second) Tick
+    Sub.batch
+        [ Time.every (10 * Time.minute) Tick
+        , monitor Monitor
+        ]
+
+
+port monitor : (String -> msg) -> Sub msg

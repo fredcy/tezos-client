@@ -436,7 +436,7 @@ shortHash hash =
     String.left 14 hash
 
 
-viewError : String -> List Http.Error -> Html Msg
+viewError : String -> List Error -> Html Msg
 viewError nodeUrl errors =
     H.div [ HA.class "error" ]
         [ H.h1 [] [ H.text "Errors" ]
@@ -447,13 +447,13 @@ viewError nodeUrl errors =
 
 viewErrorInfo nodeUrl error =
     case error of
-        Http.BadPayload message response ->
+        HttpError (Http.BadPayload message response) ->
             H.div []
                 [ H.h4 [] [ H.text "Bad Payload (JSON parsing problem)" ]
                 , H.div [] [ H.text message ]
                 ]
 
-        Http.BadStatus response ->
+        HttpError (Http.BadStatus response) ->
             H.div []
                 [ H.h4 [] [ H.text "Bad response status from node" ]
                 , H.div [] [ H.text (toString response.status) ]
@@ -462,7 +462,7 @@ viewErrorInfo nodeUrl error =
                 --, H.div [ HA.style [ ( "white-space", "pre" ) ] ] [ H.text (toString response) ]
                 ]
 
-        Http.NetworkError ->
+        HttpError Http.NetworkError ->
             H.div []
                 [ H.h4 [] [ H.text "Network Error" ]
                 , H.div [] [ H.text ("Unable to access Tezos node at " ++ nodeUrl) ]

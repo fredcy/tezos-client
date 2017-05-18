@@ -9,7 +9,7 @@ elm.js: $(SRC)
 
 NODE_URL = https://tezos.ostraca.org
 
-dist: docs docs/elm.js docs/index.html docs/tezos.css
+dist: docs docs/elm.js docs/index.html docs/tezos.css docs/tezos.js
 
 docs:
 	mkdir docs
@@ -22,3 +22,6 @@ docs/index.html: index.html Makefile
 
 docs/tezos.css: tezos.css
 	cp $< $@
+
+docs/tezos.js: tezos.js
+	perl -pe 's#http://localhost:8732#$(NODE_URL)#' tezos.js >$@

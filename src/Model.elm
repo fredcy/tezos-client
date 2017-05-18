@@ -9,15 +9,20 @@ import Page exposing (Page)
 
 
 {-| This page state comes from elm-spa-example.
-    TODO: Make full use of transition state, or remove.
+TODO: Make full use of transition state, or remove.
 -}
 type PageState
     = Loaded Page
 
 
+type Error
+    = HttpError Http.Error
+    | OtherError String
+
+
 type alias Model =
     { schemaData : Schema.Model
-    , errors : List Http.Error
+    , errors : List Error
     , nodeUrl : String
     , now : Date
     , chain : Chain.Model
