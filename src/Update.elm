@@ -37,6 +37,7 @@ type Msg
     | ClearErrors
     | Monitor String
     | Now Time
+    | LoadChainAt BlockID (Result Http.Error Chain.BlocksData)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -124,6 +125,14 @@ updatePage page msg model =
                 Err error ->
                     ( { model | errors = HttpError error :: model.errors }, Cmd.none )
 
+        ( LoadChainAt hash blocksResult, _ ) ->
+            case blocksResult of
+                Ok blocks ->
+                    loadBlocks model blocks
+
+                Err error ->
+                    ( { model | errors = HttpError error :: model.errors }, Cmd.none )
+
         ( ShowBlock blockhash, _ ) ->
             ( model
             , Cmd.batch
@@ -137,7 +146,7 @@ updatePage page msg model =
 
         ( ShowBranch hash, _ ) ->
             ( model
-            , getBranch model hash
+            , Route.newUrl (Route.ChainAt hash)
             )
 
         ( Tick time, _ ) ->
@@ -184,6 +193,11 @@ setRoute routeMaybe model =
 
         Just Route.Heads ->
             ( { model | pageState = Loaded Page.Heads }, Cmd.none )
+
+        Just (Route.ChainAt hash) ->
+            ( { model | pageState = Loaded (Page.ChainAt hash) }
+            , getBranch model hash
+            )
 
         Just Route.Schema ->
             let
@@ -256,7 +270,7 @@ getBranch model blockhash =
             Chain.getBranchList model.chain blockhash
 
         desiredLength =
-            20
+            24
 
         toGet =
             desiredLength - List.length branchList

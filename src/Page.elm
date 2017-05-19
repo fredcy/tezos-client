@@ -12,5 +12,6 @@ type Page
     | Schema
     | Operations
     | Operation OperationID
+    | ChainAt BlockID
     | Errors
     | Debug

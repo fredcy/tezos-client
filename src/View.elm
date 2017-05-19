@@ -58,6 +58,9 @@ view model =
                         Nothing ->
                             H.text "loading block ..."
 
+                Loaded (Page.ChainAt hash) ->
+                    viewChainAt model hash
+
                 Loaded Page.Errors ->
                     viewError model.nodeUrl model.errors
 
@@ -80,7 +83,7 @@ viewHome model =
 
                     -- TODO: fix this mess
                     , getBranchList model.chain head
-                        |> viewBranch 8 model (Just head)
+                        |> viewBranch 24 model (Just head)
                     ]
 
             Nothing ->
@@ -152,7 +155,7 @@ viewHeads model =
                 [ H.td [ HA.class "index" ] [ H.text (toString i) ]
                 , H.td
                     [ HA.class "hash"
-                    , HE.onClick (ShowBlock block.hash)
+                    , HE.onClick (ShowBranch block.hash)
                     , HA.title block.hash
                     ]
                     [ H.text (shortHash block.hash) ]
@@ -301,7 +304,6 @@ viewBlock model block =
                 , viewPropertyString "timestamp" (formatDate block.timestamp)
                 , viewPropertyList "fitness" block.fitness
                 , viewPropertyString "net_id" block.net_id
-                , viewOperations block
                 ]
             , H.h4 [] [ H.text "Operations" ]
             , viewParsedOperations model block.hash
@@ -437,6 +439,15 @@ viewAllOperations model =
 shortHash : Base58CheckEncodedSHA256 -> String
 shortHash hash =
     String.left 14 hash
+
+
+viewChainAt : Model -> BlockID -> Html Msg
+viewChainAt model hash =
+    H.div []
+        [ H.h3 [] [ H.text ("Chain at " ++ (shortHash hash)) ]
+        , getBranchList model.chain hash
+            |> viewBranch 24 model (Just hash)
+        ]
 
 
 viewError : String -> List Error -> Html Msg

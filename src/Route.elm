@@ -12,6 +12,7 @@ type Route
     | Block BlockID
     | Operations
     | Operation OperationID
+    | ChainAt BlockID
     | Schema
     | Heads
     | Errors
@@ -27,6 +28,7 @@ route =
         , Url.map Block (s "block" </> Url.string)
         , Url.map Operations (s "operations")
         , Url.map Operation (s "operation" </> Url.string)
+        , Url.map ChainAt (s "chainat" </> Url.string)
         , Url.map Schema (s "schema")
         , Url.map Debug (s "debug")
         , Url.map Errors (s "errors")
@@ -49,6 +51,9 @@ routeToString route =
 
                 Operation operationId ->
                     [ "operation", operationId ]
+
+                ChainAt hash ->
+                    [ "chainat", hash ]
 
                 Schema ->
                     [ "schema" ]

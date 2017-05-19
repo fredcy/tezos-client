@@ -14658,6 +14658,16 @@ var _user$project$Route$routeToString = function (route) {
 						_1: {ctor: '[]'}
 					}
 				};
+			case 'ChainAt':
+				return {
+					ctor: '::',
+					_0: 'chainat',
+					_1: {
+						ctor: '::',
+						_0: _p0._0,
+						_1: {ctor: '[]'}
+					}
+				};
 			case 'Schema':
 				return {
 					ctor: '::',
@@ -14705,6 +14715,9 @@ var _user$project$Route$Debug = {ctor: 'Debug'};
 var _user$project$Route$Errors = {ctor: 'Errors'};
 var _user$project$Route$Heads = {ctor: 'Heads'};
 var _user$project$Route$Schema = {ctor: 'Schema'};
+var _user$project$Route$ChainAt = function (a) {
+	return {ctor: 'ChainAt', _0: a};
+};
 var _user$project$Route$Operation = function (a) {
 	return {ctor: 'Operation', _0: a};
 };
@@ -14760,21 +14773,31 @@ var _user$project$Route$route = _evancz$url_parser$UrlParser$oneOf(
 								ctor: '::',
 								_0: A2(
 									_evancz$url_parser$UrlParser$map,
-									_user$project$Route$Schema,
-									_evancz$url_parser$UrlParser$s('schema')),
+									_user$project$Route$ChainAt,
+									A2(
+										_evancz$url_parser$UrlParser_ops['</>'],
+										_evancz$url_parser$UrlParser$s('chainat'),
+										_evancz$url_parser$UrlParser$string)),
 								_1: {
 									ctor: '::',
 									_0: A2(
 										_evancz$url_parser$UrlParser$map,
-										_user$project$Route$Debug,
-										_evancz$url_parser$UrlParser$s('debug')),
+										_user$project$Route$Schema,
+										_evancz$url_parser$UrlParser$s('schema')),
 									_1: {
 										ctor: '::',
 										_0: A2(
 											_evancz$url_parser$UrlParser$map,
-											_user$project$Route$Errors,
-											_evancz$url_parser$UrlParser$s('errors')),
-										_1: {ctor: '[]'}
+											_user$project$Route$Debug,
+											_evancz$url_parser$UrlParser$s('debug')),
+										_1: {
+											ctor: '::',
+											_0: A2(
+												_evancz$url_parser$UrlParser$map,
+												_user$project$Route$Errors,
+												_evancz$url_parser$UrlParser$s('errors')),
+											_1: {ctor: '[]'}
+										}
 									}
 								}
 							}
@@ -14790,6 +14813,9 @@ var _user$project$Route$fromLocation = function (location) {
 
 var _user$project$Page$Debug = {ctor: 'Debug'};
 var _user$project$Page$Errors = {ctor: 'Errors'};
+var _user$project$Page$ChainAt = function (a) {
+	return {ctor: 'ChainAt', _0: a};
+};
 var _user$project$Page$Operation = function (a) {
 	return {ctor: 'Operation', _0: a};
 };
@@ -15001,6 +15027,10 @@ var _user$project$Request_Schema$getSchema = F2(
 		return A3(_elm_lang$http$Http$post, url, body, _user$project$Data_Schema$decodeSchema);
 	});
 
+var _user$project$Update$LoadChainAt = F2(
+	function (a, b) {
+		return {ctor: 'LoadChainAt', _0: a, _1: b};
+	});
 var _user$project$Update$Now = function (a) {
 	return {ctor: 'Now', _0: a};
 };
@@ -15137,6 +15167,30 @@ var _user$project$Update$getBlock = F2(
 			return _elm_lang$core$Platform_Cmd$none;
 		}
 	});
+var _user$project$Update$getBranch = F2(
+	function (model, blockhash) {
+		var desiredLength = 24;
+		var branchList = A2(_user$project$Data_Chain$getBranchList, model.chain, blockhash);
+		var toGet = desiredLength - _elm_lang$core$List$length(branchList);
+		if (_elm_lang$core$Native_Utils.cmp(toGet, 0) > 0) {
+			var startHash = A2(
+				_elm_lang$core$Maybe$withDefault,
+				blockhash,
+				A2(
+					_elm_lang$core$Maybe$map,
+					function (_) {
+						return _.predecessor;
+					},
+					_elm_lang$core$List$head(
+						_elm_lang$core$List$reverse(branchList))));
+			return A2(
+				_elm_lang$http$Http$send,
+				_user$project$Update$LoadBlocks,
+				A3(_user$project$Request_Block$getChainStartingAt, model.nodeUrl, toGet, startHash));
+		} else {
+			return _elm_lang$core$Platform_Cmd$none;
+		}
+	});
 var _user$project$Update$setRoute = F2(
 	function (routeMaybe, model) {
 		var _p3 = routeMaybe;
@@ -15205,6 +15259,18 @@ var _user$project$Update$setRoute = F2(
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
+				case 'ChainAt':
+					var _p5 = _p3._0._0;
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								pageState: _user$project$Model$Loaded(
+									_user$project$Page$ChainAt(_p5))
+							}),
+						_1: A2(_user$project$Update$getBranch, model, _p5)
+					};
 				case 'Schema':
 					var schemaQuery2 = '/describe/blocks/head/proto';
 					var schemaQuery1 = '/describe';
@@ -15255,30 +15321,6 @@ var _user$project$Update$setRoute = F2(
 			}
 		}
 	});
-var _user$project$Update$getBranch = F2(
-	function (model, blockhash) {
-		var desiredLength = 20;
-		var branchList = A2(_user$project$Data_Chain$getBranchList, model.chain, blockhash);
-		var toGet = desiredLength - _elm_lang$core$List$length(branchList);
-		if (_elm_lang$core$Native_Utils.cmp(toGet, 0) > 0) {
-			var startHash = A2(
-				_elm_lang$core$Maybe$withDefault,
-				blockhash,
-				A2(
-					_elm_lang$core$Maybe$map,
-					function (_) {
-						return _.predecessor;
-					},
-					_elm_lang$core$List$head(
-						_elm_lang$core$List$reverse(branchList))));
-			return A2(
-				_elm_lang$http$Http$send,
-				_user$project$Update$LoadBlocks,
-				A3(_user$project$Request_Block$getChainStartingAt, model.nodeUrl, toGet, startHash));
-		} else {
-			return _elm_lang$core$Platform_Cmd$none;
-		}
-	});
 var _user$project$Update$loadHeads = F2(
 	function (model, headsData) {
 		var newChain = A2(_user$project$Data_Chain$loadHeads, model.chain, headsData);
@@ -15299,46 +15341,15 @@ var _user$project$Update$loadHeads = F2(
 	});
 var _user$project$Update$updatePage = F3(
 	function (page, msg, model) {
-		var _p5 = A2(
+		var _p6 = A2(
 			_elm_lang$core$Debug$log,
 			'msg',
 			{ctor: '_Tuple2', _0: msg, _1: page});
-		switch (_p5._0.ctor) {
+		switch (_p6._0.ctor) {
 			case 'LoadBlocks':
-				var _p6 = _p5._0._0;
-				if (_p6.ctor === 'Ok') {
-					return A2(_user$project$Update$loadBlocks, model, _p6._0);
-				} else {
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Native_Utils.update(
-							model,
-							{
-								errors: {
-									ctor: '::',
-									_0: _user$project$Model$HttpError(_p6._0),
-									_1: model.errors
-								}
-							}),
-						_1: _elm_lang$core$Platform_Cmd$none
-					};
-				}
-			case 'LoadSchema':
-				var _p7 = _p5._0._1;
+				var _p7 = _p6._0._0;
 				if (_p7.ctor === 'Ok') {
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Native_Utils.update(
-							model,
-							{
-								schemaData: A3(
-									_elm_lang$core$Dict$insert,
-									_p5._0._0,
-									_user$project$Data_Schema$collapseTrees(_p7._0),
-									model.schemaData)
-							}),
-						_1: _elm_lang$core$Platform_Cmd$none
-					};
+					return A2(_user$project$Update$loadBlocks, model, _p7._0);
 				} else {
 					return {
 						ctor: '_Tuple2',
@@ -15354,36 +15365,20 @@ var _user$project$Update$updatePage = F3(
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				}
-			case 'SchemaMsg':
-				var _p10 = _p5._0._0;
-				var newSchemaMaybe = A2(
-					_elm_lang$core$Maybe$map,
-					_user$project$Data_Schema$update(_p5._0._1),
-					A2(_elm_lang$core$Dict$get, _p10, model.schemaData));
-				var _p8 = newSchemaMaybe;
-				if (_p8.ctor === 'Just') {
+			case 'LoadSchema':
+				var _p8 = _p6._0._1;
+				if (_p8.ctor === 'Ok') {
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								schemaData: A3(_elm_lang$core$Dict$insert, _p10, _p8._0, model.schemaData)
+								schemaData: A3(
+									_elm_lang$core$Dict$insert,
+									_p6._0._0,
+									_user$project$Data_Schema$collapseTrees(_p8._0),
+									model.schemaData)
 							}),
-						_1: _elm_lang$core$Platform_Cmd$none
-					};
-				} else {
-					var _p9 = A2(_elm_lang$core$Debug$log, 'Failed to find schema', _p10);
-					return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
-				}
-			case 'LoadOperation':
-				var _p11 = _p5._0._0;
-				if (_p11.ctor === 'Ok') {
-					var newChain = A2(_user$project$Data_Chain$loadOperation, model.chain, _p11._0);
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Native_Utils.update(
-							model,
-							{chain: newChain}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				} else {
@@ -15394,17 +15389,38 @@ var _user$project$Update$updatePage = F3(
 							{
 								errors: {
 									ctor: '::',
-									_0: _user$project$Model$HttpError(_p11._0),
+									_0: _user$project$Model$HttpError(_p8._0),
 									_1: model.errors
 								}
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				}
-			case 'LoadParsedOperation':
-				var _p12 = _p5._0._1;
+			case 'SchemaMsg':
+				var _p11 = _p6._0._0;
+				var newSchemaMaybe = A2(
+					_elm_lang$core$Maybe$map,
+					_user$project$Data_Schema$update(_p6._0._1),
+					A2(_elm_lang$core$Dict$get, _p11, model.schemaData));
+				var _p9 = newSchemaMaybe;
+				if (_p9.ctor === 'Just') {
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								schemaData: A3(_elm_lang$core$Dict$insert, _p11, _p9._0, model.schemaData)
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				} else {
+					var _p10 = A2(_elm_lang$core$Debug$log, 'Failed to find schema', _p11);
+					return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+				}
+			case 'LoadOperation':
+				var _p12 = _p6._0._0;
 				if (_p12.ctor === 'Ok') {
-					var newChain = A3(_user$project$Data_Chain$loadParsedOperation, model.chain, _p5._0._0, _p12._0);
+					var newChain = A2(_user$project$Data_Chain$loadOperation, model.chain, _p12._0);
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
@@ -15427,16 +15443,15 @@ var _user$project$Update$updatePage = F3(
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				}
-			case 'LoadBlockOperations':
-				var _p13 = _p5._0._1;
+			case 'LoadParsedOperation':
+				var _p13 = _p6._0._1;
 				if (_p13.ctor === 'Ok') {
+					var newChain = A3(_user$project$Data_Chain$loadParsedOperation, model.chain, _p6._0._0, _p13._0);
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
-							{
-								chain: A3(_user$project$Data_Chain$addBlockOperations, model.chain, _p5._0._0, _p13._0)
-							}),
+							{chain: newChain}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				} else {
@@ -15454,10 +15469,18 @@ var _user$project$Update$updatePage = F3(
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				}
-			case 'LoadHeads':
-				var _p14 = _p5._0._0;
+			case 'LoadBlockOperations':
+				var _p14 = _p6._0._1;
 				if (_p14.ctor === 'Ok') {
-					return A2(_user$project$Update$loadHeads, model, _p14._0);
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								chain: A3(_user$project$Data_Chain$addBlockOperations, model.chain, _p6._0._0, _p14._0)
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
 				} else {
 					return {
 						ctor: '_Tuple2',
@@ -15473,19 +15496,57 @@ var _user$project$Update$updatePage = F3(
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				}
+			case 'LoadHeads':
+				var _p15 = _p6._0._0;
+				if (_p15.ctor === 'Ok') {
+					return A2(_user$project$Update$loadHeads, model, _p15._0);
+				} else {
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								errors: {
+									ctor: '::',
+									_0: _user$project$Model$HttpError(_p15._0),
+									_1: model.errors
+								}
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				}
+			case 'LoadChainAt':
+				var _p16 = _p6._0._1;
+				if (_p16.ctor === 'Ok') {
+					return A2(_user$project$Update$loadBlocks, model, _p16._0);
+				} else {
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								errors: {
+									ctor: '::',
+									_0: _user$project$Model$HttpError(_p16._0),
+									_1: model.errors
+								}
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				}
 			case 'ShowBlock':
-				var _p15 = _p5._0._0;
+				var _p17 = _p6._0._0;
 				return {
 					ctor: '_Tuple2',
 					_0: model,
 					_1: _elm_lang$core$Platform_Cmd$batch(
 						{
 							ctor: '::',
-							_0: A2(_user$project$Update$getBlockOperationDetails, model, _p15),
+							_0: A2(_user$project$Update$getBlockOperationDetails, model, _p17),
 							_1: {
 								ctor: '::',
 								_0: _user$project$Route$newUrl(
-									_user$project$Route$Block(_p15)),
+									_user$project$Route$Block(_p17)),
 								_1: {ctor: '[]'}
 							}
 						})
@@ -15495,13 +15556,14 @@ var _user$project$Update$updatePage = F3(
 					ctor: '_Tuple2',
 					_0: model,
 					_1: _user$project$Route$newUrl(
-						_user$project$Route$Operation(_p5._0._0))
+						_user$project$Route$Operation(_p6._0._0))
 				};
 			case 'ShowBranch':
 				return {
 					ctor: '_Tuple2',
 					_0: model,
-					_1: A2(_user$project$Update$getBranch, model, _p5._0._0)
+					_1: _user$project$Route$newUrl(
+						_user$project$Route$ChainAt(_p6._0._0))
 				};
 			case 'Tick':
 				return {
@@ -15509,7 +15571,7 @@ var _user$project$Update$updatePage = F3(
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							now: _elm_lang$core$Date$fromTime(_p5._0._0)
+							now: _elm_lang$core$Date$fromTime(_p6._0._0)
 						}),
 					_1: A2(
 						_elm_lang$http$Http$send,
@@ -15522,12 +15584,12 @@ var _user$project$Update$updatePage = F3(
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							now: _elm_lang$core$Date$fromTime(_p5._0._0)
+							now: _elm_lang$core$Date$fromTime(_p6._0._0)
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			case 'SetRoute':
-				return A2(_user$project$Update$setRoute, _p5._0._0, model);
+				return A2(_user$project$Update$setRoute, _p6._0._0, model);
 			case 'ClearErrors':
 				return {
 					ctor: '_Tuple2',
@@ -15539,9 +15601,9 @@ var _user$project$Update$updatePage = F3(
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			default:
-				var _p16 = A2(_user$project$Update$updateMonitor, _p5._0._0, model);
-				var newModel = _p16._0;
-				var cmd = _p16._1;
+				var _p18 = A2(_user$project$Update$updateMonitor, _p6._0._0, model);
+				var newModel = _p18._0;
+				var cmd = _p18._1;
 				return {
 					ctor: '_Tuple2',
 					_0: newModel,
@@ -16457,11 +16519,7 @@ var _user$project$View$viewBlock = F2(
 										_1: {
 											ctor: '::',
 											_0: A2(viewPropertyString, 'net_id', block.net_id),
-											_1: {
-												ctor: '::',
-												_0: viewOperations(block),
-												_1: {ctor: '[]'}
-											}
+											_1: {ctor: '[]'}
 										}
 									}
 								}
@@ -16699,6 +16757,37 @@ var _user$project$View$viewBranch = F4(
 				_1: {ctor: '[]'}
 			});
 	});
+var _user$project$View$viewChainAt = F2(
+	function (model, hash) {
+		return A2(
+			_elm_lang$html$Html$div,
+			{ctor: '[]'},
+			{
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$h3,
+					{ctor: '[]'},
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html$text(
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								'Chain at ',
+								_user$project$View$shortHash(hash))),
+						_1: {ctor: '[]'}
+					}),
+				_1: {
+					ctor: '::',
+					_0: A4(
+						_user$project$View$viewBranch,
+						24,
+						model,
+						_elm_lang$core$Maybe$Just(hash),
+						A2(_user$project$Data_Chain$getBranchList, model.chain, hash)),
+					_1: {ctor: '[]'}
+				}
+			});
+	});
 var _user$project$View$canonFitness = function (strings) {
 	return A2(
 		_elm_community$list_extra$List_Extra$dropWhile,
@@ -16788,7 +16877,7 @@ var _user$project$View$viewHome = function (model) {
 					ctor: '::',
 					_0: A4(
 						_user$project$View$viewBranch,
-						8,
+						24,
 						model,
 						_elm_lang$core$Maybe$Just(_p10),
 						A2(_user$project$Data_Chain$getBranchList, model.chain, _p10)),
@@ -16845,7 +16934,7 @@ var _user$project$View$viewHeads = function (model) {
 								_1: {
 									ctor: '::',
 									_0: _elm_lang$html$Html_Events$onClick(
-										_user$project$Update$ShowBlock(block.hash)),
+										_user$project$Update$ShowBranch(block.hash)),
 									_1: {
 										ctor: '::',
 										_0: _elm_lang$html$Html_Attributes$title(block.hash),
@@ -17089,6 +17178,8 @@ var _user$project$View$view = function (model) {
 				} else {
 					return _elm_lang$html$Html$text('loading block ...');
 				}
+			case 'ChainAt':
+				return A2(_user$project$View$viewChainAt, model, _p13._0._0);
 			case 'Errors':
 				return A2(_user$project$View$viewError, model.nodeUrl, model.errors);
 			default:
