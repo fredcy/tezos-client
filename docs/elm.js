@@ -15077,10 +15077,7 @@ var _user$project$Update$getBlockOperationDetails = F2(
 	});
 var _user$project$Update$updateMonitor = F2(
 	function (data, model) {
-		var blocksResult = A2(
-			_elm_lang$core$Debug$log,
-			'blocksResult',
-			A2(_elm_lang$core$Json_Decode$decodeString, _user$project$Data_Chain$decodeBlocks, data));
+		var blocksResult = A2(_elm_lang$core$Json_Decode$decodeString, _user$project$Data_Chain$decodeBlocks, data);
 		var newModel = function () {
 			var _p0 = blocksResult;
 			if (_p0.ctor === 'Ok') {
@@ -15341,10 +15338,7 @@ var _user$project$Update$loadHeads = F2(
 	});
 var _user$project$Update$updatePage = F3(
 	function (page, msg, model) {
-		var _p6 = A2(
-			_elm_lang$core$Debug$log,
-			'msg',
-			{ctor: '_Tuple2', _0: msg, _1: page});
+		var _p6 = {ctor: '_Tuple2', _0: msg, _1: page};
 		switch (_p6._0.ctor) {
 			case 'LoadBlocks':
 				var _p7 = _p6._0._0;
@@ -16558,17 +16552,6 @@ var _user$project$View$blockOperationCount = F2(
 				},
 				blockOperationsMaybe));
 	});
-var _user$project$View$formatTimestamp = F2(
-	function (now, date) {
-		var distance = A2(_alpacaaa$elm_date_distance$Date_Distance$inWords, now, date);
-		return A2(
-			_elm_lang$core$Basics_ops['++'],
-			_user$project$View$formatDate(date),
-			A2(
-				_elm_lang$core$Basics_ops['++'],
-				' (',
-				A2(_elm_lang$core$Basics_ops['++'], distance, ')')));
-	});
 var _user$project$View$viewBlock2 = F4(
 	function (model, blockhashMaybe, n, block) {
 		return A2(
@@ -16630,7 +16613,7 @@ var _user$project$View$viewBlock2 = F4(
 							{
 								ctor: '::',
 								_0: _elm_lang$html$Html$text(
-									A2(_user$project$View$formatTimestamp, model.now, block.timestamp)),
+									_user$project$View$formatDate(block.timestamp)),
 								_1: {ctor: '[]'}
 							}),
 						_1: {
@@ -16639,20 +16622,47 @@ var _user$project$View$viewBlock2 = F4(
 								_elm_lang$html$Html$td,
 								{
 									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$class('operation-count'),
+									_0: _elm_lang$html$Html_Attributes$class('age'),
 									_1: {ctor: '[]'}
 								},
 								{
 									ctor: '::',
 									_0: _elm_lang$html$Html$text(
-										A2(_user$project$View$blockOperationCount, model, block)),
+										A2(_alpacaaa$elm_date_distance$Date_Distance$inWords, model.now, block.timestamp)),
 									_1: {ctor: '[]'}
 								}),
-							_1: {ctor: '[]'}
+							_1: {
+								ctor: '::',
+								_0: A2(
+									_elm_lang$html$Html$td,
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html_Attributes$class('operation-count'),
+										_1: {ctor: '[]'}
+									},
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html$text(
+											A2(_user$project$View$blockOperationCount, model, block)),
+										_1: {ctor: '[]'}
+									}),
+								_1: {ctor: '[]'}
+							}
 						}
 					}
 				}
 			});
+	});
+var _user$project$View$formatTimestamp = F2(
+	function (now, date) {
+		var distance = A2(_alpacaaa$elm_date_distance$Date_Distance$inWords, now, date);
+		return A2(
+			_elm_lang$core$Basics_ops['++'],
+			_user$project$View$formatDate(date),
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				' (',
+				A2(_elm_lang$core$Basics_ops['++'], distance, ')')));
 	});
 var _user$project$View$viewBranch = F4(
 	function (howMany, model, blockhashMaybe, branch) {
@@ -16684,27 +16694,38 @@ var _user$project$View$viewBranch = F4(
 						ctor: '::',
 						_0: A2(
 							_elm_lang$html$Html$th,
+							{ctor: '[]'},
 							{
 								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$class('timestamp'),
-								_1: {ctor: '[]'}
-							},
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html$text('age'),
+								_0: _elm_lang$html$Html$text('timestamp'),
 								_1: {ctor: '[]'}
 							}),
 						_1: {
 							ctor: '::',
 							_0: A2(
 								_elm_lang$html$Html$th,
-								{ctor: '[]'},
 								{
 									ctor: '::',
-									_0: _elm_lang$html$Html$text('operations'),
+									_0: _elm_lang$html$Html_Attributes$class('timestamp'),
+									_1: {ctor: '[]'}
+								},
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html$text('age'),
 									_1: {ctor: '[]'}
 								}),
-							_1: {ctor: '[]'}
+							_1: {
+								ctor: '::',
+								_0: A2(
+									_elm_lang$html$Html$th,
+									{ctor: '[]'},
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html$text('operations'),
+										_1: {ctor: '[]'}
+									}),
+								_1: {ctor: '[]'}
+							}
 						}
 					}
 				}

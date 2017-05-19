@@ -47,7 +47,7 @@ update msg model =
 
 updatePage : Page -> Msg -> Model -> ( Model, Cmd Msg )
 updatePage page msg model =
-    case ( msg, page ) |> Debug.log "msg" of
+    case ( msg, page ) of
         ( LoadBlocks blocksMaybe, _ ) ->
             case blocksMaybe of
                 Ok blockChains ->
@@ -314,7 +314,7 @@ updateMonitor : String -> Model -> ( Model, Cmd Msg )
 updateMonitor data model =
     let
         blocksResult =
-            Decode.decodeString decodeBlocks data |> Debug.log "blocksResult"
+            Decode.decodeString decodeBlocks data
 
         newModel =
             case blocksResult of

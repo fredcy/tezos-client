@@ -158,6 +158,10 @@ td.timestamp {
     white-space: nowrap;
 }
 
+td.age {
+    font-size: 85%;
+}
+
 /* make block hash values look like link */
 
 table.blockchain tr.block td.hash,
