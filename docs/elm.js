@@ -17246,11 +17246,18 @@ var _user$project$View$viewBlock = F2(
 										_user$project$View$formatDate(block.timestamp)),
 									_1: {
 										ctor: '::',
-										_0: A2(viewPropertyList, 'fitness', block.fitness),
+										_0: A2(
+											viewPropertyString,
+											'level',
+											_elm_lang$core$Basics$toString(block.level)),
 										_1: {
 											ctor: '::',
-											_0: A2(viewPropertyString, 'net_id', block.net_id),
-											_1: {ctor: '[]'}
+											_0: A2(viewPropertyList, 'fitness', block.fitness),
+											_1: {
+												ctor: '::',
+												_0: A2(viewPropertyString, 'net_id', block.net_id),
+												_1: {ctor: '[]'}
+											}
 										}
 									}
 								}

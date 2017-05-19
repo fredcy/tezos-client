@@ -299,6 +299,7 @@ viewBlock model block =
                 [ viewPropertyString "hash" block.hash
                 , viewProperty "predecessor" (blockFullLink block.predecessor)
                 , viewPropertyString "timestamp" (formatDate block.timestamp)
+                , viewPropertyString "level" (toString block.level)
                 , viewPropertyList "fitness" block.fitness
                 , viewPropertyString "net_id" block.net_id
                 ]

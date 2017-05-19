@@ -13,7 +13,7 @@ body {
 
 .property > div {
     display: table-cell;
-    padding: .5em;
+    padding: .35em;
 }
 
 .property .label {
@@ -151,7 +151,7 @@ div.scrollable2 {
 }
 
 table.blockchain td {
-    padding: .5em;
+    padding: .4em;
 }
 
 td.timestamp {
@@ -192,7 +192,7 @@ tr.selected {
 
 table.operations td,
 table.operations th {
-    padding: .5em 1em;
+    padding: .35em 1em;
 }
 
 table.operations td ul {
