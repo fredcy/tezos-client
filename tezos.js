@@ -43,6 +43,8 @@
     }
     
     try {
+        // Send the single request that will stream its response. We will handle
+        // the received chunks via onreadystatechange above.
         xhr.open("POST", "http://localhost:8732/blocks", true);
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.send('{"monitor": true}');

@@ -314,7 +314,7 @@ updateMonitor : Decode.Value -> Model -> ( Model, Cmd Msg )
 updateMonitor data model =
     let
         blocksResult =
-            Decode.decodeValue decodeBlocks (Debug.log "data" data) |> Debug.log "blocksResult"
+            Decode.decodeValue decodeBlocks data
 
         newModel =
             case blocksResult of

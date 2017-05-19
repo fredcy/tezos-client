@@ -43,6 +43,8 @@
     }
     
     try {
+        // Send the single request that will stream its response. We will handle
+        // the received chunks via onreadystatechange above.
         xhr.open("POST", "https://tezos.ostraca.org/blocks", true);
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.send('{"monitor": true}');

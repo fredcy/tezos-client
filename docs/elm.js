@@ -14746,6 +14746,9 @@ var _user$project$Data_Chain$Model = F5(
 	function (a, b, c, d, e) {
 		return {heads: a, blocks: b, operations: c, parsedOperations: d, blockOperations: e};
 	});
+var _user$project$Data_Chain$Delegation = function (a) {
+	return {ctor: 'Delegation', _0: a};
+};
 var _user$project$Data_Chain$Faucet = F2(
 	function (a, b) {
 		return {ctor: 'Faucet', _0: a, _1: b};
@@ -15656,11 +15659,16 @@ var _user$project$Request_Operation$decodeEndorsement = A2(
 					_user$project$Data_Chain$Faucet,
 					A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$string),
 					A2(_elm_lang$core$Json_Decode$field, 'nonce', _elm_lang$core$Json_Decode$string));
+			case 'delegation':
+				return A2(
+					_elm_lang$core$Json_Decode$map,
+					_user$project$Data_Chain$Delegation,
+					A2(_elm_lang$core$Json_Decode$field, 'delegate', _elm_lang$core$Json_Decode$string));
 			default:
 				return A2(
 					_elm_lang$core$Json_Decode$map,
 					_user$project$Data_Chain$Unknown,
-					_user$project$Request$decodeDebug('bad kind'));
+					_user$project$Request$decodeDebug('unknown kind'));
 		}
 	},
 	A2(_elm_lang$core$Json_Decode$field, 'kind', _elm_lang$core$Json_Decode$string));
@@ -15805,13 +15813,7 @@ var _user$project$Update$getBlockOperationDetails = F2(
 	});
 var _user$project$Update$updateMonitor = F2(
 	function (data, model) {
-		var blocksResult = A2(
-			_elm_lang$core$Debug$log,
-			'blocksResult',
-			A2(
-				_elm_lang$core$Json_Decode$decodeValue,
-				_user$project$Data_Chain$decodeBlocks,
-				A2(_elm_lang$core$Debug$log, 'data', data)));
+		var blocksResult = A2(_elm_lang$core$Json_Decode$decodeValue, _user$project$Data_Chain$decodeBlocks, data);
 		var newModel = function () {
 			var _p0 = blocksResult;
 			if (_p0.ctor === 'Ok') {

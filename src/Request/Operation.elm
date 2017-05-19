@@ -88,6 +88,10 @@ decodeEndorsement =
                             (Decode.field "id" Decode.string)
                             (Decode.field "nonce" Decode.string)
 
+                    "delegation" ->
+                        Decode.map Delegation
+                            (Decode.field "delegate" Decode.string)
+
                     _ ->
-                        decodeDebug "bad kind" |> Decode.map Unknown
+                        decodeDebug "unknown kind" |> Decode.map Unknown
             )

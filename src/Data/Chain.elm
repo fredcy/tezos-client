@@ -75,6 +75,7 @@ type SubOperation
     | SeedNonceRevelation Level Nonce
     | Transaction TransactionID Int
     | Faucet TransactionID Nonce
+    | Delegation Base58CheckEncodedSHA256
 
 
 type alias ParsedOperation =
