@@ -275,7 +275,15 @@ decodeTimestamp : Decode.Decoder Timestamp
 decodeTimestamp =
     Decode.string
         |> Decode.map Date.fromString
-        |> Decode.map (Result.withDefault (Date.fromTime 0))
+        |> Decode.andThen
+            (\dateResult ->
+                case dateResult of
+                    Ok date ->
+                        Decode.succeed date
+
+                    Err error ->
+                        Decode.fail error
+            )
 
 
 decodeLevel : Decode.Decoder Int

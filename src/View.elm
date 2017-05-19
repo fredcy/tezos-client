@@ -2,6 +2,8 @@ module View exposing (view)
 
 import Date exposing (Date)
 import Date.Distance
+import Date.Extra.Format
+import Date.Extra.Config.Config_en_us
 import Html as H exposing (Html)
 import Html.Attributes as HA
 import Html.Events as HE
@@ -9,7 +11,6 @@ import Http
 import Dict exposing (Dict)
 import List.Extra as List
 import ParseInt
-import Date.Format
 import Data.Chain exposing (BlockID, Block, OperationID, ParsedOperation, Base58CheckEncodedSHA256, SubOperation(..), getBranchList)
 import Data.Schema as Schema
 import Model exposing (..)
@@ -145,6 +146,7 @@ viewHeads model =
                 [ H.th [ HA.class "index" ] [ H.text "index" ]
                 , H.th [ HA.class "hash" ] [ H.text "hash" ]
                 , H.th [ HA.class "timestamp" ] [ H.text "timestamp" ]
+                , H.th [ HA.class "age" ] [ H.text "age" ]
                 , H.th [ HA.class "fitness" ] [ H.text "fitness" ]
                 , H.th [ HA.class "level" ] [ H.text "level" ]
                 ]
@@ -159,7 +161,8 @@ viewHeads model =
                     , HA.title block.hash
                     ]
                     [ H.text (shortHash block.hash) ]
-                , H.td [ HA.class "timestamp" ] [ H.text (formatTimestamp model.now block.timestamp) ]
+                , H.td [ HA.class "timestamp" ] [ H.text (formatDate block.timestamp) ]
+                , H.td [ HA.class "age" ] [ H.text (Date.Distance.inWords model.now block.timestamp) ]
                 , H.td [ HA.class "fitness" ] [ H.text (toString (canonFitness block.fitness)) ]
                 , H.td [ HA.class "level" ] [ H.text (toString block.level) ]
                 ]
@@ -207,15 +210,6 @@ viewBranch howMany model blockhashMaybe branch =
                     ]
                 ]
             ]
-
-
-formatTimestamp : Date -> Date -> String
-formatTimestamp now date =
-    let
-        distance =
-            Date.Distance.inWords now date
-    in
-        formatDate date ++ " (" ++ distance ++ ")"
 
 
 blockOperationCount : Model -> Block -> String
@@ -332,7 +326,7 @@ viewParsedOperations model blockId =
 
 formatDate : Date -> String
 formatDate date =
-    Date.Format.format "%Y-%m-%d %H:%M:%S" date
+    Date.Extra.Format.formatUtc Date.Extra.Config.Config_en_us.config "%Y-%m-%dT%H:%M:%SZ" date
 
 
 viewShowBlockOperations : Dict BlockID (List ParsedOperation) -> Maybe BlockID -> Html Msg

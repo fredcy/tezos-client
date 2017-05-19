@@ -3,7 +3,8 @@ module View.Page exposing (frame)
 import Date exposing (Date)
 import Html as H exposing (Html)
 import Html.Attributes as HA
-import Date.Format
+import Date.Extra.Format
+import Date.Extra.Config.Config_en_us
 import Model
 import Route exposing (Route)
 
@@ -35,13 +36,18 @@ viewHeader context =
         ]
 
 
+formatDate : String -> Date -> String
+formatDate =
+    Date.Extra.Format.format Date.Extra.Config.Config_en_us.config
+
+
 viewNow : Date -> Html msg
 viewNow now =
     H.div
         [ HA.class "now"
-        , HA.title (Date.Format.format "%Y/%m/%d %H:%M:%S" now)
+        , HA.title (formatDate "%Y/%m/%d %H:%M:%S" now)
         ]
-        [ H.text (Date.Format.format "%H:%M" now) ]
+        [ H.text (formatDate "%H:%M" now) ]
 
 
 links : List ( String, Route )

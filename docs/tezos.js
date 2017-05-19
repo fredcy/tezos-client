@@ -1,47 +1,55 @@
-var d = new Date();
+(function () {
 
-var flags = {
-    nodeUrl: "https://tezos.ostraca.org",
-    now: d.getTime()
-};
+    var d = new Date();
 
-var app = Elm.Main.fullscreen(flags);
+    var flags = {
+        nodeUrl: "https://tezos.ostraca.org",
+        now: d.getTime()
+    };
 
-var xhr = new XMLHttpRequest();
+    var app = Elm.Main.fullscreen(flags);
 
-xhr.previous_text = '';
+    var xhr = new XMLHttpRequest();
 
-xhr.onerror = function() { console.log("fatal XHR error"); };
+    xhr.previous_text = '';
 
-xhr.onreadystatechange = function()
-{
-    var t = new Date();
-    var timestamp = t.getMinutes() + ":" + t.getSeconds();
+    xhr.onerror = function() { console.log("fatal XHR error"); };
 
-    if (xhr.readyState > 2)
+    xhr.onreadystatechange = function()
     {
-        var new_response = xhr.responseText.substring(xhr.previous_text.length);
-        try {
-            var result = JSON.parse( new_response );
-            // if we get here then we have a complete JSON data object
-            xhr.previous_text = xhr.responseText;
-            app.ports.monitor.send(new_response);
-        }
-        catch (e)
+        var t = new Date();
+        var timestamp = t.getMinutes() + ":" + t.getSeconds();
+
+        if (xhr.readyState > 2)
         {
-            if (e.name != "SyntaxError") {
-                console.log("exception", e);
+            var new_response = xhr.responseText.substring(xhr.previous_text.length);
+            try {
+                var result = JSON.parse( new_response );
+                // If we get here (because no exception happened) then we have a
+                // complete JSON data object. We take that to mean that the
+                // stream has settled and we have the next chunk that we can
+                // deliver to the app.
+                xhr.previous_text = xhr.responseText;
+                app.ports.monitor.send(result);
             }
-        }
-    }   
-}
-     
-try {
-    xhr.open("POST", "https://tezos.ostraca.org/blocks", true);
-    xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.send('{"monitor": true}');
-}
-catch (e)
-{
-    console.log("XHR exception", e);
-}
+            catch (e)
+            {
+                if (e.name != "SyntaxError") {
+                    console.log("exception", e);
+                }
+                // else new_response is not well-formed JSON; wait for more and try again
+            }
+        }   
+    }
+    
+    try {
+        xhr.open("POST", "https://tezos.ostraca.org/blocks", true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.send('{"monitor": true}');
+    }
+    catch (e)
+    {
+        console.log("XHR exception", e);
+    }
+
+})();

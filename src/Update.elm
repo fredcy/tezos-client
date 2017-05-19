@@ -35,7 +35,7 @@ type Msg
     | Tick Time
     | SetRoute (Maybe Route)
     | ClearErrors
-    | Monitor String
+    | Monitor Decode.Value
     | Now Time
     | LoadChainAt BlockID (Result Http.Error Chain.BlocksData)
 
@@ -310,11 +310,11 @@ getAllBlocksOperations model =
         Cmd.batch (List.map getBlockOperations blocksToGet)
 
 
-updateMonitor : String -> Model -> ( Model, Cmd Msg )
+updateMonitor : Decode.Value -> Model -> ( Model, Cmd Msg )
 updateMonitor data model =
     let
         blocksResult =
-            Decode.decodeString decodeBlocks data
+            Decode.decodeValue decodeBlocks (Debug.log "data" data) |> Debug.log "blocksResult"
 
         newModel =
             case blocksResult of

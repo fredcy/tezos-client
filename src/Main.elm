@@ -3,6 +3,7 @@ port module Main exposing (main)
 import Html
 import Http
 import Date
+import Json.Decode as Decode
 import Dict
 import Navigation
 import Route exposing (Route)
@@ -63,4 +64,4 @@ subscriptions model =
         ]
 
 
-port monitor : (String -> msg) -> Sub msg
+port monitor : (Decode.Value -> msg) -> Sub msg
