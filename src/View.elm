@@ -4,6 +4,8 @@ import Date exposing (Date)
 import Date.Distance
 import Date.Extra.Format
 import Date.Extra.Config.Config_en_us
+import FormatNumber
+import FormatNumber.Locales
 import Html as H exposing (Html)
 import Html.Attributes as HA
 import Html.Events as HE
@@ -220,7 +222,7 @@ blockOperationCount model block =
     in
         blockOperationsMaybe
             |> Maybe.map (List.length >> toString)
-            |> Maybe.withDefault "unknown"
+            |> Maybe.withDefault ""
 
 
 viewBlock2 : Model -> Maybe BlockID -> Int -> Block -> Html Msg
@@ -368,6 +370,18 @@ viewOperation model operationId =
             ]
 
 
+{-| Format Int value with a thousands separator.
+-}
+formatInt : Int -> String
+formatInt number =
+    let
+        usLocale =
+            FormatNumber.Locales.usLocale
+    in
+        toFloat number
+            |> FormatNumber.format { usLocale | decimals = 0 }
+
+
 viewSuboperation : SubOperation -> Html Msg
 viewSuboperation suboperation =
     case suboperation of
@@ -375,7 +389,15 @@ viewSuboperation suboperation =
             H.span []
                 [ H.text "Endorsement of "
                 , H.span [ HA.class "hash" ] [ H.text (shortHash blockid) ]
-                , H.text (", " ++ (toString int))
+                , H.text (", slot " ++ (toString int))
+                ]
+
+        Transaction address amount ->
+            H.span []
+                [ H.text "Transaction of "
+                , H.text (formatInt amount)
+                , H.text " to "
+                , H.span [ HA.title address, HA.class "hash" ] [ H.text (shortHash address) ]
                 ]
 
         _ ->

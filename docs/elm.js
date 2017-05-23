@@ -8354,6 +8354,320 @@ var _alpacaaa$elm_date_distance$Date_Distance$inWordsWithConfig = F3(
 	});
 var _alpacaaa$elm_date_distance$Date_Distance$inWords = _alpacaaa$elm_date_distance$Date_Distance$inWordsWithConfig(_alpacaaa$elm_date_distance$Date_Distance$defaultConfig);
 
+var _cuducos$elm_format_number$FormatNumber_Locales$Locale = F3(
+	function (a, b, c) {
+		return {decimals: a, thousandSeparator: b, decimalSeparator: c};
+	});
+var _cuducos$elm_format_number$FormatNumber_Locales$frenchLocale = A3(_cuducos$elm_format_number$FormatNumber_Locales$Locale, 3, ' ', ',');
+var _cuducos$elm_format_number$FormatNumber_Locales$spanishLocale = A3(_cuducos$elm_format_number$FormatNumber_Locales$Locale, 3, '.', ',');
+var _cuducos$elm_format_number$FormatNumber_Locales$usLocale = A3(_cuducos$elm_format_number$FormatNumber_Locales$Locale, 2, ',', '.');
+
+var _myrho$elm_round$Round$funNum = F3(
+	function (fun, s, fl) {
+		return A2(
+			_elm_lang$core$Maybe$withDefault,
+			1 / 0,
+			_elm_lang$core$Result$toMaybe(
+				_elm_lang$core$String$toFloat(
+					A2(fun, s, fl))));
+	});
+var _myrho$elm_round$Round$splitComma = function (str) {
+	var _p0 = A2(_elm_lang$core$String$split, '.', str);
+	if (_p0.ctor === '::') {
+		if (_p0._1.ctor === '::') {
+			return {ctor: '_Tuple2', _0: _p0._0, _1: _p0._1._0};
+		} else {
+			return {ctor: '_Tuple2', _0: _p0._0, _1: '0'};
+		}
+	} else {
+		return {ctor: '_Tuple2', _0: '0', _1: '0'};
+	}
+};
+var _myrho$elm_round$Round$toDecimal = function (fl) {
+	var _p1 = A2(
+		_elm_lang$core$String$split,
+		'e',
+		_elm_lang$core$Basics$toString(fl));
+	if (_p1.ctor === '::') {
+		if (_p1._1.ctor === '::') {
+			var _p4 = _p1._1._0;
+			var _p2 = function () {
+				var hasSign = _elm_lang$core$Native_Utils.cmp(fl, 0) < 0;
+				var _p3 = _myrho$elm_round$Round$splitComma(_p1._0);
+				var b = _p3._0;
+				var a = _p3._1;
+				return {
+					ctor: '_Tuple3',
+					_0: hasSign ? '-' : '',
+					_1: hasSign ? A2(_elm_lang$core$String$dropLeft, 1, b) : b,
+					_2: a
+				};
+			}();
+			var sign = _p2._0;
+			var before = _p2._1;
+			var after = _p2._2;
+			var e = A2(
+				_elm_lang$core$Maybe$withDefault,
+				0,
+				_elm_lang$core$Result$toMaybe(
+					_elm_lang$core$String$toInt(
+						A2(_elm_lang$core$String$startsWith, '+', _p4) ? A2(_elm_lang$core$String$dropLeft, 1, _p4) : _p4)));
+			var newBefore = (_elm_lang$core$Native_Utils.cmp(e, 0) > -1) ? before : ((_elm_lang$core$Native_Utils.cmp(
+				_elm_lang$core$Basics$abs(e),
+				_elm_lang$core$String$length(before)) < 0) ? A2(
+				_elm_lang$core$Basics_ops['++'],
+				A2(
+					_elm_lang$core$String$left,
+					_elm_lang$core$String$length(before) - _elm_lang$core$Basics$abs(e),
+					before),
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					'.',
+					A2(
+						_elm_lang$core$String$right,
+						_elm_lang$core$Basics$abs(e),
+						before))) : A2(
+				_elm_lang$core$Basics_ops['++'],
+				'0.',
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					A2(
+						_elm_lang$core$String$repeat,
+						_elm_lang$core$Basics$abs(e) - _elm_lang$core$String$length(before),
+						'0'),
+					before)));
+			var newAfter = (_elm_lang$core$Native_Utils.cmp(e, 0) < 1) ? after : ((_elm_lang$core$Native_Utils.cmp(
+				e,
+				_elm_lang$core$String$length(after)) < 0) ? A2(
+				_elm_lang$core$Basics_ops['++'],
+				A2(_elm_lang$core$String$left, e, after),
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					'.',
+					A2(
+						_elm_lang$core$String$right,
+						_elm_lang$core$String$length(after) - e,
+						after))) : A2(
+				_elm_lang$core$Basics_ops['++'],
+				after,
+				A2(
+					_elm_lang$core$String$repeat,
+					e - _elm_lang$core$String$length(after),
+					'0')));
+			return A2(
+				_elm_lang$core$Basics_ops['++'],
+				sign,
+				A2(_elm_lang$core$Basics_ops['++'], newBefore, newAfter));
+		} else {
+			return _p1._0;
+		}
+	} else {
+		return '';
+	}
+};
+var _myrho$elm_round$Round$truncate = function (n) {
+	return (_elm_lang$core$Native_Utils.cmp(n, 0) < 0) ? _elm_lang$core$Basics$ceiling(n) : _elm_lang$core$Basics$floor(n);
+};
+var _myrho$elm_round$Round$roundFun = F3(
+	function (functor, s, fl) {
+		if (_elm_lang$core$Native_Utils.eq(s, 0)) {
+			return _elm_lang$core$Basics$toString(
+				functor(fl));
+		} else {
+			if (_elm_lang$core$Native_Utils.cmp(s, 0) < 0) {
+				return function (r) {
+					return (!_elm_lang$core$Native_Utils.eq(r, '0')) ? A2(
+						_elm_lang$core$Basics_ops['++'],
+						r,
+						A2(
+							_elm_lang$core$String$repeat,
+							_elm_lang$core$Basics$abs(s),
+							'0')) : r;
+				}(
+					A3(
+						_myrho$elm_round$Round$roundFun,
+						functor,
+						0,
+						A2(
+							F2(
+								function (x, y) {
+									return x / y;
+								}),
+							fl,
+							A2(
+								F2(
+									function (x, y) {
+										return Math.pow(x, y);
+									}),
+								10,
+								_elm_lang$core$Basics$abs(
+									_elm_lang$core$Basics$toFloat(s))))));
+			} else {
+				var dd = (_elm_lang$core$Native_Utils.cmp(fl, 0) < 0) ? 2 : 1;
+				var n = (_elm_lang$core$Native_Utils.cmp(fl, 0) < 0) ? -1 : 1;
+				var e = Math.pow(10, s);
+				var _p5 = _myrho$elm_round$Round$splitComma(
+					_myrho$elm_round$Round$toDecimal(fl));
+				var before = _p5._0;
+				var after = _p5._1;
+				var a = A3(
+					_elm_lang$core$String$padRight,
+					s + 1,
+					_elm_lang$core$Native_Utils.chr('0'),
+					after);
+				var b = A2(_elm_lang$core$String$left, s, a);
+				var c = A2(_elm_lang$core$String$dropLeft, s, a);
+				var f = functor(
+					A2(
+						_elm_lang$core$Maybe$withDefault,
+						_elm_lang$core$Basics$toFloat(e),
+						_elm_lang$core$Result$toMaybe(
+							_elm_lang$core$String$toFloat(
+								A2(
+									_elm_lang$core$Basics_ops['++'],
+									(_elm_lang$core$Native_Utils.cmp(fl, 0) < 0) ? '-' : '',
+									A2(
+										_elm_lang$core$Basics_ops['++'],
+										'1',
+										A2(
+											_elm_lang$core$Basics_ops['++'],
+											b,
+											A2(_elm_lang$core$Basics_ops['++'], '.', c))))))));
+				var g = A2(
+					_elm_lang$core$String$dropLeft,
+					dd,
+					_elm_lang$core$Basics$toString(f));
+				var h = _myrho$elm_round$Round$truncate(fl) + (_elm_lang$core$Native_Utils.eq(f - (e * n), e * n) ? ((_elm_lang$core$Native_Utils.cmp(fl, 0) < 0) ? -1 : 1) : 0);
+				var j = _elm_lang$core$Basics$toString(h);
+				var i = (_elm_lang$core$Native_Utils.eq(j, '0') && ((!_elm_lang$core$Native_Utils.eq(f - (e * n), 0)) && ((_elm_lang$core$Native_Utils.cmp(fl, 0) < 0) && (_elm_lang$core$Native_Utils.cmp(fl, -1) > 0)))) ? A2(_elm_lang$core$Basics_ops['++'], '-', j) : j;
+				return A2(
+					_elm_lang$core$Basics_ops['++'],
+					i,
+					A2(_elm_lang$core$Basics_ops['++'], '.', g));
+			}
+		}
+	});
+var _myrho$elm_round$Round$round = _myrho$elm_round$Round$roundFun(_elm_lang$core$Basics$round);
+var _myrho$elm_round$Round$roundNum = _myrho$elm_round$Round$funNum(_myrho$elm_round$Round$round);
+var _myrho$elm_round$Round$ceiling = _myrho$elm_round$Round$roundFun(_elm_lang$core$Basics$ceiling);
+var _myrho$elm_round$Round$ceilingNum = _myrho$elm_round$Round$funNum(_myrho$elm_round$Round$ceiling);
+var _myrho$elm_round$Round$floor = _myrho$elm_round$Round$roundFun(_elm_lang$core$Basics$floor);
+var _myrho$elm_round$Round$floorCom = F2(
+	function (s, fl) {
+		return (_elm_lang$core$Native_Utils.cmp(fl, 0) < 0) ? A2(_myrho$elm_round$Round$ceiling, s, fl) : A2(_myrho$elm_round$Round$floor, s, fl);
+	});
+var _myrho$elm_round$Round$floorNumCom = _myrho$elm_round$Round$funNum(_myrho$elm_round$Round$floorCom);
+var _myrho$elm_round$Round$ceilingCom = F2(
+	function (s, fl) {
+		return (_elm_lang$core$Native_Utils.cmp(fl, 0) < 0) ? A2(_myrho$elm_round$Round$floor, s, fl) : A2(_myrho$elm_round$Round$ceiling, s, fl);
+	});
+var _myrho$elm_round$Round$ceilingNumCom = _myrho$elm_round$Round$funNum(_myrho$elm_round$Round$ceilingCom);
+var _myrho$elm_round$Round$floorNum = _myrho$elm_round$Round$funNum(_myrho$elm_round$Round$floor);
+var _myrho$elm_round$Round$roundCom = _myrho$elm_round$Round$roundFun(
+	function (fl) {
+		var dec = fl - _elm_lang$core$Basics$toFloat(
+			_myrho$elm_round$Round$truncate(fl));
+		return (_elm_lang$core$Native_Utils.cmp(dec, 0.5) > -1) ? _elm_lang$core$Basics$ceiling(fl) : ((_elm_lang$core$Native_Utils.cmp(dec, -0.5) < 1) ? _elm_lang$core$Basics$floor(fl) : _elm_lang$core$Basics$round(fl));
+	});
+var _myrho$elm_round$Round$roundNumCom = _myrho$elm_round$Round$funNum(_myrho$elm_round$Round$roundCom);
+
+var _cuducos$elm_format_number$Helpers$stringfy = F2(
+	function (locale, formatted) {
+		var decimals = function () {
+			var _p0 = formatted.decimals;
+			if (_p0.ctor === 'Just') {
+				return A2(_elm_lang$core$Basics_ops['++'], locale.decimalSeparator, _p0._0);
+			} else {
+				return '';
+			}
+		}();
+		return _elm_lang$core$String$concat(
+			{
+				ctor: '::',
+				_0: A2(_elm_lang$core$Maybe$withDefault, '', formatted.prefix),
+				_1: {
+					ctor: '::',
+					_0: A2(_elm_lang$core$String$join, locale.thousandSeparator, formatted.integers),
+					_1: {
+						ctor: '::',
+						_0: decimals,
+						_1: {ctor: '[]'}
+					}
+				}
+			});
+	});
+var _cuducos$elm_format_number$Helpers$splitThousands = function (integers) {
+	var reversedSplitThousands = function (value) {
+		return (_elm_lang$core$Native_Utils.cmp(
+			_elm_lang$core$String$length(value),
+			3) > 0) ? A2(
+			F2(
+				function (x, y) {
+					return {ctor: '::', _0: x, _1: y};
+				}),
+			A2(_elm_lang$core$String$right, 3, value),
+			reversedSplitThousands(
+				A2(_elm_lang$core$String$dropRight, 3, value))) : {
+			ctor: '::',
+			_0: value,
+			_1: {ctor: '[]'}
+		};
+	};
+	return _elm_lang$core$List$reverse(
+		reversedSplitThousands(integers));
+};
+var _cuducos$elm_format_number$Helpers$addPrefix = function (formatted) {
+	var onlyZeros = A2(
+		_elm_lang$core$String$all,
+		function ($char) {
+			return _elm_lang$core$Native_Utils.eq(
+				$char,
+				_elm_lang$core$Native_Utils.chr('0'));
+		},
+		_elm_lang$core$String$concat(
+			A2(
+				_elm_lang$core$List$append,
+				formatted.integers,
+				_elm_lang$core$List$singleton(
+					A2(_elm_lang$core$Maybe$withDefault, '', formatted.decimals)))));
+	var isPositive = _elm_lang$core$Native_Utils.cmp(formatted.original, 0) > -1;
+	var prefix = (isPositive || onlyZeros) ? _elm_lang$core$Maybe$Nothing : _elm_lang$core$Maybe$Just('−');
+	return _elm_lang$core$Native_Utils.update(
+		formatted,
+		{prefix: prefix});
+};
+var _cuducos$elm_format_number$Helpers$FormattedNumber = F4(
+	function (a, b, c, d) {
+		return {original: a, integers: b, decimals: c, prefix: d};
+	});
+var _cuducos$elm_format_number$Helpers$parse = F2(
+	function (decimalDigits, original) {
+		var parts = A2(
+			_elm_lang$core$String$split,
+			'.',
+			A2(_myrho$elm_round$Round$round, decimalDigits, original));
+		var integers = _cuducos$elm_format_number$Helpers$splitThousands(
+			A2(
+				_elm_lang$core$String$filter,
+				_elm_lang$core$Char$isDigit,
+				A2(
+					_elm_lang$core$Maybe$withDefault,
+					'0',
+					_elm_lang$core$List$head(parts))));
+		var decimals = _elm_lang$core$List$head(
+			A2(_elm_lang$core$List$drop, 1, parts));
+		return _cuducos$elm_format_number$Helpers$addPrefix(
+			A4(_cuducos$elm_format_number$Helpers$FormattedNumber, original, integers, decimals, _elm_lang$core$Maybe$Nothing));
+	});
+
+var _cuducos$elm_format_number$FormatNumber$format = F2(
+	function (locale, num) {
+		return A2(
+			_cuducos$elm_format_number$Helpers$stringfy,
+			locale,
+			A2(_cuducos$elm_format_number$Helpers$parse, locale.decimals, num));
+	});
+
 var _elm_lang$core$Set$foldr = F3(
 	function (f, b, _p0) {
 		var _p1 = _p0;
@@ -16713,44 +17027,93 @@ var _user$project$View$viewError = F2(
 var _user$project$View$shortHash = function (hash) {
 	return A2(_elm_lang$core$String$left, 14, hash);
 };
+var _user$project$View$formatInt = function (number) {
+	var usLocale = _cuducos$elm_format_number$FormatNumber_Locales$usLocale;
+	return A2(
+		_cuducos$elm_format_number$FormatNumber$format,
+		_elm_lang$core$Native_Utils.update(
+			usLocale,
+			{decimals: 0}),
+		_elm_lang$core$Basics$toFloat(number));
+};
 var _user$project$View$viewSuboperation = function (suboperation) {
 	var _p2 = suboperation;
-	if (_p2.ctor === 'Endorsement') {
-		return A2(
-			_elm_lang$html$Html$span,
-			{ctor: '[]'},
-			{
-				ctor: '::',
-				_0: _elm_lang$html$Html$text('Endorsement of '),
-				_1: {
+	switch (_p2.ctor) {
+		case 'Endorsement':
+			return A2(
+				_elm_lang$html$Html$span,
+				{ctor: '[]'},
+				{
 					ctor: '::',
-					_0: A2(
-						_elm_lang$html$Html$span,
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$class('hash'),
-							_1: {ctor: '[]'}
-						},
-						{
+					_0: _elm_lang$html$Html$text('Endorsement of '),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$span,
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html_Attributes$class('hash'),
+								_1: {ctor: '[]'}
+							},
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html$text(
+									_user$project$View$shortHash(_p2._0)),
+								_1: {ctor: '[]'}
+							}),
+						_1: {
 							ctor: '::',
 							_0: _elm_lang$html$Html$text(
-								_user$project$View$shortHash(_p2._0)),
+								A2(
+									_elm_lang$core$Basics_ops['++'],
+									', slot ',
+									_elm_lang$core$Basics$toString(_p2._1))),
 							_1: {ctor: '[]'}
-						}),
+						}
+					}
+				});
+		case 'Transaction':
+			var _p3 = _p2._0;
+			return A2(
+				_elm_lang$html$Html$span,
+				{ctor: '[]'},
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html$text('Transaction of '),
 					_1: {
 						ctor: '::',
 						_0: _elm_lang$html$Html$text(
-							A2(
-								_elm_lang$core$Basics_ops['++'],
-								', ',
-								_elm_lang$core$Basics$toString(_p2._1))),
-						_1: {ctor: '[]'}
+							_user$project$View$formatInt(_p2._1)),
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$html$Html$text(' to '),
+							_1: {
+								ctor: '::',
+								_0: A2(
+									_elm_lang$html$Html$span,
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html_Attributes$title(_p3),
+										_1: {
+											ctor: '::',
+											_0: _elm_lang$html$Html_Attributes$class('hash'),
+											_1: {ctor: '[]'}
+										}
+									},
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html$text(
+											_user$project$View$shortHash(_p3)),
+										_1: {ctor: '[]'}
+									}),
+								_1: {ctor: '[]'}
+							}
+						}
 					}
-				}
-			});
-	} else {
-		return _elm_lang$html$Html$text(
-			_elm_lang$core$Basics$toString(suboperation));
+				});
+		default:
+			return _elm_lang$html$Html$text(
+				_elm_lang$core$Basics$toString(suboperation));
 	}
 };
 var _user$project$View$viewOperationsTable = function (operations) {
@@ -16961,15 +17324,15 @@ var _user$project$View$viewAllOperations = function (model) {
 };
 var _user$project$View$viewShowBlockOperations = F2(
 	function (blockOperations, hashMaybe) {
-		var _p3 = hashMaybe;
-		if (_p3.ctor === 'Just') {
+		var _p4 = hashMaybe;
+		if (_p4.ctor === 'Just') {
 			return A2(
 				_elm_lang$core$Maybe$withDefault,
 				_elm_lang$html$Html$text(''),
 				A2(
 					_elm_lang$core$Maybe$map,
 					_user$project$View$viewOperations,
-					A2(_elm_lang$core$Dict$get, _p3._0, blockOperations)));
+					A2(_elm_lang$core$Dict$get, _p4._0, blockOperations)));
 		} else {
 			return _elm_lang$html$Html$text('');
 		}
@@ -17037,12 +17400,12 @@ var _user$project$View$viewProperty = F2(
 	});
 var _user$project$View$viewPropertyMaybe = F2(
 	function (label, valueMaybe) {
-		var _p4 = valueMaybe;
-		if (_p4.ctor === 'Just') {
+		var _p5 = valueMaybe;
+		if (_p5.ctor === 'Just') {
 			return A2(
 				_user$project$View$viewProperty,
 				label,
-				_elm_lang$html$Html$text(_p4._0));
+				_elm_lang$html$Html$text(_p5._0));
 		} else {
 			return _elm_lang$html$Html$text('');
 		}
@@ -17125,9 +17488,9 @@ var _user$project$View$viewOperation = F2(
 				_1: {
 					ctor: '::',
 					_0: function () {
-						var _p5 = operationMaybe;
-						if (_p5.ctor === 'Just') {
-							return viewOperationFields(_p5._0);
+						var _p6 = operationMaybe;
+						if (_p6.ctor === 'Just') {
+							return viewOperationFields(_p6._0);
 						} else {
 							return _elm_lang$html$Html$text('operation not found');
 						}
@@ -17174,15 +17537,15 @@ var _user$project$View$viewBlock = F2(
 					_elm_lang$html$Html$text(value));
 			});
 		var viewOperations = function (block) {
-			var _p6 = block.operations;
-			if (_p6.ctor === 'Just') {
+			var _p7 = block.operations;
+			if (_p7.ctor === 'Just') {
 				return A2(
 					viewPropertyList,
 					'operations',
 					A2(
 						_elm_lang$core$List$map,
 						_user$project$View$shortHash,
-						_elm_lang$core$List$concat(_p6._0)));
+						_elm_lang$core$List$concat(_p7._0)));
 			} else {
 				return A2(viewPropertyString, 'operations', '[unknown]');
 			}
@@ -17287,12 +17650,12 @@ var _user$project$View$blockOperationCount = F2(
 		var blockOperationsMaybe = A2(_elm_lang$core$Dict$get, block.hash, model.chain.blockOperations);
 		return A2(
 			_elm_lang$core$Maybe$withDefault,
-			'unknown',
+			'',
 			A2(
 				_elm_lang$core$Maybe$map,
-				function (_p7) {
+				function (_p8) {
 					return _elm_lang$core$Basics$toString(
-						_elm_lang$core$List$length(_p7));
+						_elm_lang$core$List$length(_p8));
 				},
 				blockOperationsMaybe));
 	});
@@ -17551,11 +17914,11 @@ var _user$project$View$canonFitness = function (strings) {
 			})(0),
 		A2(
 			_elm_lang$core$List$map,
-			function (_p8) {
+			function (_p9) {
 				return A2(
 					_elm_lang$core$Result$withDefault,
 					0,
-					_fredcy$elm_parseint$ParseInt$parseIntHex(_p8));
+					_fredcy$elm_parseint$ParseInt$parseIntHex(_p9));
 			},
 			strings));
 };
@@ -17611,9 +17974,9 @@ var _user$project$View$viewSchemas = function (schemas) {
 };
 var _user$project$View$viewHome = function (model) {
 	var headMaybe = _elm_lang$core$List$head(model.chain.heads);
-	var _p9 = headMaybe;
-	if (_p9.ctor === 'Just') {
-		var _p10 = _p9._0;
+	var _p10 = headMaybe;
+	if (_p10.ctor === 'Just') {
+		var _p11 = _p10._0;
 		return A2(
 			_elm_lang$html$Html$div,
 			{ctor: '[]'},
@@ -17633,8 +17996,8 @@ var _user$project$View$viewHome = function (model) {
 						_user$project$View$viewBranch,
 						24,
 						model,
-						_elm_lang$core$Maybe$Just(_p10),
-						A2(_user$project$Data_Chain$getBranchList, model.chain, _p10)),
+						_elm_lang$core$Maybe$Just(_p11),
+						A2(_user$project$Data_Chain$getBranchList, model.chain, _p11)),
 					_1: {ctor: '[]'}
 				}
 			});
@@ -17650,9 +18013,9 @@ var _user$project$View$BlockFound = function (a) {
 };
 var _user$project$View$findBlockStatus = F2(
 	function (blocks, blockhash) {
-		var _p11 = A2(_elm_lang$core$Dict$get, blockhash, blocks);
-		if (_p11.ctor === 'Just') {
-			return _user$project$View$BlockFound(_p11._0);
+		var _p12 = A2(_elm_lang$core$Dict$get, blockhash, blocks);
+		if (_p12.ctor === 'Just') {
+			return _user$project$View$BlockFound(_p12._0);
 		} else {
 			return _user$project$View$BlockNotFound(blockhash);
 		}
@@ -17773,15 +18136,15 @@ var _user$project$View$viewHeads = function (model) {
 		});
 	var viewHead = F2(
 		function (i, blockStatus) {
-			var _p12 = blockStatus;
-			if (_p12.ctor === 'BlockFound') {
-				return A2(viewBlockSummary, i, _p12._0);
+			var _p13 = blockStatus;
+			if (_p13.ctor === 'BlockFound') {
+				return A2(viewBlockSummary, i, _p13._0);
 			} else {
 				return _elm_lang$html$Html$text(
 					A2(
 						_elm_lang$core$Basics_ops['++'],
 						'block ',
-						A2(_elm_lang$core$Basics_ops['++'], _p12._0, ' not found')));
+						A2(_elm_lang$core$Basics_ops['++'], _p13._0, ' not found')));
 			}
 		});
 	var header = A2(
@@ -17940,8 +18303,8 @@ var _user$project$View$viewHeads = function (model) {
 };
 var _user$project$View$view = function (model) {
 	var content = function () {
-		var _p13 = model.pageState;
-		switch (_p13._0.ctor) {
+		var _p14 = model.pageState;
+		switch (_p14._0.ctor) {
 			case 'Home':
 				return _user$project$View$viewHome(model);
 			case 'Blank':
@@ -17949,7 +18312,7 @@ var _user$project$View$view = function (model) {
 			case 'Operations':
 				return _user$project$View$viewAllOperations(model);
 			case 'Operation':
-				return A2(_user$project$View$viewOperation, model, _p13._0._0);
+				return A2(_user$project$View$viewOperation, model, _p14._0._0);
 			case 'Schema':
 				return _user$project$View$viewSchemas(model.schemaData);
 			case 'Debug':
@@ -17957,14 +18320,14 @@ var _user$project$View$view = function (model) {
 			case 'Heads':
 				return _user$project$View$viewHeads(model);
 			case 'Block':
-				var _p14 = A2(_elm_lang$core$Dict$get, _p13._0._0, model.chain.blocks);
-				if (_p14.ctor === 'Just') {
-					return A2(_user$project$View$viewBlock, model, _p14._0);
+				var _p15 = A2(_elm_lang$core$Dict$get, _p14._0._0, model.chain.blocks);
+				if (_p15.ctor === 'Just') {
+					return A2(_user$project$View$viewBlock, model, _p15._0);
 				} else {
 					return _elm_lang$html$Html$text('loading block ...');
 				}
 			case 'ChainAt':
-				return A2(_user$project$View$viewChainAt, model, _p13._0._0);
+				return A2(_user$project$View$viewChainAt, model, _p14._0._0);
 			case 'Errors':
 				return A2(_user$project$View$viewError, model.nodeUrl, model.errors);
 			default:
