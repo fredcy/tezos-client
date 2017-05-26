@@ -60,6 +60,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ Time.every (10 * Time.minute) Tick
+        , Time.every (30 * Time.second) Now
         , monitor Monitor
         ]
 

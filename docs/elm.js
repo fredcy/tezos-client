@@ -18384,8 +18384,12 @@ var _user$project$Main$subscriptions = function (model) {
 			_0: A2(_elm_lang$core$Time$every, 10 * _elm_lang$core$Time$minute, _user$project$Update$Tick),
 			_1: {
 				ctor: '::',
-				_0: _user$project$Main$monitor(_user$project$Update$Monitor),
-				_1: {ctor: '[]'}
+				_0: A2(_elm_lang$core$Time$every, 30 * _elm_lang$core$Time$second, _user$project$Update$Now),
+				_1: {
+					ctor: '::',
+					_0: _user$project$Main$monitor(_user$project$Update$Monitor),
+					_1: {ctor: '[]'}
+				}
 			}
 		});
 };
