@@ -3,27 +3,21 @@
 
     function transferComplete(evt) {
         // This should not happen as the response is streamed without end.
-        console.log("transferComplete", evt);
+        console.log("transferComplete", timeDisplay(), evt);
     }
 
     function transferCancelled(evt) {
         // This happens when reloading the page.
-        console.log("transferCancelled", evt);
+        console.log("transferCancelled", timeDisplay(), evt);
     }
 
     function transferFailed(evt) {
         // This should not happen, but I've seen it.
-        console.log("transferFailed", evt);
+        console.log("transferFailed", timeDisplay(), evt);
 
         // Send the request again to restart the response stream.
         // TODO: Some kind of backoff on repeated failures.
         setTimeout(sendRequest, 5000);
-    }
-
-
-    function timeDisplay() {
-        var date = new Date();
-        return date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
     }
 
     function updateProgress(evt) {
@@ -59,8 +53,19 @@
             xhr.setRequestHeader("Content-Type", "application/json");
             xhr.send('{"monitor": true}');
         } catch (e) {
-            console.log("XHR exception", e);
+            console.log("XHR exception", timeDisplay(), e);
         }
+    }
+
+    var timeFormat = new Intl.DateTimeFormat('en-US', {
+        month: 'numeric', day: 'numeric',
+        hour: 'numeric', minute: 'numeric',second: 'numeric',
+        hour12: false
+    });
+
+    function timeDisplay() {
+        var date = new Date();
+        return timeFormat.format(date);
     }
 
     // MAIN
