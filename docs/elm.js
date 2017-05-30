@@ -13836,6 +13836,222 @@ var _fredcy$elm_parseint$ParseInt$parseInt = _fredcy$elm_parseint$ParseInt$parse
 var _fredcy$elm_parseint$ParseInt$parseIntOct = _fredcy$elm_parseint$ParseInt$parseIntRadix(8);
 var _fredcy$elm_parseint$ParseInt$parseIntHex = _fredcy$elm_parseint$ParseInt$parseIntRadix(16);
 
+var _krisajenkins$remotedata$RemoteData$isNotAsked = function (data) {
+	var _p0 = data;
+	if (_p0.ctor === 'NotAsked') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var _krisajenkins$remotedata$RemoteData$isLoading = function (data) {
+	var _p1 = data;
+	if (_p1.ctor === 'Loading') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var _krisajenkins$remotedata$RemoteData$isFailure = function (data) {
+	var _p2 = data;
+	if (_p2.ctor === 'Failure') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var _krisajenkins$remotedata$RemoteData$isSuccess = function (data) {
+	var _p3 = data;
+	if (_p3.ctor === 'Success') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var _krisajenkins$remotedata$RemoteData$withDefault = F2(
+	function ($default, data) {
+		var _p4 = data;
+		if (_p4.ctor === 'Success') {
+			return _p4._0;
+		} else {
+			return $default;
+		}
+	});
+var _krisajenkins$remotedata$RemoteData$Success = function (a) {
+	return {ctor: 'Success', _0: a};
+};
+var _krisajenkins$remotedata$RemoteData$succeed = _krisajenkins$remotedata$RemoteData$Success;
+var _krisajenkins$remotedata$RemoteData$prism = {
+	reverseGet: _krisajenkins$remotedata$RemoteData$Success,
+	getOption: function (data) {
+		var _p5 = data;
+		if (_p5.ctor === 'Success') {
+			return _elm_lang$core$Maybe$Just(_p5._0);
+		} else {
+			return _elm_lang$core$Maybe$Nothing;
+		}
+	}
+};
+var _krisajenkins$remotedata$RemoteData$Failure = function (a) {
+	return {ctor: 'Failure', _0: a};
+};
+var _krisajenkins$remotedata$RemoteData$fromResult = function (result) {
+	var _p6 = result;
+	if (_p6.ctor === 'Err') {
+		return _krisajenkins$remotedata$RemoteData$Failure(_p6._0);
+	} else {
+		return _krisajenkins$remotedata$RemoteData$Success(_p6._0);
+	}
+};
+var _krisajenkins$remotedata$RemoteData$asCmd = _elm_lang$core$Task$attempt(_krisajenkins$remotedata$RemoteData$fromResult);
+var _krisajenkins$remotedata$RemoteData$sendRequest = _elm_lang$http$Http$send(_krisajenkins$remotedata$RemoteData$fromResult);
+var _krisajenkins$remotedata$RemoteData$fromTask = function (_p7) {
+	return A2(
+		_elm_lang$core$Task$onError,
+		function (_p8) {
+			return _elm_lang$core$Task$succeed(
+				_krisajenkins$remotedata$RemoteData$Failure(_p8));
+		},
+		A2(_elm_lang$core$Task$map, _krisajenkins$remotedata$RemoteData$Success, _p7));
+};
+var _krisajenkins$remotedata$RemoteData$Loading = {ctor: 'Loading'};
+var _krisajenkins$remotedata$RemoteData$NotAsked = {ctor: 'NotAsked'};
+var _krisajenkins$remotedata$RemoteData$map = F2(
+	function (f, data) {
+		var _p9 = data;
+		switch (_p9.ctor) {
+			case 'Success':
+				return _krisajenkins$remotedata$RemoteData$Success(
+					f(_p9._0));
+			case 'Loading':
+				return _krisajenkins$remotedata$RemoteData$Loading;
+			case 'NotAsked':
+				return _krisajenkins$remotedata$RemoteData$NotAsked;
+			default:
+				return _krisajenkins$remotedata$RemoteData$Failure(_p9._0);
+		}
+	});
+var _krisajenkins$remotedata$RemoteData$toMaybe = function (_p10) {
+	return A2(
+		_krisajenkins$remotedata$RemoteData$withDefault,
+		_elm_lang$core$Maybe$Nothing,
+		A2(_krisajenkins$remotedata$RemoteData$map, _elm_lang$core$Maybe$Just, _p10));
+};
+var _krisajenkins$remotedata$RemoteData$mapError = F2(
+	function (f, data) {
+		var _p11 = data;
+		switch (_p11.ctor) {
+			case 'Success':
+				return _krisajenkins$remotedata$RemoteData$Success(_p11._0);
+			case 'Failure':
+				return _krisajenkins$remotedata$RemoteData$Failure(
+					f(_p11._0));
+			case 'Loading':
+				return _krisajenkins$remotedata$RemoteData$Loading;
+			default:
+				return _krisajenkins$remotedata$RemoteData$NotAsked;
+		}
+	});
+var _krisajenkins$remotedata$RemoteData$mapBoth = F3(
+	function (successFn, errorFn, data) {
+		var _p12 = data;
+		switch (_p12.ctor) {
+			case 'Success':
+				return _krisajenkins$remotedata$RemoteData$Success(
+					successFn(_p12._0));
+			case 'Failure':
+				return _krisajenkins$remotedata$RemoteData$Failure(
+					errorFn(_p12._0));
+			case 'Loading':
+				return _krisajenkins$remotedata$RemoteData$Loading;
+			default:
+				return _krisajenkins$remotedata$RemoteData$NotAsked;
+		}
+	});
+var _krisajenkins$remotedata$RemoteData$andThen = F2(
+	function (f, data) {
+		var _p13 = data;
+		switch (_p13.ctor) {
+			case 'Success':
+				return f(_p13._0);
+			case 'Failure':
+				return _krisajenkins$remotedata$RemoteData$Failure(_p13._0);
+			case 'NotAsked':
+				return _krisajenkins$remotedata$RemoteData$NotAsked;
+			default:
+				return _krisajenkins$remotedata$RemoteData$Loading;
+		}
+	});
+var _krisajenkins$remotedata$RemoteData$andMap = F2(
+	function (wrappedValue, wrappedFunction) {
+		var _p14 = wrappedFunction;
+		switch (_p14.ctor) {
+			case 'Success':
+				return A2(_krisajenkins$remotedata$RemoteData$map, _p14._0, wrappedValue);
+			case 'Failure':
+				return _krisajenkins$remotedata$RemoteData$Failure(_p14._0);
+			case 'Loading':
+				return _krisajenkins$remotedata$RemoteData$Loading;
+			default:
+				return _krisajenkins$remotedata$RemoteData$NotAsked;
+		}
+	});
+var _krisajenkins$remotedata$RemoteData$map2 = F3(
+	function (f, a, b) {
+		return A2(
+			_krisajenkins$remotedata$RemoteData$andMap,
+			b,
+			A2(_krisajenkins$remotedata$RemoteData$map, f, a));
+	});
+var _krisajenkins$remotedata$RemoteData$map3 = F4(
+	function (f, a, b, c) {
+		return A2(
+			_krisajenkins$remotedata$RemoteData$andMap,
+			c,
+			A2(
+				_krisajenkins$remotedata$RemoteData$andMap,
+				b,
+				A2(_krisajenkins$remotedata$RemoteData$map, f, a)));
+	});
+var _krisajenkins$remotedata$RemoteData$append = F2(
+	function (a, b) {
+		return A2(
+			_krisajenkins$remotedata$RemoteData$andMap,
+			b,
+			A2(
+				_krisajenkins$remotedata$RemoteData$map,
+				F2(
+					function (v0, v1) {
+						return {ctor: '_Tuple2', _0: v0, _1: v1};
+					}),
+				a));
+	});
+var _krisajenkins$remotedata$RemoteData$update = F2(
+	function (f, remoteData) {
+		var _p15 = remoteData;
+		switch (_p15.ctor) {
+			case 'Success':
+				var _p16 = f(_p15._0);
+				var first = _p16._0;
+				var second = _p16._1;
+				return {
+					ctor: '_Tuple2',
+					_0: _krisajenkins$remotedata$RemoteData$Success(first),
+					_1: second
+				};
+			case 'NotAsked':
+				return {ctor: '_Tuple2', _0: _krisajenkins$remotedata$RemoteData$NotAsked, _1: _elm_lang$core$Platform_Cmd$none};
+			case 'Loading':
+				return {ctor: '_Tuple2', _0: _krisajenkins$remotedata$RemoteData$Loading, _1: _elm_lang$core$Platform_Cmd$none};
+			default:
+				return {
+					ctor: '_Tuple2',
+					_0: _krisajenkins$remotedata$RemoteData$Failure(_p15._0),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+		}
+	});
+
 var _rluiten$elm_date_extra$Date_Extra_Internal2$prevMonth = function (month) {
 	var _p0 = month;
 	switch (_p0.ctor) {
@@ -14821,6 +15037,10 @@ var _rluiten$elm_date_extra$Date_Extra_Format$utcIsoString = function (date) {
 };
 var _rluiten$elm_date_extra$Date_Extra_Format$isoFormat = '%Y-%m-%dT%H:%M:%S';
 
+var _user$project$Data_Chain$decodeContracts = A2(
+	_elm_lang$core$Json_Decode$field,
+	'ok',
+	_elm_lang$core$Json_Decode$list(_elm_lang$core$Json_Decode$string));
 var _user$project$Data_Chain$decodeLevel = A2(
 	_elm_lang$core$Json_Decode$at,
 	{
@@ -14844,6 +15064,27 @@ var _user$project$Data_Chain$decodeTimestamp = A2(
 		}
 	},
 	A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Date$fromString, _elm_lang$core$Json_Decode$string));
+var _user$project$Data_Chain$loadingContracts = function (model) {
+	return _elm_lang$core$Native_Utils.update(
+		model,
+		{contracts: _krisajenkins$remotedata$RemoteData$Loading});
+};
+var _user$project$Data_Chain$loadContractError = F2(
+	function (model, error) {
+		return _elm_lang$core$Native_Utils.update(
+			model,
+			{
+				contracts: _krisajenkins$remotedata$RemoteData$Failure(error)
+			});
+	});
+var _user$project$Data_Chain$loadContracts = F2(
+	function (model, contracts) {
+		return _elm_lang$core$Native_Utils.update(
+			model,
+			{
+				contracts: _krisajenkins$remotedata$RemoteData$Success(contracts)
+			});
+	});
 var _user$project$Data_Chain$loadParsedOperation = F3(
 	function (model, operationId, operation) {
 		var newParsed = A3(_elm_lang$core$Dict$insert, operationId, operation, model.parsedOperations);
@@ -15003,7 +15244,8 @@ var _user$project$Data_Chain$init = {
 	blocks: _elm_lang$core$Dict$empty,
 	operations: _elm_lang$core$Dict$empty,
 	parsedOperations: _elm_lang$core$Dict$empty,
-	blockOperations: _elm_lang$core$Dict$empty
+	blockOperations: _elm_lang$core$Dict$empty,
+	contracts: _krisajenkins$remotedata$RemoteData$NotAsked
 };
 var _user$project$Data_Chain$Block = F7(
 	function (a, b, c, d, e, f, g) {
@@ -15056,9 +15298,9 @@ var _user$project$Data_Chain$ParsedOperation = F5(
 	function (a, b, c, d, e) {
 		return {hash: a, net_id: b, operations: c, source: d, signature: e};
 	});
-var _user$project$Data_Chain$Model = F5(
-	function (a, b, c, d, e) {
-		return {heads: a, blocks: b, operations: c, parsedOperations: d, blockOperations: e};
+var _user$project$Data_Chain$Model = F6(
+	function (a, b, c, d, e, f) {
+		return {heads: a, blocks: b, operations: c, parsedOperations: d, blockOperations: e, contracts: f};
 	});
 var _user$project$Data_Chain$Delegation = function (a) {
 	return {ctor: 'Delegation', _0: a};
@@ -15713,6 +15955,12 @@ var _user$project$Route$routeToString = function (route) {
 						_1: {ctor: '[]'}
 					}
 				};
+			case 'Contracts':
+				return {
+					ctor: '::',
+					_0: 'contracts',
+					_1: {ctor: '[]'}
+				};
 			case 'Schema':
 				return {
 					ctor: '::',
@@ -15760,6 +16008,7 @@ var _user$project$Route$Debug = {ctor: 'Debug'};
 var _user$project$Route$Errors = {ctor: 'Errors'};
 var _user$project$Route$Heads = {ctor: 'Heads'};
 var _user$project$Route$Schema = {ctor: 'Schema'};
+var _user$project$Route$Contracts = {ctor: 'Contracts'};
 var _user$project$Route$ChainAt = function (a) {
 	return {ctor: 'ChainAt', _0: a};
 };
@@ -15827,21 +16076,28 @@ var _user$project$Route$route = _evancz$url_parser$UrlParser$oneOf(
 									ctor: '::',
 									_0: A2(
 										_evancz$url_parser$UrlParser$map,
-										_user$project$Route$Schema,
-										_evancz$url_parser$UrlParser$s('schema')),
+										_user$project$Route$Contracts,
+										_evancz$url_parser$UrlParser$s('contracts')),
 									_1: {
 										ctor: '::',
 										_0: A2(
 											_evancz$url_parser$UrlParser$map,
-											_user$project$Route$Debug,
-											_evancz$url_parser$UrlParser$s('debug')),
+											_user$project$Route$Schema,
+											_evancz$url_parser$UrlParser$s('schema')),
 										_1: {
 											ctor: '::',
 											_0: A2(
 												_evancz$url_parser$UrlParser$map,
-												_user$project$Route$Errors,
-												_evancz$url_parser$UrlParser$s('errors')),
-											_1: {ctor: '[]'}
+												_user$project$Route$Debug,
+												_evancz$url_parser$UrlParser$s('debug')),
+											_1: {
+												ctor: '::',
+												_0: A2(
+													_evancz$url_parser$UrlParser$map,
+													_user$project$Route$Errors,
+													_evancz$url_parser$UrlParser$s('errors')),
+												_1: {ctor: '[]'}
+											}
 										}
 									}
 								}
@@ -15858,6 +16114,7 @@ var _user$project$Route$fromLocation = function (location) {
 
 var _user$project$Page$Debug = {ctor: 'Debug'};
 var _user$project$Page$Errors = {ctor: 'Errors'};
+var _user$project$Page$Contracts = {ctor: 'Contracts'};
 var _user$project$Page$ChainAt = function (a) {
 	return {ctor: 'ChainAt', _0: a};
 };
@@ -15892,6 +16149,10 @@ var _user$project$Model$HttpError = function (a) {
 	return {ctor: 'HttpError', _0: a};
 };
 
+var _user$project$Request_Block$getContracts = function (nodeUrl) {
+	var url = A2(_elm_lang$core$Basics_ops['++'], nodeUrl, '/blocks/head/proto/context/contracts');
+	return A3(_elm_lang$http$Http$post, url, _user$project$Data_Request$emptyJsonBody, _user$project$Data_Chain$decodeContracts);
+};
 var _user$project$Request_Block$getChainStartingAt = F3(
 	function (nodeUrl, length, blockhash) {
 		var url = A2(_elm_lang$core$Basics_ops['++'], nodeUrl, '/blocks');
@@ -16093,6 +16354,15 @@ var _user$project$Update$SetRoute = function (a) {
 };
 var _user$project$Update$Tick = function (a) {
 	return {ctor: 'Tick', _0: a};
+};
+var _user$project$Update$LoadContracts = function (a) {
+	return {ctor: 'LoadContracts', _0: a};
+};
+var _user$project$Update$getContracts = function (model) {
+	return A2(
+		_elm_lang$http$Http$send,
+		_user$project$Update$LoadContracts,
+		_user$project$Request_Block$getContracts(model.nodeUrl));
 };
 var _user$project$Update$LoadHeads = function (a) {
 	return {ctor: 'LoadHeads', _0: a};
@@ -16317,6 +16587,17 @@ var _user$project$Update$setRoute = F2(
 									_user$project$Page$ChainAt(_p5))
 							}),
 						_1: A2(_user$project$Update$getBranch, model, _p5)
+					};
+				case 'Contracts':
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								pageState: _user$project$Model$Loaded(_user$project$Page$Contracts),
+								chain: _user$project$Data_Chain$loadingContracts(model.chain)
+							}),
+						_1: _user$project$Update$getContracts(model)
 					};
 				case 'Schema':
 					var schemaQuery2 = '/describe/blocks/head/proto';
@@ -16578,19 +16859,48 @@ var _user$project$Update$updatePage = F3(
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				}
-			case 'ShowBlock':
+			case 'LoadContracts':
 				var _p17 = _p6._0._0;
+				if (_p17.ctor === 'Ok') {
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								chain: A2(_user$project$Data_Chain$loadContracts, model.chain, _p17._0)
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				} else {
+					var _p18 = _p17._0;
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								errors: {
+									ctor: '::',
+									_0: _user$project$Model$HttpError(_p18),
+									_1: model.errors
+								},
+								chain: A2(_user$project$Data_Chain$loadContractError, model.chain, _p18)
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				}
+			case 'ShowBlock':
+				var _p19 = _p6._0._0;
 				return {
 					ctor: '_Tuple2',
 					_0: model,
 					_1: _elm_lang$core$Platform_Cmd$batch(
 						{
 							ctor: '::',
-							_0: A2(_user$project$Update$getBlockOperationDetails, model, _p17),
+							_0: A2(_user$project$Update$getBlockOperationDetails, model, _p19),
 							_1: {
 								ctor: '::',
 								_0: _user$project$Route$newUrl(
-									_user$project$Route$Block(_p17)),
+									_user$project$Route$Block(_p19)),
 								_1: {ctor: '[]'}
 							}
 						})
@@ -16645,9 +16955,9 @@ var _user$project$Update$updatePage = F3(
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			default:
-				var _p18 = A2(_user$project$Update$updateMonitor, _p6._0._0, model);
-				var newModel = _p18._0;
-				var cmd = _p18._1;
+				var _p20 = A2(_user$project$Update$updateMonitor, _p6._0._0, model);
+				var newModel = _p20._0;
+				var cmd = _p20._1;
 				return {
 					ctor: '_Tuple2',
 					_0: newModel,
@@ -16723,8 +17033,12 @@ var _user$project$View_Page$links = {
 			_0: {ctor: '_Tuple2', _0: 'Operations', _1: _user$project$Route$Operations},
 			_1: {
 				ctor: '::',
-				_0: {ctor: '_Tuple2', _0: 'Schemas', _1: _user$project$Route$Schema},
-				_1: {ctor: '[]'}
+				_0: {ctor: '_Tuple2', _0: 'Contracts', _1: _user$project$Route$Contracts},
+				_1: {
+					ctor: '::',
+					_0: {ctor: '_Tuple2', _0: 'Schemas', _1: _user$project$Route$Schema},
+					_1: {ctor: '[]'}
+				}
 			}
 		}
 	}
@@ -17024,6 +17338,68 @@ var _user$project$View$viewError = F2(
 				}
 			});
 	});
+var _user$project$View$viewContractList = function (contracts) {
+	var viewContract = function (contract) {
+		return A2(
+			_elm_lang$html$Html$li,
+			{ctor: '[]'},
+			{
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$span,
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html_Attributes$class('hash'),
+						_1: {ctor: '[]'}
+					},
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html$text(contract),
+						_1: {ctor: '[]'}
+					}),
+				_1: {ctor: '[]'}
+			});
+	};
+	return A2(
+		_elm_lang$html$Html$ul,
+		{ctor: '[]'},
+		A2(
+			_elm_lang$core$List$map,
+			viewContract,
+			_elm_lang$core$List$sort(contracts)));
+};
+var _user$project$View$viewContracts = function (model) {
+	return A2(
+		_elm_lang$html$Html$div,
+		{ctor: '[]'},
+		{
+			ctor: '::',
+			_0: A2(
+				_elm_lang$html$Html$h3,
+				{ctor: '[]'},
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html$text('Contracts'),
+					_1: {ctor: '[]'}
+				}),
+			_1: {
+				ctor: '::',
+				_0: function () {
+					var _p2 = model.chain.contracts;
+					switch (_p2.ctor) {
+						case 'Success':
+							return _user$project$View$viewContractList(_p2._0);
+						case 'Loading':
+							return _elm_lang$html$Html$text('loading ...');
+						default:
+							return _elm_lang$html$Html$text(
+								_elm_lang$core$Basics$toString(model.chain.contracts));
+					}
+				}(),
+				_1: {ctor: '[]'}
+			}
+		});
+};
 var _user$project$View$shortHash = function (hash) {
 	return A2(_elm_lang$core$String$left, 14, hash);
 };
@@ -17037,8 +17413,8 @@ var _user$project$View$formatInt = function (number) {
 		_elm_lang$core$Basics$toFloat(number));
 };
 var _user$project$View$viewSuboperation = function (suboperation) {
-	var _p2 = suboperation;
-	switch (_p2.ctor) {
+	var _p3 = suboperation;
+	switch (_p3.ctor) {
 		case 'Endorsement':
 			return A2(
 				_elm_lang$html$Html$span,
@@ -17058,7 +17434,7 @@ var _user$project$View$viewSuboperation = function (suboperation) {
 							{
 								ctor: '::',
 								_0: _elm_lang$html$Html$text(
-									_user$project$View$shortHash(_p2._0)),
+									_user$project$View$shortHash(_p3._0)),
 								_1: {ctor: '[]'}
 							}),
 						_1: {
@@ -17067,13 +17443,13 @@ var _user$project$View$viewSuboperation = function (suboperation) {
 								A2(
 									_elm_lang$core$Basics_ops['++'],
 									', slot ',
-									_elm_lang$core$Basics$toString(_p2._1))),
+									_elm_lang$core$Basics$toString(_p3._1))),
 							_1: {ctor: '[]'}
 						}
 					}
 				});
 		case 'Transaction':
-			var _p3 = _p2._0;
+			var _p4 = _p3._0;
 			return A2(
 				_elm_lang$html$Html$span,
 				{ctor: '[]'},
@@ -17083,7 +17459,7 @@ var _user$project$View$viewSuboperation = function (suboperation) {
 					_1: {
 						ctor: '::',
 						_0: _elm_lang$html$Html$text(
-							_user$project$View$formatInt(_p2._1)),
+							_user$project$View$formatInt(_p3._1)),
 						_1: {
 							ctor: '::',
 							_0: _elm_lang$html$Html$text(' to '),
@@ -17093,7 +17469,7 @@ var _user$project$View$viewSuboperation = function (suboperation) {
 									_elm_lang$html$Html$span,
 									{
 										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$title(_p3),
+										_0: _elm_lang$html$Html_Attributes$title(_p4),
 										_1: {
 											ctor: '::',
 											_0: _elm_lang$html$Html_Attributes$class('hash'),
@@ -17103,7 +17479,7 @@ var _user$project$View$viewSuboperation = function (suboperation) {
 									{
 										ctor: '::',
 										_0: _elm_lang$html$Html$text(
-											_user$project$View$shortHash(_p3)),
+											_user$project$View$shortHash(_p4)),
 										_1: {ctor: '[]'}
 									}),
 								_1: {ctor: '[]'}
@@ -17324,15 +17700,15 @@ var _user$project$View$viewAllOperations = function (model) {
 };
 var _user$project$View$viewShowBlockOperations = F2(
 	function (blockOperations, hashMaybe) {
-		var _p4 = hashMaybe;
-		if (_p4.ctor === 'Just') {
+		var _p5 = hashMaybe;
+		if (_p5.ctor === 'Just') {
 			return A2(
 				_elm_lang$core$Maybe$withDefault,
 				_elm_lang$html$Html$text(''),
 				A2(
 					_elm_lang$core$Maybe$map,
 					_user$project$View$viewOperations,
-					A2(_elm_lang$core$Dict$get, _p4._0, blockOperations)));
+					A2(_elm_lang$core$Dict$get, _p5._0, blockOperations)));
 		} else {
 			return _elm_lang$html$Html$text('');
 		}
@@ -17400,12 +17776,12 @@ var _user$project$View$viewProperty = F2(
 	});
 var _user$project$View$viewPropertyMaybe = F2(
 	function (label, valueMaybe) {
-		var _p5 = valueMaybe;
-		if (_p5.ctor === 'Just') {
+		var _p6 = valueMaybe;
+		if (_p6.ctor === 'Just') {
 			return A2(
 				_user$project$View$viewProperty,
 				label,
-				_elm_lang$html$Html$text(_p5._0));
+				_elm_lang$html$Html$text(_p6._0));
 		} else {
 			return _elm_lang$html$Html$text('');
 		}
@@ -17488,9 +17864,9 @@ var _user$project$View$viewOperation = F2(
 				_1: {
 					ctor: '::',
 					_0: function () {
-						var _p6 = operationMaybe;
-						if (_p6.ctor === 'Just') {
-							return viewOperationFields(_p6._0);
+						var _p7 = operationMaybe;
+						if (_p7.ctor === 'Just') {
+							return viewOperationFields(_p7._0);
 						} else {
 							return _elm_lang$html$Html$text('operation not found');
 						}
@@ -17537,15 +17913,15 @@ var _user$project$View$viewBlock = F2(
 					_elm_lang$html$Html$text(value));
 			});
 		var viewOperations = function (block) {
-			var _p7 = block.operations;
-			if (_p7.ctor === 'Just') {
+			var _p8 = block.operations;
+			if (_p8.ctor === 'Just') {
 				return A2(
 					viewPropertyList,
 					'operations',
 					A2(
 						_elm_lang$core$List$map,
 						_user$project$View$shortHash,
-						_elm_lang$core$List$concat(_p7._0)));
+						_elm_lang$core$List$concat(_p8._0)));
 			} else {
 				return A2(viewPropertyString, 'operations', '[unknown]');
 			}
@@ -17653,9 +18029,9 @@ var _user$project$View$blockOperationCount = F2(
 			'',
 			A2(
 				_elm_lang$core$Maybe$map,
-				function (_p8) {
+				function (_p9) {
 					return _elm_lang$core$Basics$toString(
-						_elm_lang$core$List$length(_p8));
+						_elm_lang$core$List$length(_p9));
 				},
 				blockOperationsMaybe));
 	});
@@ -17914,11 +18290,11 @@ var _user$project$View$canonFitness = function (strings) {
 			})(0),
 		A2(
 			_elm_lang$core$List$map,
-			function (_p9) {
+			function (_p10) {
 				return A2(
 					_elm_lang$core$Result$withDefault,
 					0,
-					_fredcy$elm_parseint$ParseInt$parseIntHex(_p9));
+					_fredcy$elm_parseint$ParseInt$parseIntHex(_p10));
 			},
 			strings));
 };
@@ -17974,9 +18350,9 @@ var _user$project$View$viewSchemas = function (schemas) {
 };
 var _user$project$View$viewHome = function (model) {
 	var headMaybe = _elm_lang$core$List$head(model.chain.heads);
-	var _p10 = headMaybe;
-	if (_p10.ctor === 'Just') {
-		var _p11 = _p10._0;
+	var _p11 = headMaybe;
+	if (_p11.ctor === 'Just') {
+		var _p12 = _p11._0;
 		return A2(
 			_elm_lang$html$Html$div,
 			{ctor: '[]'},
@@ -17996,8 +18372,8 @@ var _user$project$View$viewHome = function (model) {
 						_user$project$View$viewBranch,
 						24,
 						model,
-						_elm_lang$core$Maybe$Just(_p11),
-						A2(_user$project$Data_Chain$getBranchList, model.chain, _p11)),
+						_elm_lang$core$Maybe$Just(_p12),
+						A2(_user$project$Data_Chain$getBranchList, model.chain, _p12)),
 					_1: {ctor: '[]'}
 				}
 			});
@@ -18013,9 +18389,9 @@ var _user$project$View$BlockFound = function (a) {
 };
 var _user$project$View$findBlockStatus = F2(
 	function (blocks, blockhash) {
-		var _p12 = A2(_elm_lang$core$Dict$get, blockhash, blocks);
-		if (_p12.ctor === 'Just') {
-			return _user$project$View$BlockFound(_p12._0);
+		var _p13 = A2(_elm_lang$core$Dict$get, blockhash, blocks);
+		if (_p13.ctor === 'Just') {
+			return _user$project$View$BlockFound(_p13._0);
 		} else {
 			return _user$project$View$BlockNotFound(blockhash);
 		}
@@ -18136,15 +18512,15 @@ var _user$project$View$viewHeads = function (model) {
 		});
 	var viewHead = F2(
 		function (i, blockStatus) {
-			var _p13 = blockStatus;
-			if (_p13.ctor === 'BlockFound') {
-				return A2(viewBlockSummary, i, _p13._0);
+			var _p14 = blockStatus;
+			if (_p14.ctor === 'BlockFound') {
+				return A2(viewBlockSummary, i, _p14._0);
 			} else {
 				return _elm_lang$html$Html$text(
 					A2(
 						_elm_lang$core$Basics_ops['++'],
 						'block ',
-						A2(_elm_lang$core$Basics_ops['++'], _p13._0, ' not found')));
+						A2(_elm_lang$core$Basics_ops['++'], _p14._0, ' not found')));
 			}
 		});
 	var header = A2(
@@ -18303,8 +18679,8 @@ var _user$project$View$viewHeads = function (model) {
 };
 var _user$project$View$view = function (model) {
 	var content = function () {
-		var _p14 = model.pageState;
-		switch (_p14._0.ctor) {
+		var _p15 = model.pageState;
+		switch (_p15._0.ctor) {
 			case 'Home':
 				return _user$project$View$viewHome(model);
 			case 'Blank':
@@ -18312,7 +18688,7 @@ var _user$project$View$view = function (model) {
 			case 'Operations':
 				return _user$project$View$viewAllOperations(model);
 			case 'Operation':
-				return A2(_user$project$View$viewOperation, model, _p14._0._0);
+				return A2(_user$project$View$viewOperation, model, _p15._0._0);
 			case 'Schema':
 				return _user$project$View$viewSchemas(model.schemaData);
 			case 'Debug':
@@ -18320,14 +18696,16 @@ var _user$project$View$view = function (model) {
 			case 'Heads':
 				return _user$project$View$viewHeads(model);
 			case 'Block':
-				var _p15 = A2(_elm_lang$core$Dict$get, _p14._0._0, model.chain.blocks);
-				if (_p15.ctor === 'Just') {
-					return A2(_user$project$View$viewBlock, model, _p15._0);
+				var _p16 = A2(_elm_lang$core$Dict$get, _p15._0._0, model.chain.blocks);
+				if (_p16.ctor === 'Just') {
+					return A2(_user$project$View$viewBlock, model, _p16._0);
 				} else {
 					return _elm_lang$html$Html$text('loading block ...');
 				}
 			case 'ChainAt':
-				return A2(_user$project$View$viewChainAt, model, _p14._0._0);
+				return A2(_user$project$View$viewChainAt, model, _p15._0._0);
+			case 'Contracts':
+				return _user$project$View$viewContracts(model);
 			case 'Errors':
 				return A2(_user$project$View$viewError, model.nodeUrl, model.errors);
 			default:

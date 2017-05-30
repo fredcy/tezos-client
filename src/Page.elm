@@ -13,5 +13,6 @@ type Page
     | Operations
     | Operation OperationID
     | ChainAt BlockID
+    | Contracts
     | Errors
     | Debug

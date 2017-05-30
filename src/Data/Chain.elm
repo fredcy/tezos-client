@@ -2,8 +2,10 @@ module Data.Chain exposing (..)
 
 import Date exposing (Date)
 import Dict exposing (Dict)
+import Http
 import Json.Decode as Decode
 import Json.Decode.Pipeline as Decode
+import RemoteData exposing (RemoteData)
 import Set
 
 
@@ -95,12 +97,17 @@ type alias BlocksData =
     List (List Block)
 
 
+type alias Contracts =
+    List Base58CheckEncodedSHA256
+
+
 type alias Model =
     { heads : List BlockID
     , blocks : Dict BlockID Block
     , operations : Dict OperationID Operation
     , parsedOperations : Dict OperationID ParsedOperation
     , blockOperations : Dict BlockID (List OperationID)
+    , contracts : RemoteData Http.Error Contracts
     }
 
 
@@ -111,6 +118,7 @@ init =
     , operations = Dict.empty
     , parsedOperations = Dict.empty
     , blockOperations = Dict.empty
+    , contracts = RemoteData.NotAsked
     }
 
 
@@ -249,6 +257,21 @@ loadParsedOperation model operationId operation =
         { model | parsedOperations = newParsed }
 
 
+loadContracts : Model -> Contracts -> Model
+loadContracts model contracts =
+    { model | contracts = RemoteData.Success contracts }
+
+
+loadContractError : Model -> Http.Error -> Model
+loadContractError model error =
+    { model | contracts = RemoteData.Failure error }
+
+
+loadingContracts : Model -> Model
+loadingContracts model =
+    { model | contracts = RemoteData.Loading }
+
+
 
 -- Decoders
 
@@ -290,3 +313,8 @@ decodeTimestamp =
 decodeLevel : Decode.Decoder Int
 decodeLevel =
     Decode.at [ "ok", "level" ] Decode.int
+
+
+decodeContracts : Decode.Decoder Contracts
+decodeContracts =
+    Decode.field "ok" (Decode.list Decode.string)

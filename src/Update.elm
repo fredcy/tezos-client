@@ -32,6 +32,7 @@ type Msg
     | ShowOperation OperationID
     | ShowBranch BlockID
     | LoadHeads (Result Http.Error Chain.BlocksData)
+    | LoadContracts (Result Http.Error Chain.Contracts)
     | Tick Time
     | SetRoute (Maybe Route)
     | ClearErrors
@@ -133,6 +134,21 @@ updatePage page msg model =
                 Err error ->
                     ( { model | errors = HttpError error :: model.errors }, Cmd.none )
 
+        ( LoadContracts contractsResult, _ ) ->
+            case contractsResult of
+                Ok contracts ->
+                    ( { model | chain = Chain.loadContracts model.chain contracts }
+                    , Cmd.none
+                    )
+
+                Err error ->
+                    ( { model
+                        | errors = HttpError error :: model.errors
+                        , chain = Chain.loadContractError model.chain error
+                      }
+                    , Cmd.none
+                    )
+
         ( ShowBlock blockhash, _ ) ->
             ( model
             , Cmd.batch
@@ -197,6 +213,14 @@ setRoute routeMaybe model =
         Just (Route.ChainAt hash) ->
             ( { model | pageState = Loaded (Page.ChainAt hash) }
             , getBranch model hash
+            )
+
+        Just Route.Contracts ->
+            ( { model
+                | pageState = Loaded Page.Contracts
+                , chain = Chain.loadingContracts model.chain
+              }
+            , getContracts model
             )
 
         Just Route.Schema ->
@@ -308,6 +332,11 @@ getAllBlocksOperations model =
                 |> Http.send (LoadBlockOperations blockHash)
     in
         Cmd.batch (List.map getBlockOperations blocksToGet)
+
+
+getContracts : Model -> Cmd Msg
+getContracts model =
+    Request.Block.getContracts model.nodeUrl |> Http.send LoadContracts
 
 
 updateMonitor : Decode.Value -> Model -> ( Model, Cmd Msg )

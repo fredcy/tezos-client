@@ -34,3 +34,11 @@ getChainStartingAt nodeUrl length blockhash =
             nodeUrl ++ "/blocks"
     in
         Http.post url body Chain.decodeBlocks
+
+getContracts: URL -> Http.Request Chain.Contracts
+getContracts nodeUrl =
+    let
+        url =
+            nodeUrl ++ "/blocks/head/proto/context/contracts"
+    in
+        Http.post url emptyJsonBody Chain.decodeContracts

@@ -17,7 +17,7 @@
 
         // Send the request again to restart the response stream.
         // TODO: Some kind of backoff on repeated failures.
-        setTimeout(sendRequest, 5000);
+        window.setTimeout(sendRequest, 5000);
     }
 
     function updateProgress(evt) {

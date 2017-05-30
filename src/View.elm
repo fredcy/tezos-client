@@ -13,7 +13,8 @@ import Http
 import Dict exposing (Dict)
 import List.Extra as List
 import ParseInt
-import Data.Chain exposing (BlockID, Block, OperationID, ParsedOperation, Base58CheckEncodedSHA256, SubOperation(..), getBranchList)
+import RemoteData
+import Data.Chain as Chain exposing (BlockID, Block, OperationID, ParsedOperation, Base58CheckEncodedSHA256, SubOperation(..), getBranchList)
 import Data.Schema as Schema
 import Model exposing (..)
 import Page
@@ -63,6 +64,9 @@ view model =
 
                 Loaded (Page.ChainAt hash) ->
                     viewChainAt model hash
+
+                Loaded Page.Contracts ->
+                    viewContracts model
 
                 Loaded Page.Errors ->
                     viewError model.nodeUrl model.errors
@@ -424,7 +428,7 @@ viewOperationsTable operations =
                     ]
                 ]
 
-        viewSourceMaybe : Maybe Data.Chain.SourceID -> String
+        viewSourceMaybe : Maybe Chain.SourceID -> String
         viewSourceMaybe sourceMaybe =
             Maybe.map shortHash sourceMaybe |> Maybe.withDefault "[no source]"
 
@@ -468,6 +472,31 @@ viewChainAt model hash =
         , getBranchList model.chain hash
             |> viewBranch 24 model (Just hash)
         ]
+
+
+viewContracts : Model -> Html Msg
+viewContracts model =
+    H.div []
+        [ H.h3 [] [ H.text "Contracts" ]
+        , case model.chain.contracts of
+            RemoteData.Success contracts ->
+                viewContractList contracts
+
+            RemoteData.Loading ->
+                H.text "loading ..."
+
+            _ ->
+                H.text (toString model.chain.contracts)
+        ]
+
+
+viewContractList : Chain.Contracts -> Html Msg
+viewContractList contracts =
+    let
+        viewContract contract =
+            H.li [] [ H.span [ HA.class "hash" ] [ H.text contract ] ]
+    in
+        H.ul [] (List.map viewContract (List.sort contracts))
 
 
 viewError : String -> List Error -> Html Msg
