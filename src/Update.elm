@@ -33,6 +33,7 @@ type Msg
     | ShowBranch BlockID
     | LoadHeads (Result Http.Error Chain.BlocksData)
     | LoadContracts (Result Http.Error Chain.Contracts)
+    | LoadKeys (Result Http.Error (List Chain.Key))
     | Tick Time
     | SetRoute (Maybe Route)
     | ClearErrors
@@ -149,6 +150,19 @@ updatePage page msg model =
                     , Cmd.none
                     )
 
+        ( LoadKeys keysResult, _ ) ->
+            case keysResult of
+                Ok keys ->
+                    ( { model | chain = Chain.loadKeys model.chain keys }, Cmd.none )
+
+                Err error ->
+                    ( { model
+                        | errors = HttpError error :: model.errors
+                        , chain = Chain.loadKeysError model.chain error
+                      }
+                    , Cmd.none
+                    )
+
         ( ShowBlock blockhash, _ ) ->
             ( model
             , Cmd.batch
@@ -221,6 +235,14 @@ setRoute routeMaybe model =
                 , chain = Chain.loadingContracts model.chain
               }
             , getContracts model
+            )
+
+        Just Route.Keys ->
+            ( { model
+                | pageState = Loaded Page.Keys
+                , chain = Chain.loadingKeys model.chain
+              }
+            , getKeys model
             )
 
         Just Route.Schema ->
@@ -337,6 +359,11 @@ getAllBlocksOperations model =
 getContracts : Model -> Cmd Msg
 getContracts model =
     Request.Block.getContracts model.nodeUrl |> Http.send LoadContracts
+
+
+getKeys : Model -> Cmd Msg
+getKeys model =
+    Request.Block.getKeys model.nodeUrl |> Http.send LoadKeys
 
 
 updateMonitor : Decode.Value -> Model -> ( Model, Cmd Msg )

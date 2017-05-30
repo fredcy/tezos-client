@@ -42,3 +42,12 @@ getContracts nodeUrl =
             nodeUrl ++ "/blocks/head/proto/context/contracts"
     in
         Http.post url emptyJsonBody Chain.decodeContracts
+
+
+getKeys: URL -> Http.Request (List Chain.Key)
+getKeys nodeUrl =
+    let
+        url =
+            nodeUrl ++ "/blocks/head/proto/context/keys"
+    in
+        Http.post url emptyJsonBody Chain.decodeKeys

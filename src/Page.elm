@@ -14,5 +14,6 @@ type Page
     | Operation OperationID
     | ChainAt BlockID
     | Contracts
+    | Keys
     | Errors
     | Debug

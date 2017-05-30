@@ -13,7 +13,7 @@ import Http
 import Dict exposing (Dict)
 import List.Extra as List
 import ParseInt
-import RemoteData
+import RemoteData exposing (RemoteData)
 import Data.Chain as Chain exposing (BlockID, Block, OperationID, ParsedOperation, Base58CheckEncodedSHA256, SubOperation(..), getBranchList)
 import Data.Schema as Schema
 import Model exposing (..)
@@ -67,6 +67,9 @@ view model =
 
                 Loaded Page.Contracts ->
                     viewContracts model
+
+                Loaded Page.Keys ->
+                    viewKeys model.chain.keys
 
                 Loaded Page.Errors ->
                     viewError model.nodeUrl model.errors
@@ -497,6 +500,45 @@ viewContractList contracts =
             H.li [] [ H.span [ HA.class "hash" ] [ H.text contract ] ]
     in
         H.ul [] (List.map viewContract (List.sort contracts))
+
+
+viewKeys : RemoteData Http.Error (List Chain.Key) -> Html Msg
+viewKeys keysData =
+    H.div []
+        [ H.h3 [] [ H.text "Keys " ]
+        , case keysData of
+            RemoteData.Success keys ->
+                viewKeyList keys
+
+            RemoteData.Loading ->
+                H.text "loading ..."
+
+            _ ->
+                H.text (toString keysData)
+        ]
+
+
+viewKeyList : List Chain.Key -> Html Msg
+viewKeyList keys =
+    let
+        tableHead =
+            H.thead []
+                [ H.tr []
+                    [ H.th [] [ H.text "hash" ]
+                    , H.th [] [ H.text "public_key" ]
+                    ]
+                ]
+
+        tableBody keys =
+            H.tbody [] (List.map tableRow keys)
+
+        tableRow key =
+            H.tr []
+                [ H.td [] [ H.span [ HA.class "hash" ] [ H.text key.hash ] ]
+                , H.td [] [ H.span [ HA.class "hash" ] [ H.text key.public_key ] ]
+                ]
+    in
+        H.table [ HA.class "keys" ] [ tableHead, tableBody keys ]
 
 
 viewError : String -> List Error -> Html Msg

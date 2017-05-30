@@ -101,6 +101,12 @@ type alias Contracts =
     List Base58CheckEncodedSHA256
 
 
+type alias Key =
+    { hash : Base58CheckEncodedSHA256
+    , public_key : Base58CheckEncodedSHA256
+    }
+
+
 type alias Model =
     { heads : List BlockID
     , blocks : Dict BlockID Block
@@ -108,6 +114,7 @@ type alias Model =
     , parsedOperations : Dict OperationID ParsedOperation
     , blockOperations : Dict BlockID (List OperationID)
     , contracts : RemoteData Http.Error Contracts
+    , keys : RemoteData Http.Error (List Key)
     }
 
 
@@ -119,6 +126,7 @@ init =
     , parsedOperations = Dict.empty
     , blockOperations = Dict.empty
     , contracts = RemoteData.NotAsked
+    , keys = RemoteData.NotAsked
     }
 
 
@@ -272,6 +280,21 @@ loadingContracts model =
     { model | contracts = RemoteData.Loading }
 
 
+loadingKeys : Model -> Model
+loadingKeys model =
+    { model | keys = RemoteData.Loading }
+
+
+loadKeys : Model -> List Key -> Model
+loadKeys model keys =
+    { model | keys = RemoteData.Success keys }
+
+
+loadKeysError : Model -> Http.Error -> Model
+loadKeysError model error =
+    { model | keys = RemoteData.Failure error }
+
+
 
 -- Decoders
 
@@ -318,3 +341,15 @@ decodeLevel =
 decodeContracts : Decode.Decoder Contracts
 decodeContracts =
     Decode.field "ok" (Decode.list Decode.string)
+
+
+decodeKey : Decode.Decoder Key
+decodeKey =
+    Decode.succeed Key
+        |> Decode.required "hash" Decode.string
+        |> Decode.required "public_key" Decode.string
+
+
+decodeKeys : Decode.Decoder (List Key)
+decodeKeys =
+    Decode.field "ok" (Decode.list decodeKey)

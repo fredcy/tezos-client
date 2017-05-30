@@ -154,6 +154,10 @@ table.blockchain td {
     padding: .4em;
 }
 
+table.keys td {
+    padding: .4em;
+}
+
 td.timestamp {
     white-space: nowrap;
 }

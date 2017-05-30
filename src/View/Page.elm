@@ -56,6 +56,7 @@ links =
     , ( "Heads", Route.Heads )
     , ( "Operations", Route.Operations )
     , ( "Contracts", Route.Contracts )
+    , ( "Keys", Route.Keys )
     , ( "Schemas", Route.Schema )
 
     --, ( "Debug", Route.Debug )
