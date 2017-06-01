@@ -107,6 +107,16 @@ type alias Key =
     }
 
 
+type alias Peer =
+    { hash : Base58CheckEncodedSHA256
+    , info : PeerInfo
+    }
+
+
+type alias PeerInfo =
+    Decode.Value
+
+
 type alias Model =
     { heads : List BlockID
     , blocks : Dict BlockID Block
@@ -115,6 +125,7 @@ type alias Model =
     , blockOperations : Dict BlockID (List OperationID)
     , contracts : RemoteData Http.Error Contracts
     , keys : RemoteData Http.Error (List Key)
+    , peers : RemoteData Http.Error (List Peer)
     }
 
 
@@ -127,6 +138,7 @@ init =
     , blockOperations = Dict.empty
     , contracts = RemoteData.NotAsked
     , keys = RemoteData.NotAsked
+    , peers = RemoteData.NotAsked
     }
 
 
@@ -295,6 +307,21 @@ loadKeysError model error =
     { model | keys = RemoteData.Failure error }
 
 
+loadingPeers : Model -> Model
+loadingPeers model =
+    { model | peers = RemoteData.Loading }
+
+
+loadPeers : Model -> List Peer -> Model
+loadPeers model peers =
+    { model | peers = RemoteData.Success peers }
+
+
+loadPeersError : Model -> Http.Error -> Model
+loadPeersError model error =
+    { model | peers = RemoteData.Failure error }
+
+
 
 -- Decoders
 
@@ -353,3 +380,37 @@ decodeKey =
 decodeKeys : Decode.Decoder (List Key)
 decodeKeys =
     Decode.field "ok" (Decode.list decodeKey)
+
+
+decodePeers : Decode.Decoder (List Peer)
+decodePeers =
+    Decode.list decodePeer
+
+
+type Item
+    = ItemString String
+    | ItemValue Decode.Value
+
+
+decodePeer : Decode.Decoder Peer
+decodePeer =
+    let
+        decodeString =
+            Decode.map ItemString Decode.string
+
+        decodeValue =
+            Decode.map ItemValue Decode.value
+
+        decodeItem =
+            Decode.oneOf [ decodeString, decodeValue ]
+    in
+        Decode.list decodeItem
+            |> Decode.andThen
+                (\list ->
+                    case list of
+                        [ ItemString string, ItemValue value ] ->
+                            Decode.succeed (Peer string value)
+
+                        _ ->
+                            Decode.fail "bad peer"
+                )

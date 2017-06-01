@@ -34,6 +34,7 @@ type Msg
     | LoadHeads (Result Http.Error Chain.BlocksData)
     | LoadContracts (Result Http.Error Chain.Contracts)
     | LoadKeys (Result Http.Error (List Chain.Key))
+    | LoadPeers (Result Http.Error (List Chain.Peer))
     | Tick Time
     | SetRoute (Maybe Route)
     | ClearErrors
@@ -163,6 +164,19 @@ updatePage page msg model =
                     , Cmd.none
                     )
 
+        ( LoadPeers peersResult, _ ) ->
+            case peersResult of
+                Ok peers ->
+                    ( { model | chain = Chain.loadPeers model.chain peers }, Cmd.none )
+
+                Err error ->
+                    ( { model
+                        | errors = HttpError error :: model.errors
+                        , chain = Chain.loadPeersError model.chain error
+                      }
+                    , Cmd.none
+                    )
+
         ( ShowBlock blockhash, _ ) ->
             ( model
             , Cmd.batch
@@ -243,6 +257,14 @@ setRoute routeMaybe model =
                 , chain = Chain.loadingKeys model.chain
               }
             , getKeys model
+            )
+
+        Just Route.Peers ->
+            ( { model
+                | pageState = Loaded Page.Peers
+                , chain = Chain.loadingPeers model.chain
+              }
+            , getPeers model
             )
 
         Just Route.Schema ->
@@ -364,6 +386,11 @@ getContracts model =
 getKeys : Model -> Cmd Msg
 getKeys model =
     Request.Block.getKeys model.nodeUrl |> Http.send LoadKeys
+
+
+getPeers : Model -> Cmd Msg
+getPeers model =
+    Request.Block.getPeers model.nodeUrl |> Http.send LoadPeers
 
 
 updateMonitor : Decode.Value -> Model -> ( Model, Cmd Msg )

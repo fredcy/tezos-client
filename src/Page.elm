@@ -15,5 +15,6 @@ type Page
     | ChainAt BlockID
     | Contracts
     | Keys
+    | Peers
     | Errors
     | Debug

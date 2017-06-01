@@ -35,7 +35,8 @@ getChainStartingAt nodeUrl length blockhash =
     in
         Http.post url body Chain.decodeBlocks
 
-getContracts: URL -> Http.Request Chain.Contracts
+
+getContracts : URL -> Http.Request Chain.Contracts
 getContracts nodeUrl =
     let
         url =
@@ -44,10 +45,21 @@ getContracts nodeUrl =
         Http.post url emptyJsonBody Chain.decodeContracts
 
 
-getKeys: URL -> Http.Request (List Chain.Key)
+getKeys : URL -> Http.Request (List Chain.Key)
 getKeys nodeUrl =
     let
         url =
             nodeUrl ++ "/blocks/head/proto/context/keys"
     in
         Http.post url emptyJsonBody Chain.decodeKeys
+
+
+{-| TODO : move to different module?
+-}
+getPeers : URL -> Http.Request (List Chain.Peer)
+getPeers nodeUrl =
+    let
+        url =
+            nodeUrl ++ "/network/peer_id"
+    in
+        Http.post url emptyJsonBody Chain.decodePeers

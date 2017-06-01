@@ -15,6 +15,7 @@ type Route
     | ChainAt BlockID
     | Contracts
     | Keys
+    | Peers
     | Schema
     | Heads
     | Errors
@@ -33,6 +34,7 @@ route =
         , Url.map ChainAt (s "chainat" </> Url.string)
         , Url.map Contracts (s "contracts")
         , Url.map Keys (s "keys")
+        , Url.map Peers (s "peers")
         , Url.map Schema (s "schema")
         , Url.map Debug (s "debug")
         , Url.map Errors (s "errors")
@@ -64,6 +66,9 @@ routeToString route =
 
                 Keys ->
                     [ "keys" ]
+
+                Peers ->
+                    [ "peers" ]
 
                 Schema ->
                     [ "schema" ]

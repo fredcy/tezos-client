@@ -71,6 +71,9 @@ view model =
                 Loaded Page.Keys ->
                     viewKeys model.chain.keys
 
+                Loaded Page.Peers ->
+                    viewPeers model.chain.peers
+
                 Loaded Page.Errors ->
                     viewError model.nodeUrl model.errors
 
@@ -539,6 +542,31 @@ viewKeyList keys =
                 ]
     in
         H.table [ HA.class "keys" ] [ tableHead, tableBody keys ]
+
+
+viewPeers : RemoteData Http.Error (List Chain.Peer) -> Html Msg
+viewPeers peersData =
+    H.div []
+        [ H.h3 [] [ H.text "Peers" ]
+        , case peersData of
+            RemoteData.Success peers ->
+                viewPeersList peers
+
+            _ ->
+                H.text (toString peersData)
+        ]
+
+
+viewPeersList : List Chain.Peer -> Html Msg
+viewPeersList peers =
+    let
+        row peer =
+            H.tr [] [ H.text (toString peer) ]
+
+        body =
+            H.tbody [] (List.map row peers)
+    in
+        H.table [] [ body ]
 
 
 viewError : String -> List Error -> Html Msg
