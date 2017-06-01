@@ -557,16 +557,67 @@ viewPeers peersData =
         ]
 
 
+simplifyHost : String -> String
+simplifyHost host =
+    let
+        prefix =
+            "::ffff:"
+    in
+        if String.startsWith prefix host then
+            String.dropLeft (String.length prefix) host
+        else
+            host
+
+
+viewAddress : Chain.Address -> Html Msg
+viewAddress address =
+    H.span []
+        [ H.text (simplifyHost address.addr)
+        , H.text ":"
+        , H.text (toString address.port_)
+        ]
+
+
+viewConnection : Maybe Chain.Connection -> Html Msg
+viewConnection connectionM =
+    case connectionM of
+        Just connection ->
+            H.div [ HA.class "connection" ]
+                [ viewAddress connection.addr
+                , H.text " "
+                , H.span [ HA.class "timestamp" ] [ H.text (formatDate connection.time) ]
+                ]
+
+        Nothing ->
+            H.text ""
+
+
 viewPeersList : List Chain.Peer -> Html Msg
 viewPeersList peers =
     let
         row peer =
-            H.tr [] [ H.text (toString peer) ]
+            H.tr []
+                [ H.td [ HA.class "hash" ] [ H.text (shortHash peer.hash) ]
+                , H.td [] [ H.text peer.info.state ]
+                , H.td [] [ H.text (toString peer.info.trusted) ]
+                , H.td [] [ H.text (toString peer.info.score) ]
+                , H.td [ HA.class "number" ] [ H.text (toString peer.info.stat.total_sent) ]
+                , H.td [ HA.class "number" ] [ H.text (toString peer.info.stat.total_recv) ]
+                , H.td [] [ viewConnection peer.info.lastConnection ]
 
-        body =
+                --, H.td [] [ H.text (toString peer.info.value) ]
+                ]
+
+        colHeader label =
+            H.th [] [ H.text label ]
+
+        thead =
+            H.thead [] (List.map colHeader [ "id", "state", "trusted", "score", "sent", "recv", "last connection" ])
+
+        tbody =
             H.tbody [] (List.map row peers)
     in
-        H.table [] [ body ]
+        H.table [ HA.class "peers" ] [ thead, tbody ]
 
 
 viewError : String -> List Error -> Html Msg

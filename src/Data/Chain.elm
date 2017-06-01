@@ -114,7 +114,32 @@ type alias Peer =
 
 
 type alias PeerInfo =
-    Decode.Value
+    { value : Decode.Value
+    , state : String
+    , stat : PeerStats
+    , trusted : Bool
+    , score : Int
+    , lastConnection : Maybe Connection
+    }
+
+
+type alias Connection =
+    { addr : Address
+    , time : Timestamp
+    }
+
+type alias Address =
+    { addr: String
+    , port_: Int
+    }
+
+
+type alias PeerStats =
+    { total_sent : Int
+    , total_recv : Int
+    , current_inflow : Int
+    , current_outflow : Int
+    }
 
 
 type alias Model =
@@ -389,7 +414,7 @@ decodePeers =
 
 type Item
     = ItemString String
-    | ItemValue Decode.Value
+    | ItemValue PeerInfo
 
 
 decodePeer : Decode.Decoder Peer
@@ -399,7 +424,7 @@ decodePeer =
             Decode.map ItemString Decode.string
 
         decodeValue =
-            Decode.map ItemValue Decode.value
+            Decode.map ItemValue decodePeerInfo
 
         decodeItem =
             Decode.oneOf [ decodeString, decodeValue ]
@@ -414,3 +439,60 @@ decodePeer =
                         _ ->
                             Decode.fail "bad peer"
                 )
+
+
+decodePeerInfo : Decode.Decoder PeerInfo
+decodePeerInfo =
+    Decode.value
+        |> Decode.andThen
+            (\value ->
+                Decode.succeed PeerInfo
+                    |> Decode.hardcoded value
+                    |> Decode.required "state" Decode.string
+                    |> Decode.required "stat" decodePeerStats
+                    |> Decode.required "trusted" Decode.bool
+                    |> Decode.required "score" Decode.int
+                    |> Decode.optional "last_established_connection" (Decode.map Just decodeConnection) Nothing
+            )
+
+
+decodePeerStats : Decode.Decoder PeerStats
+decodePeerStats =
+    Decode.succeed PeerStats
+        |> Decode.required "total_sent" Decode.int
+        |> Decode.required "total_recv" Decode.int
+        |> Decode.required "current_inflow" Decode.int
+        |> Decode.required "current_outflow" Decode.int
+
+
+type AddressItem
+    = AddressTime Timestamp
+    | AddressAddr Address
+
+
+decodeConnection : Decode.Decoder Connection
+decodeConnection =
+    let
+        decodeAddrItem =
+            Decode.oneOf
+                [ Decode.map AddressTime decodeTimestamp
+                , Decode.map AddressAddr decodeAddress
+                ]
+    in
+        Decode.list decodeAddrItem
+            |> Decode.andThen
+                (\list ->
+                    case list of
+                        [ AddressAddr addr, AddressTime time ] ->
+                            Decode.succeed (Connection addr time)
+
+                        _ ->
+                            Decode.fail "address decode failed"
+                )
+
+
+decodeAddress : Decode.Decoder Address
+decodeAddress =
+    Decode.succeed Address
+        |> Decode.required "addr" Decode.string
+        |> Decode.required "port" Decode.int

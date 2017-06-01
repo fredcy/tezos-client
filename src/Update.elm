@@ -50,7 +50,7 @@ update msg model =
 
 updatePage : Page -> Msg -> Model -> ( Model, Cmd Msg )
 updatePage page msg model =
-    case ( msg, page ) of
+    case ( Debug.log "msg" msg, page ) of
         ( LoadBlocks blocksMaybe, _ ) ->
             case blocksMaybe of
                 Ok blockChains ->

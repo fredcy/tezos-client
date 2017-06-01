@@ -158,6 +158,15 @@ table.keys td {
     padding: .4em;
 }
 
+table.peers td,
+table.peers th {
+    padding: .4em;
+}
+
+.connection .timestamp {
+    white-space: nowrap;
+}
+
 td.timestamp {
     white-space: nowrap;
 }
@@ -189,6 +198,10 @@ td.predecessor, div.predecessor,
     font-family: Andale Mono, Courier New, monospace;
 }
 
+
+.number {
+    text-align: right;
+}
 
 tr.selected {
     background-color: yellow;

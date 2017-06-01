@@ -57,6 +57,7 @@ links =
     , ( "Operations", Route.Operations )
     , ( "Contracts", Route.Contracts )
     , ( "Keys", Route.Keys )
+    , ( "Peers", Route.Peers )
     , ( "Schemas", Route.Schema )
 
     --, ( "Debug", Route.Debug )
