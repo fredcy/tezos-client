@@ -15182,75 +15182,123 @@ var _user$project$Data_Chain$addChainBlocks = F2(
 	function (chain, blocks) {
 		return A3(_elm_lang$core$List$foldl, _user$project$Data_Chain$addBlock, blocks, chain);
 	});
-var _user$project$Data_Chain$updateHeads = F2(
-	function (newChain, heads) {
-		var replace2 = F2(
-			function (oldhead, newhead) {
-				var help = F2(
-					function (hash, _p3) {
-						var _p4 = _p3;
-						var _p7 = _p4._0;
-						var _p6 = _p4._1;
-						if (_elm_lang$core$Native_Utils.eq(hash, oldhead)) {
-							var _p5 = A2(
-								_elm_lang$core$Debug$log,
-								'replace head ->',
-								{ctor: '_Tuple3', _0: _p7, _1: oldhead, _2: newhead});
-							return {
-								ctor: '_Tuple2',
-								_0: _p7 + 1,
-								_1: {ctor: '::', _0: newhead, _1: _p6}
-							};
-						} else {
-							return {
-								ctor: '_Tuple2',
-								_0: _p7 + 1,
-								_1: {ctor: '::', _0: hash, _1: _p6}
-							};
-						}
-					});
-				return _elm_lang$core$List$reverse(
-					_elm_lang$core$Tuple$second(
-						A3(
-							_elm_lang$core$List$foldr,
-							help,
-							{
-								ctor: '_Tuple2',
-								_0: 0,
-								_1: {ctor: '[]'}
-							},
-							_elm_lang$core$List$reverse(heads))));
-			});
-		var replace = F2(
-			function (oldhead, newhead) {
+var _user$project$Data_Chain$fitnessGreater = F2(
+	function (a, b) {
+		var _p3 = {ctor: '_Tuple2', _0: a, _1: b};
+		if (((_p3.ctor === '_Tuple2') && (_p3._0.ctor === '::')) && (_p3._1.ctor === '::')) {
+			return A2(
+				_elm_lang$core$Result$withDefault,
+				false,
+				A2(
+					_elm_lang$core$Result$mapError,
+					_elm_lang$core$Debug$log('fitnessGreater error'),
+					A2(
+						_elm_lang$core$Result$andThen,
+						function (aInt) {
+							return A2(
+								_elm_lang$core$Result$map,
+								function (bInt) {
+									return _elm_lang$core$Native_Utils.eq(aInt, bInt) ? A2(_user$project$Data_Chain$fitnessGreater, _p3._0._1, _p3._1._1) : (_elm_lang$core$Native_Utils.cmp(aInt, bInt) > 0);
+								},
+								_fredcy$elm_parseint$ParseInt$parseIntHex(_p3._1._0));
+						},
+						_fredcy$elm_parseint$ParseInt$parseIntHex(_p3._0._0))));
+		} else {
+			return A2(
+				_elm_lang$core$Debug$log,
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					'error: fitnessGreater-2: ',
+					_elm_lang$core$Basics$toString(
+						{ctor: '_Tuple2', _0: a, _1: b})),
+				false);
+		}
+	});
+var _user$project$Data_Chain$fitnessGreaterDebug = F2(
+	function (a, b) {
+		return A2(
+			_elm_lang$core$Debug$log,
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				'fitnessGreater ',
+				_elm_lang$core$Basics$toString(
+					{ctor: '_Tuple2', _0: a, _1: b})),
+			A2(_user$project$Data_Chain$fitnessGreater, a, b));
+	});
+var _user$project$Data_Chain$insertHead = F3(
+	function (blocks, newHead, heads) {
+		var _p4 = heads;
+		if (_p4.ctor === '[]') {
+			return {ctor: '[]'};
+		} else {
+			var _p7 = _p4._1;
+			var _p6 = _p4._0;
+			var blockMaybe = A2(_elm_lang$core$Dict$get, _p6, blocks);
+			var _p5 = blockMaybe;
+			if (_p5.ctor === 'Just') {
+				return A2(_user$project$Data_Chain$fitnessGreaterDebug, newHead.fitness, _p5._0.fitness) ? {
+					ctor: '::',
+					_0: newHead.hash,
+					_1: {ctor: '::', _0: _p6, _1: _p7}
+				} : {
+					ctor: '::',
+					_0: _p6,
+					_1: A3(_user$project$Data_Chain$insertHead, blocks, newHead, _p7)
+				};
+			} else {
+				return A2(_elm_lang$core$Debug$log, 'error: insertHead failed', heads);
+			}
+		}
+	});
+var _user$project$Data_Chain$updateExistingHead = F3(
+	function (newHead, predHash, heads) {
+		return A2(
+			_elm_lang$core$Maybe$map,
+			function (_p8) {
 				return A3(
 					_elm_community$list_extra$List_Extra$updateIf,
 					function (h) {
-						return _elm_lang$core$Native_Utils.eq(h, oldhead);
+						return _elm_lang$core$Native_Utils.eq(h, predHash);
 					},
-					function (_p8) {
-						return newhead;
+					function (_p9) {
+						return newHead;
 					},
 					heads);
-			});
-		var lastPredMaybe = A2(
-			_elm_lang$core$Maybe$map,
-			function (_) {
-				return _.predecessor;
 			},
-			_elm_community$list_extra$List_Extra$last(newChain));
-		var newHeadMaybe = A2(
-			_elm_lang$core$Maybe$map,
-			function (_) {
-				return _.hash;
-			},
-			_elm_lang$core$List$head(newChain));
-		var _p9 = {ctor: '_Tuple2', _0: lastPredMaybe, _1: newHeadMaybe};
-		if (((_p9.ctor === '_Tuple2') && (_p9._0.ctor === 'Just')) && (_p9._1.ctor === 'Just')) {
-			return A2(replace2, _p9._0._0, _p9._1._0);
-		} else {
-			return heads;
-		}
+			A2(
+				_elm_lang$core$Maybe$map,
+				_elm_lang$core$Debug$log('replacing head at index'),
+				A2(
+					_elm_community$list_extra$List_Extra$findIndex,
+					function (h) {
+						return _elm_lang$core$Native_Utils.eq(h, predHash);
+					},
+					heads)));
+	});
+var _user$project$Data_Chain$updateHeads = F3(
+	function (blocks, newChain, heads) {
+		return A2(
+			_elm_lang$core$Maybe$withDefault,
+			heads,
+			A2(
+				_elm_lang$core$Maybe$andThen,
+				function (newhead) {
+					return A2(
+						_elm_lang$core$Maybe$map,
+						function (newpredhash) {
+							return A2(
+								_elm_lang$core$Maybe$withDefault,
+								A3(_user$project$Data_Chain$insertHead, blocks, newhead, heads),
+								A3(_user$project$Data_Chain$updateExistingHead, newhead.hash, newpredhash, heads));
+						},
+						A2(
+							_elm_lang$core$Maybe$map,
+							function (_) {
+								return _.predecessor;
+							},
+							_elm_community$list_extra$List_Extra$last(newChain)));
+				},
+				_elm_lang$core$List$head(newChain)));
 	});
 var _user$project$Data_Chain$loadBlocks = F2(
 	function (model, blocksData) {
@@ -15277,8 +15325,12 @@ var _user$project$Data_Chain$loadHeads = F2(
 	});
 var _user$project$Data_Chain$updateMonitor = F2(
 	function (model, headsData) {
-		var newHeads = A3(_elm_lang$core$List$foldr, _user$project$Data_Chain$updateHeads, model.heads, headsData);
 		var newModel = A2(_user$project$Data_Chain$loadBlocks, model, headsData);
+		var newHeads = A3(
+			_elm_lang$core$List$foldr,
+			_user$project$Data_Chain$updateHeads(newModel.blocks),
+			newModel.heads,
+			headsData);
 		return _elm_lang$core$Native_Utils.update(
 			newModel,
 			{heads: newHeads});

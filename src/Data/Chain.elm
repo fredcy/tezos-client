@@ -6,6 +6,7 @@ import Http
 import Json.Decode as Decode
 import Json.Decode.Pipeline as Decode
 import List.Extra
+import ParseInt
 import RemoteData exposing (RemoteData)
 import Set
 
@@ -235,48 +236,78 @@ with the head of the new chain.
 TODO: What if it's a new chain?
 
 -}
-updateHeads : List Block -> List BlockID -> List BlockID
-updateHeads newChain heads =
-    let
-        newHeadMaybe : Maybe BlockID
-        newHeadMaybe =
-            List.head newChain |> Maybe.map .hash
+updateHeads : Dict BlockID Block -> List Block -> List BlockID -> List BlockID
+updateHeads blocks newChain heads =
+    List.head newChain
+        |> Maybe.andThen
+            (\newhead ->
+                List.Extra.last newChain
+                    |> Maybe.map .predecessor
+                    |> Maybe.map
+                        (\newpredhash ->
+                            updateExistingHead newhead.hash newpredhash heads
+                                |> Maybe.withDefault (insertHead blocks newhead heads)
+                        )
+            )
+        |> Maybe.withDefault heads
 
-        lastPredMaybe : Maybe BlockID
-        lastPredMaybe =
-            List.Extra.last newChain |> Maybe.map .predecessor
 
-        replace : BlockID -> BlockID -> List BlockID
-        replace oldhead newhead =
-            List.Extra.updateIf (\h -> h == oldhead) (\_ -> newhead) heads
+updateExistingHead : BlockID -> BlockID -> List BlockID -> Maybe (List BlockID)
+updateExistingHead newHead predHash heads =
+    List.Extra.findIndex (\h -> h == predHash) heads
+        |> Maybe.map (Debug.log "replacing head at index")
+        |> Maybe.map
+            (\_ -> List.Extra.updateIf (\h -> h == predHash) (\_ -> newHead) heads)
 
-        -- Do the list-update explicitly so that we can log details of what is
-        -- done. The use of `i` and the list reversals are just so we can report
-        -- the index of the replaced head.
-        replace2 : BlockID -> BlockID -> List BlockID
-        replace2 oldhead newhead =
+
+insertHead : Dict BlockID Block -> Block -> List BlockID -> List BlockID
+insertHead blocks newHead heads =
+    case heads of
+        [] ->
+            []
+
+        head :: tail ->
             let
-                help hash ( i, headsAccum ) =
-                    if hash == oldhead then
-                        let
-                            _ =
-                                Debug.log "replace head ->" ( i, oldhead, newhead )
-                        in
-                            ( i + 1, newhead :: headsAccum )
-                    else
-                        ( i + 1, hash :: headsAccum )
+                blockMaybe =
+                    Dict.get head blocks
             in
-                List.reverse heads
-                    |> List.foldr help ( 0, [] )
-                    |> Tuple.second
-                    |> List.reverse
-    in
-        case ( lastPredMaybe, newHeadMaybe ) of
-            ( Just predecessor, Just newhead ) ->
-                replace2 predecessor newhead
+                case blockMaybe of
+                    Just block ->
+                        if fitnessGreaterDebug newHead.fitness block.fitness then
+                            newHead.hash :: head :: tail
+                        else
+                            head :: insertHead blocks newHead tail
 
-            _ ->
-                heads
+                    Nothing ->
+                        Debug.log "error: insertHead failed" heads
+
+
+fitnessGreaterDebug a b =
+    fitnessGreater a b
+        |> Debug.log ("fitnessGreater " ++ toString ( a, b ))
+
+
+fitnessGreater : List Fitness -> List Fitness -> Bool
+fitnessGreater a b =
+    case ( a, b ) of
+        ( aFirst :: aRest, bFirst :: bRest ) ->
+            ParseInt.parseIntHex aFirst
+                |> Result.andThen
+                    (\aInt ->
+                        ParseInt.parseIntHex bFirst
+                            |> Result.map
+                                (\bInt ->
+                                    if aInt == bInt then
+                                        fitnessGreater aRest bRest
+                                    else
+                                        aInt > bInt
+                                )
+                    )
+                |> Result.mapError (Debug.log "fitnessGreater error")
+                |> Result.withDefault False
+
+        _ ->
+            Debug.log ("error: fitnessGreater-2: " ++ toString ( a, b )) False
 
 
 updateMonitor : Model -> BlocksData -> Model
@@ -286,7 +317,7 @@ updateMonitor model headsData =
             loadBlocks model headsData
 
         newHeads =
-            List.foldr updateHeads model.heads headsData
+            List.foldr (updateHeads newModel.blocks) newModel.heads headsData
     in
         { newModel | heads = newHeads }
 

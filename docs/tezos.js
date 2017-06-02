@@ -24,27 +24,43 @@
         console.log("updateProgress", timeDisplay(), evt);
 
         // Get all the text received since the stream last settled with a valid chunk.
-        var new_response = xhr.responseText.substring(previous_text.length);
+        var new_response = xhr.responseText.substring(lengthParsed);
 
         console.log("updateProgress text", new_response);
 
-        try {
-            // Try to parse the chunk received so far.
-            var result = JSON.parse(new_response);
+        // One new chunk in the response stream can contain several JSON
+        // units. Try to break them apart and handle separately.
+        var units = new_response.split(/}{/);
+        console.log("units", units.length);
 
-            // If we get here (because no exception happened) then we have a
-            // complete JSON data object. We take that to mean that the stream
-            // has settled and we have the next chunk that we can deliver to the
-            // app.
-            previous_text = xhr.responseText;
-            app.ports.monitor.send(result);
-        } catch (e) {
-            console.log("updateProgress exception", e);
-            if (e.name != "SyntaxError") {
-                console.log("JSON.parse exception", e);
+        for (var i = 0; i < units.length; i++) {
+            var unit = units[i];
+            // add back the delimiters that we split by
+            if (i > 0) {
+                unit = "{" + unit;
             }
-            // else new_response is not well-formed JSON; wait for more and try again
+            if (i < units.length - 1) {
+                unit = unit + "}";
+            }
+            try {
+                var parsed = JSON.parse(unit);
+            } catch (e) {
+                console.log("parse failure", i, unit.length, e);
+                break;
+            }
+            console.log("parsed", i, parsed);
+            app.ports.monitor.send(parsed);
         }
+
+        console.log("parsed n of m:", i, units.length);
+
+        // It's possible for one JSON unit to be large enough to require
+        // multiple response chunks, so we determine how much of the new input
+        // we were able to parse and adjust our progress mark only that far so
+        // that the incomplete chunk will be considered when the next chunk
+        // arrives.
+        var newlyParsedText = units.slice(0, i).join('}{');
+        lengthParsed += newlyParsedText.length;
     }
 
 
@@ -90,7 +106,7 @@
     xhr.addEventListener("abort", transferCancelled);
 
     // Keep state on stream received so far, up through latest complete chunk.
-    var previous_text = "";
+    var lengthParsed = 0;
 
     sendRequest();
 })();
