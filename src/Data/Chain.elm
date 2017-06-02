@@ -5,6 +5,7 @@ import Dict exposing (Dict)
 import Http
 import Json.Decode as Decode
 import Json.Decode.Pipeline as Decode
+import List.Extra
 import RemoteData exposing (RemoteData)
 import Set
 
@@ -128,9 +129,10 @@ type alias Connection =
     , time : Timestamp
     }
 
+
 type alias Address =
-    { addr: String
-    , port_: Int
+    { addr : String
+    , port_ : Int
     }
 
 
@@ -208,6 +210,8 @@ loadBlocks model blocksData =
         { model | blocks = newBlocks }
 
 
+{-| Load list of blocks known to be exactly the list of chain heads.
+-}
 loadHeads : Model -> BlocksData -> Model
 loadHeads model headsData =
     let
@@ -223,23 +227,66 @@ loadHeads model headsData =
         { newModel | heads = heads }
 
 
+{-| Given an incremental new chain (from "/blocks" API with monitor option),
+update the list of heads. Look for an existing head that matches up with the
+predecessory in the tail of that new chain. If found, replace that existing head
+with the head of the new chain.
+
+TODO: What if it's a new chain?
+
+-}
+updateHeads : List Block -> List BlockID -> List BlockID
+updateHeads newChain heads =
+    let
+        newHeadMaybe : Maybe BlockID
+        newHeadMaybe =
+            List.head newChain |> Maybe.map .hash
+
+        lastPredMaybe : Maybe BlockID
+        lastPredMaybe =
+            List.Extra.last newChain |> Maybe.map .predecessor
+
+        replace : BlockID -> BlockID -> List BlockID
+        replace oldhead newhead =
+            List.Extra.updateIf (\h -> h == oldhead) (\_ -> newhead) heads
+
+        -- Do the list-update explicitly so that we can log details of what is
+        -- done. The use of `i` and the list reversals are just so we can report
+        -- the index of the replaced head.
+        replace2 : BlockID -> BlockID -> List BlockID
+        replace2 oldhead newhead =
+            let
+                help hash ( i, headsAccum ) =
+                    if hash == oldhead then
+                        let
+                            _ =
+                                Debug.log "replace head ->" ( i, oldhead, newhead )
+                        in
+                            ( i + 1, newhead :: headsAccum )
+                    else
+                        ( i + 1, hash :: headsAccum )
+            in
+                List.reverse heads
+                    |> List.foldr help ( 0, [] )
+                    |> Tuple.second
+                    |> List.reverse
+    in
+        case ( lastPredMaybe, newHeadMaybe ) of
+            ( Just predecessor, Just newhead ) ->
+                replace2 predecessor newhead
+
+            _ ->
+                heads
+
+
 updateMonitor : Model -> BlocksData -> Model
 updateMonitor model headsData =
     let
         newModel =
             loadBlocks model headsData
 
-        newHeadHash : Maybe BlockID
-        newHeadHash =
-            List.map List.head headsData
-                |> List.filterMap identity
-                |> List.head
-                |> Maybe.map .hash
-
         newHeads =
-            newHeadHash
-                |> Maybe.map (\hash -> hash :: (List.tail model.heads |> Maybe.withDefault []))
-                |> Maybe.withDefault model.heads
+            List.foldr updateHeads model.heads headsData
     in
         { newModel | heads = newHeads }
 

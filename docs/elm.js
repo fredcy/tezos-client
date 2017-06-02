@@ -15182,6 +15182,76 @@ var _user$project$Data_Chain$addChainBlocks = F2(
 	function (chain, blocks) {
 		return A3(_elm_lang$core$List$foldl, _user$project$Data_Chain$addBlock, blocks, chain);
 	});
+var _user$project$Data_Chain$updateHeads = F2(
+	function (newChain, heads) {
+		var replace2 = F2(
+			function (oldhead, newhead) {
+				var help = F2(
+					function (hash, _p3) {
+						var _p4 = _p3;
+						var _p7 = _p4._0;
+						var _p6 = _p4._1;
+						if (_elm_lang$core$Native_Utils.eq(hash, oldhead)) {
+							var _p5 = A2(
+								_elm_lang$core$Debug$log,
+								'replace head ->',
+								{ctor: '_Tuple3', _0: _p7, _1: oldhead, _2: newhead});
+							return {
+								ctor: '_Tuple2',
+								_0: _p7 + 1,
+								_1: {ctor: '::', _0: newhead, _1: _p6}
+							};
+						} else {
+							return {
+								ctor: '_Tuple2',
+								_0: _p7 + 1,
+								_1: {ctor: '::', _0: hash, _1: _p6}
+							};
+						}
+					});
+				return _elm_lang$core$List$reverse(
+					_elm_lang$core$Tuple$second(
+						A3(
+							_elm_lang$core$List$foldr,
+							help,
+							{
+								ctor: '_Tuple2',
+								_0: 0,
+								_1: {ctor: '[]'}
+							},
+							_elm_lang$core$List$reverse(heads))));
+			});
+		var replace = F2(
+			function (oldhead, newhead) {
+				return A3(
+					_elm_community$list_extra$List_Extra$updateIf,
+					function (h) {
+						return _elm_lang$core$Native_Utils.eq(h, oldhead);
+					},
+					function (_p8) {
+						return newhead;
+					},
+					heads);
+			});
+		var lastPredMaybe = A2(
+			_elm_lang$core$Maybe$map,
+			function (_) {
+				return _.predecessor;
+			},
+			_elm_community$list_extra$List_Extra$last(newChain));
+		var newHeadMaybe = A2(
+			_elm_lang$core$Maybe$map,
+			function (_) {
+				return _.hash;
+			},
+			_elm_lang$core$List$head(newChain));
+		var _p9 = {ctor: '_Tuple2', _0: lastPredMaybe, _1: newHeadMaybe};
+		if (((_p9.ctor === '_Tuple2') && (_p9._0.ctor === 'Just')) && (_p9._1.ctor === 'Just')) {
+			return A2(replace2, _p9._0._0, _p9._1._0);
+		} else {
+			return heads;
+		}
+	});
 var _user$project$Data_Chain$loadBlocks = F2(
 	function (model, blocksData) {
 		var newBlocks = A3(_elm_lang$core$List$foldl, _user$project$Data_Chain$addChainBlocks, model.blocks, blocksData);
@@ -15207,32 +15277,7 @@ var _user$project$Data_Chain$loadHeads = F2(
 	});
 var _user$project$Data_Chain$updateMonitor = F2(
 	function (model, headsData) {
-		var newHeadHash = A2(
-			_elm_lang$core$Maybe$map,
-			function (_) {
-				return _.hash;
-			},
-			_elm_lang$core$List$head(
-				A2(
-					_elm_lang$core$List$filterMap,
-					_elm_lang$core$Basics$identity,
-					A2(_elm_lang$core$List$map, _elm_lang$core$List$head, headsData))));
-		var newHeads = A2(
-			_elm_lang$core$Maybe$withDefault,
-			model.heads,
-			A2(
-				_elm_lang$core$Maybe$map,
-				function (hash) {
-					return {
-						ctor: '::',
-						_0: hash,
-						_1: A2(
-							_elm_lang$core$Maybe$withDefault,
-							{ctor: '[]'},
-							_elm_lang$core$List$tail(model.heads))
-					};
-				},
-				newHeadHash));
+		var newHeads = A3(_elm_lang$core$List$foldr, _user$project$Data_Chain$updateHeads, model.heads, headsData);
 		var newModel = A2(_user$project$Data_Chain$loadBlocks, model, headsData);
 		return _elm_lang$core$Native_Utils.update(
 			newModel,
@@ -15457,10 +15502,10 @@ var _user$project$Data_Chain$decodeConnection = function () {
 	return A2(
 		_elm_lang$core$Json_Decode$andThen,
 		function (list) {
-			var _p3 = list;
-			if (((((_p3.ctor === '::') && (_p3._0.ctor === 'AddressAddr')) && (_p3._1.ctor === '::')) && (_p3._1._0.ctor === 'AddressTime')) && (_p3._1._1.ctor === '[]')) {
+			var _p10 = list;
+			if (((((_p10.ctor === '::') && (_p10._0.ctor === 'AddressAddr')) && (_p10._1.ctor === '::')) && (_p10._1._0.ctor === 'AddressTime')) && (_p10._1._1.ctor === '[]')) {
 				return _elm_lang$core$Json_Decode$succeed(
-					A2(_user$project$Data_Chain$Connection, _p3._0._0, _p3._1._0._0));
+					A2(_user$project$Data_Chain$Connection, _p10._0._0, _p10._1._0._0));
 			} else {
 				return _elm_lang$core$Json_Decode$fail('address decode failed');
 			}
@@ -15513,10 +15558,10 @@ var _user$project$Data_Chain$decodePeer = function () {
 	return A2(
 		_elm_lang$core$Json_Decode$andThen,
 		function (list) {
-			var _p4 = list;
-			if (((((_p4.ctor === '::') && (_p4._0.ctor === 'ItemString')) && (_p4._1.ctor === '::')) && (_p4._1._0.ctor === 'ItemValue')) && (_p4._1._1.ctor === '[]')) {
+			var _p11 = list;
+			if (((((_p11.ctor === '::') && (_p11._0.ctor === 'ItemString')) && (_p11._1.ctor === '::')) && (_p11._1._0.ctor === 'ItemValue')) && (_p11._1._1.ctor === '[]')) {
 				return _elm_lang$core$Json_Decode$succeed(
-					A2(_user$project$Data_Chain$Peer, _p4._0._0, _p4._1._0._0));
+					A2(_user$project$Data_Chain$Peer, _p11._0._0, _p11._1._0._0));
 			} else {
 				return _elm_lang$core$Json_Decode$fail('bad peer');
 			}

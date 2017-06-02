@@ -26,6 +26,8 @@
         // Get all the text received since the stream last settled with a valid chunk.
         var new_response = xhr.responseText.substring(previous_text.length);
 
+        console.log("updateProgress text", new_response);
+
         try {
             // Try to parse the chunk received so far.
             var result = JSON.parse(new_response);
@@ -37,6 +39,7 @@
             previous_text = xhr.responseText;
             app.ports.monitor.send(result);
         } catch (e) {
+            console.log("updateProgress exception", e);
             if (e.name != "SyntaxError") {
                 console.log("JSON.parse exception", e);
             }
