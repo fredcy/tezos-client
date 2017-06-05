@@ -149,8 +149,21 @@ type alias PeerStats =
     }
 
 
+type alias Delegate =
+    { value : ContractID
+    , setable : Bool
+    }
+
+
 type alias Contract =
-    Decode.Value
+    { raw : Decode.Value
+    , counter : Int
+    , balance : Int
+    , spendable : Bool
+    , manager : ContractID
+    , delegate : Delegate
+    , script : Maybe Decode.Value
+    }
 
 
 type alias Model =
@@ -613,4 +626,25 @@ decodeAddress =
 
 decodeContract : Decode.Decoder Contract
 decodeContract =
+    -- Get raw value first so we can save it with the data for debugging.
     Decode.value
+        |> Decode.andThen
+            (\raw ->
+                Decode.field "ok"
+                    (Decode.succeed Contract
+                        |> Decode.hardcoded raw
+                        |> Decode.required "counter" Decode.int
+                        |> Decode.required "balance" Decode.int
+                        |> Decode.required "spendable" Decode.bool
+                        |> Decode.required "manager" Decode.string
+                        |> Decode.required "delegate" decodeDelegate
+                        |> Decode.optional "script" (Decode.value |> Decode.map Just) Nothing
+                    )
+            )
+
+
+decodeDelegate : Decode.Decoder Delegate
+decodeDelegate =
+    Decode.succeed Delegate
+        |> Decode.required "value" Decode.string
+        |> Decode.required "setable" Decode.bool

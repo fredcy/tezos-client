@@ -629,14 +629,45 @@ viewPeersList peers =
 
 
 viewContract : Chain.ContractID -> RemoteData Http.Error Chain.Contract -> Html Msg
-viewContract contractId contract =
-    H.div []
-        [ H.h3 []
-            [ H.text "Contract "
-            , H.span [ HA.class "hash" ] [ H.text contractId ]
+viewContract contractId contractData =
+    let
+        viewDelegate delegate =
+            H.span []
+                [ H.span [ HA.class "hash" ] [ H.text delegate.value ]
+                , H.text (" (" ++ (if delegate.setable then "setable" else "not setable") ++ ")")
+                ]
+
+        viewScript scriptMaybe =
+            scriptMaybe
+                |> Maybe.map
+                    (\script ->
+                        viewProperty "script" (H.text (toString script))
+                    )
+                |> Maybe.withDefault (H.text "")
+    in
+        H.div []
+            [ H.h3 []
+                [ H.text "Contract "
+                , H.span [ HA.class "hash" ] [ H.text contractId ]
+                ]
+            , case contractData of
+                RemoteData.Success contract ->
+                    H.div []
+                        [ viewProperty "manager" (H.span [ HA.class "hash" ] [ H.text contract.manager ])
+                        , viewProperty "balance" (H.text (formatInt contract.balance))
+                        , viewProperty "spendable" (H.text (toString contract.spendable))
+                        , viewProperty "counter" (H.text (toString contract.counter))
+                        , viewProperty "delegate" (viewDelegate contract.delegate)
+
+                        --, viewProperty "raw data" (H.text (toString contract.raw))
+                        ]
+
+                RemoteData.Loading ->
+                    H.text "loading ..."
+
+                _ ->
+                    H.text (toString contractData)
             ]
-        , H.text (toString contract)
-        ]
 
 
 viewError : String -> List Error -> Html Msg
