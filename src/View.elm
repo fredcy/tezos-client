@@ -125,10 +125,9 @@ viewHeader nodeUrl =
         ]
 
 
-canonFitness : List String -> List Int
-canonFitness strings =
-    List.map (ParseInt.parseIntHex >> Result.withDefault 0) strings
-        |> List.dropWhile ((==) 0)
+canonFitness : Chain.Fitness -> Chain.Fitness
+canonFitness fitness =
+    List.dropWhile ((==) 0) fitness
 
 
 type BlockStatus
@@ -312,7 +311,7 @@ viewBlock model block =
                 , viewProperty "predecessor" (blockFullLink block.predecessor)
                 , viewPropertyString "timestamp" (formatDate block.timestamp)
                 , viewPropertyString "level" (toString block.level)
-                , viewPropertyList "fitness" block.fitness
+                , viewPropertyList "fitness" (List.map toString block.fitness)
                 , viewPropertyString "net_id" block.net_id
                 ]
             , H.h4 [] [ H.text "Operations" ]

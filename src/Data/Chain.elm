@@ -40,7 +40,7 @@ type alias TransactionID =
 
 
 type alias Fitness =
-    String
+    List Int
 
 
 type alias Timestamp =
@@ -50,7 +50,7 @@ type alias Timestamp =
 type alias Block =
     { hash : BlockID
     , predecessor : BlockID
-    , fitness : List Fitness
+    , fitness : Fitness
     , timestamp : Timestamp
     , operations : Maybe (List (List OperationID))
     , net_id : NetID
@@ -245,8 +245,12 @@ updateHeads blocks newChain heads =
                     |> Maybe.map .predecessor
                     |> Maybe.map
                         (\newpredhash ->
-                            updateExistingHead newhead.hash newpredhash heads
-                                |> Maybe.withDefault (insertHead blocks newhead heads)
+                            case updateExistingHead newhead.hash newpredhash heads of
+                                Just newHeads ->
+                                    newHeads
+
+                                Nothing ->
+                                    insertHead blocks newhead heads
                         )
             )
         |> Maybe.withDefault heads
@@ -255,7 +259,6 @@ updateHeads blocks newChain heads =
 updateExistingHead : BlockID -> BlockID -> List BlockID -> Maybe (List BlockID)
 updateExistingHead newHead predHash heads =
     List.Extra.findIndex (\h -> h == predHash) heads
-        |> Maybe.map (Debug.log "replacing head at index")
         |> Maybe.map
             (\_ -> List.Extra.updateIf (\h -> h == predHash) (\_ -> newHead) heads)
 
@@ -273,7 +276,7 @@ insertHead blocks newHead heads =
             in
                 case blockMaybe of
                     Just block ->
-                        if fitnessGreaterDebug newHead.fitness block.fitness then
+                        if fitnessGreater newHead.fitness block.fitness then
                             newHead.hash :: head :: tail
                         else
                             head :: insertHead blocks newHead tail
@@ -282,35 +285,20 @@ insertHead blocks newHead heads =
                         Debug.log "error: insertHead failed" heads
 
 
-fitnessGreaterDebug a b =
-    fitnessGreater a b
-        |> Debug.log ("fitnessGreater " ++ toString ( a, b ))
-
-
-fitnessGreater : List Fitness -> List Fitness -> Bool
+fitnessGreater : Fitness -> Fitness -> Bool
 fitnessGreater a b =
     case ( a, b ) of
         ( [], [] ) ->
             False
 
         ( aFirst :: aRest, bFirst :: bRest ) ->
-            ParseInt.parseIntHex aFirst
-                |> Result.andThen
-                    (\aInt ->
-                        ParseInt.parseIntHex bFirst
-                            |> Result.map
-                                (\bInt ->
-                                    if aInt == bInt then
-                                        fitnessGreater aRest bRest
-                                    else
-                                        aInt > bInt
-                                )
-                    )
-                |> Result.mapError (Debug.log "fitnessGreater error")
-                |> Result.withDefault False
+            if aFirst > bFirst then
+                True
+            else
+                fitnessGreater aRest bRest
 
         _ ->
-            Debug.log ("error: fitnessGreater-2: " ++ toString ( a, b )) False
+            Debug.log ("error: fitnessGreater: " ++ toString ( a, b )) False
 
 
 updateMonitor : Model -> BlocksData -> Model
@@ -442,13 +430,32 @@ decodeBlock =
     Decode.succeed Block
         |> Decode.required "hash" Decode.string
         |> Decode.required "predecessor" Decode.string
-        |> Decode.required "fitness" (Decode.list Decode.string)
+        |> Decode.required "fitness" decodeFitness
         |> Decode.required "timestamp" decodeTimestamp
         |> Decode.optional "operations"
             (Decode.list (Decode.list Decode.string) |> Decode.map Just)
             Nothing
         |> Decode.required "net_id" Decode.string
         |> Decode.required "level" Decode.int
+
+
+decodeFitness : Decode.Decoder Fitness
+decodeFitness =
+    Decode.list decodeHexString
+
+
+decodeHexString : Decode.Decoder Int
+decodeHexString =
+    Decode.string
+        |> Decode.andThen
+            (\hexString ->
+                case ParseInt.parseIntHex hexString of
+                    Ok int ->
+                        Decode.succeed int
+
+                    Err err ->
+                        Decode.fail (toString err)
+            )
 
 
 decodeTimestamp : Decode.Decoder Timestamp

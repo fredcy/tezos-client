@@ -16,5 +16,5 @@ decodeDebug message =
                     _ =
                         Debug.log message value
                 in
-                    Decode.value
+                    Decode.succeed value
             )

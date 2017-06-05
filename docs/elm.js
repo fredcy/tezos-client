@@ -15064,6 +15064,19 @@ var _user$project$Data_Chain$decodeTimestamp = A2(
 		}
 	},
 	A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Date$fromString, _elm_lang$core$Json_Decode$string));
+var _user$project$Data_Chain$decodeHexString = A2(
+	_elm_lang$core$Json_Decode$andThen,
+	function (hexString) {
+		var _p1 = _fredcy$elm_parseint$ParseInt$parseIntHex(hexString);
+		if (_p1.ctor === 'Ok') {
+			return _elm_lang$core$Json_Decode$succeed(_p1._0);
+		} else {
+			return _elm_lang$core$Json_Decode$fail(
+				_elm_lang$core$Basics$toString(_p1._0));
+		}
+	},
+	_elm_lang$core$Json_Decode$string);
+var _user$project$Data_Chain$decodeFitness = _elm_lang$core$Json_Decode$list(_user$project$Data_Chain$decodeHexString);
 var _user$project$Data_Chain$loadPeersError = F2(
 	function (model, error) {
 		return _elm_lang$core$Native_Utils.update(
@@ -15148,16 +15161,16 @@ var _user$project$Data_Chain$getBranchList = F2(
 				helper:
 				while (true) {
 					var blockMaybe = A2(_elm_lang$core$Dict$get, hash, model.blocks);
-					var _p1 = blockMaybe;
-					if (_p1.ctor === 'Just') {
-						var _p2 = _p1._0;
-						if (_elm_lang$core$Native_Utils.eq(_p2.predecessor, hash)) {
+					var _p2 = blockMaybe;
+					if (_p2.ctor === 'Just') {
+						var _p3 = _p2._0;
+						if (_elm_lang$core$Native_Utils.eq(_p3.predecessor, hash)) {
 							return blockList;
 						} else {
-							var _v2 = _p2.predecessor,
-								_v3 = {ctor: '::', _0: _p2, _1: blockList};
-							hash = _v2;
-							blockList = _v3;
+							var _v3 = _p3.predecessor,
+								_v4 = {ctor: '::', _0: _p3, _1: blockList};
+							hash = _v3;
+							blockList = _v4;
 							continue helper;
 						}
 					} else {
@@ -15184,82 +15197,66 @@ var _user$project$Data_Chain$addChainBlocks = F2(
 	});
 var _user$project$Data_Chain$fitnessGreater = F2(
 	function (a, b) {
-		var _p3 = {ctor: '_Tuple2', _0: a, _1: b};
-		_v4_2:
-		do {
-			if (_p3.ctor === '_Tuple2') {
-				if (_p3._0.ctor === '[]') {
-					if (_p3._1.ctor === '[]') {
-						return false;
+		fitnessGreater:
+		while (true) {
+			var _p4 = {ctor: '_Tuple2', _0: a, _1: b};
+			_v5_2:
+			do {
+				if (_p4.ctor === '_Tuple2') {
+					if (_p4._0.ctor === '[]') {
+						if (_p4._1.ctor === '[]') {
+							return false;
+						} else {
+							break _v5_2;
+						}
 					} else {
-						break _v4_2;
+						if (_p4._1.ctor === '::') {
+							if (_elm_lang$core$Native_Utils.cmp(_p4._0._0, _p4._1._0) > 0) {
+								return true;
+							} else {
+								var _v6 = _p4._0._1,
+									_v7 = _p4._1._1;
+								a = _v6;
+								b = _v7;
+								continue fitnessGreater;
+							}
+						} else {
+							break _v5_2;
+						}
 					}
 				} else {
-					if (_p3._1.ctor === '::') {
-						return A2(
-							_elm_lang$core$Result$withDefault,
-							false,
-							A2(
-								_elm_lang$core$Result$mapError,
-								_elm_lang$core$Debug$log('fitnessGreater error'),
-								A2(
-									_elm_lang$core$Result$andThen,
-									function (aInt) {
-										return A2(
-											_elm_lang$core$Result$map,
-											function (bInt) {
-												return _elm_lang$core$Native_Utils.eq(aInt, bInt) ? A2(_user$project$Data_Chain$fitnessGreater, _p3._0._1, _p3._1._1) : (_elm_lang$core$Native_Utils.cmp(aInt, bInt) > 0);
-											},
-											_fredcy$elm_parseint$ParseInt$parseIntHex(_p3._1._0));
-									},
-									_fredcy$elm_parseint$ParseInt$parseIntHex(_p3._0._0))));
-					} else {
-						break _v4_2;
-					}
+					break _v5_2;
 				}
-			} else {
-				break _v4_2;
-			}
-		} while(false);
-		return A2(
-			_elm_lang$core$Debug$log,
-			A2(
-				_elm_lang$core$Basics_ops['++'],
-				'error: fitnessGreater-2: ',
-				_elm_lang$core$Basics$toString(
-					{ctor: '_Tuple2', _0: a, _1: b})),
-			false);
-	});
-var _user$project$Data_Chain$fitnessGreaterDebug = F2(
-	function (a, b) {
-		return A2(
-			_elm_lang$core$Debug$log,
-			A2(
-				_elm_lang$core$Basics_ops['++'],
-				'fitnessGreater ',
-				_elm_lang$core$Basics$toString(
-					{ctor: '_Tuple2', _0: a, _1: b})),
-			A2(_user$project$Data_Chain$fitnessGreater, a, b));
+			} while(false);
+			return A2(
+				_elm_lang$core$Debug$log,
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					'error: fitnessGreater: ',
+					_elm_lang$core$Basics$toString(
+						{ctor: '_Tuple2', _0: a, _1: b})),
+				false);
+		}
 	});
 var _user$project$Data_Chain$insertHead = F3(
 	function (blocks, newHead, heads) {
-		var _p4 = heads;
-		if (_p4.ctor === '[]') {
+		var _p5 = heads;
+		if (_p5.ctor === '[]') {
 			return {ctor: '[]'};
 		} else {
-			var _p7 = _p4._1;
-			var _p6 = _p4._0;
-			var blockMaybe = A2(_elm_lang$core$Dict$get, _p6, blocks);
-			var _p5 = blockMaybe;
-			if (_p5.ctor === 'Just') {
-				return A2(_user$project$Data_Chain$fitnessGreaterDebug, newHead.fitness, _p5._0.fitness) ? {
+			var _p8 = _p5._1;
+			var _p7 = _p5._0;
+			var blockMaybe = A2(_elm_lang$core$Dict$get, _p7, blocks);
+			var _p6 = blockMaybe;
+			if (_p6.ctor === 'Just') {
+				return A2(_user$project$Data_Chain$fitnessGreater, newHead.fitness, _p6._0.fitness) ? {
 					ctor: '::',
 					_0: newHead.hash,
-					_1: {ctor: '::', _0: _p6, _1: _p7}
+					_1: {ctor: '::', _0: _p7, _1: _p8}
 				} : {
 					ctor: '::',
-					_0: _p6,
-					_1: A3(_user$project$Data_Chain$insertHead, blocks, newHead, _p7)
+					_0: _p7,
+					_1: A3(_user$project$Data_Chain$insertHead, blocks, newHead, _p8)
 				};
 			} else {
 				return A2(_elm_lang$core$Debug$log, 'error: insertHead failed', heads);
@@ -15270,26 +15267,23 @@ var _user$project$Data_Chain$updateExistingHead = F3(
 	function (newHead, predHash, heads) {
 		return A2(
 			_elm_lang$core$Maybe$map,
-			function (_p8) {
+			function (_p9) {
 				return A3(
 					_elm_community$list_extra$List_Extra$updateIf,
 					function (h) {
 						return _elm_lang$core$Native_Utils.eq(h, predHash);
 					},
-					function (_p9) {
+					function (_p10) {
 						return newHead;
 					},
 					heads);
 			},
 			A2(
-				_elm_lang$core$Maybe$map,
-				_elm_lang$core$Debug$log('replacing head at index'),
-				A2(
-					_elm_community$list_extra$List_Extra$findIndex,
-					function (h) {
-						return _elm_lang$core$Native_Utils.eq(h, predHash);
-					},
-					heads)));
+				_elm_community$list_extra$List_Extra$findIndex,
+				function (h) {
+					return _elm_lang$core$Native_Utils.eq(h, predHash);
+				},
+				heads));
 	});
 var _user$project$Data_Chain$updateHeads = F3(
 	function (blocks, newChain, heads) {
@@ -15302,10 +15296,12 @@ var _user$project$Data_Chain$updateHeads = F3(
 					return A2(
 						_elm_lang$core$Maybe$map,
 						function (newpredhash) {
-							return A2(
-								_elm_lang$core$Maybe$withDefault,
-								A3(_user$project$Data_Chain$insertHead, blocks, newhead, heads),
-								A3(_user$project$Data_Chain$updateExistingHead, newhead.hash, newpredhash, heads));
+							var _p11 = A3(_user$project$Data_Chain$updateExistingHead, newhead.hash, newpredhash, heads);
+							if (_p11.ctor === 'Just') {
+								return _p11._0;
+							} else {
+								return A3(_user$project$Data_Chain$insertHead, blocks, newhead, heads);
+							}
 						},
 						A2(
 							_elm_lang$core$Maybe$map,
@@ -15432,7 +15428,7 @@ var _user$project$Data_Chain$decodeBlock = A3(
 				A3(
 					_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
 					'fitness',
-					_elm_lang$core$Json_Decode$list(_elm_lang$core$Json_Decode$string),
+					_user$project$Data_Chain$decodeFitness,
 					A3(
 						_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
 						'predecessor',
@@ -15570,10 +15566,10 @@ var _user$project$Data_Chain$decodeConnection = function () {
 	return A2(
 		_elm_lang$core$Json_Decode$andThen,
 		function (list) {
-			var _p10 = list;
-			if (((((_p10.ctor === '::') && (_p10._0.ctor === 'AddressAddr')) && (_p10._1.ctor === '::')) && (_p10._1._0.ctor === 'AddressTime')) && (_p10._1._1.ctor === '[]')) {
+			var _p12 = list;
+			if (((((_p12.ctor === '::') && (_p12._0.ctor === 'AddressAddr')) && (_p12._1.ctor === '::')) && (_p12._1._0.ctor === 'AddressTime')) && (_p12._1._1.ctor === '[]')) {
 				return _elm_lang$core$Json_Decode$succeed(
-					A2(_user$project$Data_Chain$Connection, _p10._0._0, _p10._1._0._0));
+					A2(_user$project$Data_Chain$Connection, _p12._0._0, _p12._1._0._0));
 			} else {
 				return _elm_lang$core$Json_Decode$fail('address decode failed');
 			}
@@ -15626,10 +15622,10 @@ var _user$project$Data_Chain$decodePeer = function () {
 	return A2(
 		_elm_lang$core$Json_Decode$andThen,
 		function (list) {
-			var _p11 = list;
-			if (((((_p11.ctor === '::') && (_p11._0.ctor === 'ItemString')) && (_p11._1.ctor === '::')) && (_p11._1._0.ctor === 'ItemValue')) && (_p11._1._1.ctor === '[]')) {
+			var _p13 = list;
+			if (((((_p13.ctor === '::') && (_p13._0.ctor === 'ItemString')) && (_p13._1.ctor === '::')) && (_p13._1._0.ctor === 'ItemValue')) && (_p13._1._1.ctor === '[]')) {
 				return _elm_lang$core$Json_Decode$succeed(
-					A2(_user$project$Data_Chain$Peer, _p11._0._0, _p11._1._0._0));
+					A2(_user$project$Data_Chain$Peer, _p13._0._0, _p13._1._0._0));
 			} else {
 				return _elm_lang$core$Json_Decode$fail('bad peer');
 			}
@@ -16551,7 +16547,7 @@ var _user$project$Request$decodeDebug = function (message) {
 		_elm_lang$core$Json_Decode$andThen,
 		function (value) {
 			var _p0 = A2(_elm_lang$core$Debug$log, message, value);
-			return _elm_lang$core$Json_Decode$value;
+			return _elm_lang$core$Json_Decode$succeed(value);
 		},
 		_elm_lang$core$Json_Decode$value);
 };
@@ -18854,7 +18850,10 @@ var _user$project$View$viewBlock = F2(
 											_elm_lang$core$Basics$toString(block.level)),
 										_1: {
 											ctor: '::',
-											_0: A2(viewPropertyList, 'fitness', block.fitness),
+											_0: A2(
+												viewPropertyList,
+												'fitness',
+												A2(_elm_lang$core$List$map, _elm_lang$core$Basics$toString, block.fitness)),
 											_1: {
 												ctor: '::',
 												_0: A2(viewPropertyString, 'net_id', block.net_id),
@@ -19144,22 +19143,14 @@ var _user$project$View$viewChainAt = F2(
 				}
 			});
 	});
-var _user$project$View$canonFitness = function (strings) {
+var _user$project$View$canonFitness = function (fitness) {
 	return A2(
 		_elm_community$list_extra$List_Extra$dropWhile,
 		F2(
 			function (x, y) {
 				return _elm_lang$core$Native_Utils.eq(x, y);
 			})(0),
-		A2(
-			_elm_lang$core$List$map,
-			function (_p14) {
-				return A2(
-					_elm_lang$core$Result$withDefault,
-					0,
-					_fredcy$elm_parseint$ParseInt$parseIntHex(_p14));
-			},
-			strings));
+		fitness);
 };
 var _user$project$View$viewHeader = function (nodeUrl) {
 	return A2(
@@ -19213,9 +19204,9 @@ var _user$project$View$viewSchemas = function (schemas) {
 };
 var _user$project$View$viewHome = function (model) {
 	var headMaybe = _elm_lang$core$List$head(model.chain.heads);
-	var _p15 = headMaybe;
-	if (_p15.ctor === 'Just') {
-		var _p16 = _p15._0;
+	var _p14 = headMaybe;
+	if (_p14.ctor === 'Just') {
+		var _p15 = _p14._0;
 		return A2(
 			_elm_lang$html$Html$div,
 			{ctor: '[]'},
@@ -19235,8 +19226,8 @@ var _user$project$View$viewHome = function (model) {
 						_user$project$View$viewBranch,
 						24,
 						model,
-						_elm_lang$core$Maybe$Just(_p16),
-						A2(_user$project$Data_Chain$getBranchList, model.chain, _p16)),
+						_elm_lang$core$Maybe$Just(_p15),
+						A2(_user$project$Data_Chain$getBranchList, model.chain, _p15)),
 					_1: {ctor: '[]'}
 				}
 			});
@@ -19252,9 +19243,9 @@ var _user$project$View$BlockFound = function (a) {
 };
 var _user$project$View$findBlockStatus = F2(
 	function (blocks, blockhash) {
-		var _p17 = A2(_elm_lang$core$Dict$get, blockhash, blocks);
-		if (_p17.ctor === 'Just') {
-			return _user$project$View$BlockFound(_p17._0);
+		var _p16 = A2(_elm_lang$core$Dict$get, blockhash, blocks);
+		if (_p16.ctor === 'Just') {
+			return _user$project$View$BlockFound(_p16._0);
 		} else {
 			return _user$project$View$BlockNotFound(blockhash);
 		}
@@ -19375,15 +19366,15 @@ var _user$project$View$viewHeads = function (model) {
 		});
 	var viewHead = F2(
 		function (i, blockStatus) {
-			var _p18 = blockStatus;
-			if (_p18.ctor === 'BlockFound') {
-				return A2(viewBlockSummary, i, _p18._0);
+			var _p17 = blockStatus;
+			if (_p17.ctor === 'BlockFound') {
+				return A2(viewBlockSummary, i, _p17._0);
 			} else {
 				return _elm_lang$html$Html$text(
 					A2(
 						_elm_lang$core$Basics_ops['++'],
 						'block ',
-						A2(_elm_lang$core$Basics_ops['++'], _p18._0, ' not found')));
+						A2(_elm_lang$core$Basics_ops['++'], _p17._0, ' not found')));
 			}
 		});
 	var header = A2(
@@ -19542,8 +19533,8 @@ var _user$project$View$viewHeads = function (model) {
 };
 var _user$project$View$view = function (model) {
 	var content = function () {
-		var _p19 = model.pageState;
-		switch (_p19._0.ctor) {
+		var _p18 = model.pageState;
+		switch (_p18._0.ctor) {
 			case 'Home':
 				return _user$project$View$viewHome(model);
 			case 'Blank':
@@ -19551,7 +19542,7 @@ var _user$project$View$view = function (model) {
 			case 'Operations':
 				return _user$project$View$viewAllOperations(model);
 			case 'Operation':
-				return A2(_user$project$View$viewOperation, model, _p19._0._0);
+				return A2(_user$project$View$viewOperation, model, _p18._0._0);
 			case 'Schema':
 				return _user$project$View$viewSchemas(model.schemaData);
 			case 'Debug':
@@ -19559,14 +19550,14 @@ var _user$project$View$view = function (model) {
 			case 'Heads':
 				return _user$project$View$viewHeads(model);
 			case 'Block':
-				var _p20 = A2(_elm_lang$core$Dict$get, _p19._0._0, model.chain.blocks);
-				if (_p20.ctor === 'Just') {
-					return A2(_user$project$View$viewBlock, model, _p20._0);
+				var _p19 = A2(_elm_lang$core$Dict$get, _p18._0._0, model.chain.blocks);
+				if (_p19.ctor === 'Just') {
+					return A2(_user$project$View$viewBlock, model, _p19._0);
 				} else {
 					return _elm_lang$html$Html$text('loading block ...');
 				}
 			case 'ChainAt':
-				return A2(_user$project$View$viewChainAt, model, _p19._0._0);
+				return A2(_user$project$View$viewChainAt, model, _p18._0._0);
 			case 'Contracts':
 				return _user$project$View$viewContracts(model);
 			case 'Keys':
