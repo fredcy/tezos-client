@@ -103,10 +103,6 @@ type alias BlocksData =
     List (List Block)
 
 
-type alias Contracts =
-    List Base58CheckEncodedSHA256
-
-
 type alias Key =
     { hash : Base58CheckEncodedSHA256
     , public_key : Base58CheckEncodedSHA256
@@ -172,7 +168,7 @@ type alias Model =
     , operations : Dict OperationID Operation
     , parsedOperations : Dict OperationID ParsedOperation
     , blockOperations : Dict BlockID (List OperationID)
-    , contracts : RemoteData Http.Error Contracts
+    , contractIDs : RemoteData Http.Error (List ContractID)
     , keys : RemoteData Http.Error (List Key)
     , peers : RemoteData Http.Error (List Peer)
     , contract : RemoteData Http.Error Contract
@@ -186,7 +182,7 @@ init =
     , operations = Dict.empty
     , parsedOperations = Dict.empty
     , blockOperations = Dict.empty
-    , contracts = RemoteData.NotAsked
+    , contractIDs = RemoteData.NotAsked
     , keys = RemoteData.NotAsked
     , peers = RemoteData.NotAsked
     , contract = RemoteData.NotAsked
@@ -394,19 +390,19 @@ loadParsedOperation model operationId operation =
         { model | parsedOperations = newParsed }
 
 
-loadContracts : Model -> Contracts -> Model
-loadContracts model contracts =
-    { model | contracts = RemoteData.Success contracts }
+loadContractIDs : Model -> List ContractID -> Model
+loadContractIDs model contractIDs =
+    { model | contractIDs = RemoteData.Success contractIDs }
 
 
-loadContractsError : Model -> Http.Error -> Model
-loadContractsError model error =
-    { model | contracts = RemoteData.Failure error }
+loadContractIDsError : Model -> Http.Error -> Model
+loadContractIDsError model error =
+    { model | contractIDs = RemoteData.Failure error }
 
 
-loadingContracts : Model -> Model
-loadingContracts model =
-    { model | contracts = RemoteData.Loading }
+loadingContractIDs : Model -> Model
+loadingContractIDs model =
+    { model | contractIDs = RemoteData.Loading }
 
 
 loadingKeys : Model -> Model
@@ -516,8 +512,8 @@ decodeLevel =
     Decode.at [ "ok", "level" ] Decode.int
 
 
-decodeContracts : Decode.Decoder Contracts
-decodeContracts =
+decodeContractIDs : Decode.Decoder (List ContractID)
+decodeContractIDs =
     Decode.field "ok" (Decode.list Decode.string)
 
 

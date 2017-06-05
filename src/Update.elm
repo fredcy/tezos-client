@@ -33,7 +33,7 @@ type Msg
     | ShowBranch BlockID
     | ShowContract Chain.ContractID
     | LoadHeads (Result Http.Error Chain.BlocksData)
-    | LoadContracts (Result Http.Error Chain.Contracts)
+    | LoadContractIDs (Result Http.Error (List Chain.ContractID))
     | LoadKeys (Result Http.Error (List Chain.Key))
     | LoadPeers (Result Http.Error (List Chain.Peer))
     | LoadContract (Result Http.Error Chain.Contract)
@@ -138,17 +138,17 @@ updatePage page msg model =
                 Err error ->
                     ( { model | errors = HttpError error :: model.errors }, Cmd.none )
 
-        ( LoadContracts contractsResult, _ ) ->
+        ( LoadContractIDs contractsResult, _ ) ->
             case contractsResult of
-                Ok contracts ->
-                    ( { model | chain = Chain.loadContracts model.chain contracts }
+                Ok contractIDs ->
+                    ( { model | chain = Chain.loadContractIDs model.chain contractIDs }
                     , Cmd.none
                     )
 
                 Err error ->
                     ( { model
                         | errors = HttpError error :: model.errors
-                        , chain = Chain.loadContractsError model.chain error
+                        , chain = Chain.loadContractIDsError model.chain error
                       }
                     , Cmd.none
                     )
@@ -262,9 +262,9 @@ setRoute routeMaybe model =
         Just Route.Contracts ->
             ( { model
                 | pageState = Loaded Page.Contracts
-                , chain = Chain.loadingContracts model.chain
+                , chain = Chain.loadingContractIDs model.chain
               }
-            , getContracts model
+            , getContractIDs model
             )
 
         Just Route.Keys ->
@@ -402,9 +402,9 @@ getAllBlocksOperations model =
         Cmd.batch (List.map getBlockOperations blocksToGet)
 
 
-getContracts : Model -> Cmd Msg
-getContracts model =
-    Request.Block.getContracts model.nodeUrl |> Http.send LoadContracts
+getContractIDs : Model -> Cmd Msg
+getContractIDs model =
+    Request.Block.getContractIDs model.nodeUrl |> Http.send LoadContractIDs
 
 
 getKeys : Model -> Cmd Msg

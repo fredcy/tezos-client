@@ -15037,7 +15037,7 @@ var _rluiten$elm_date_extra$Date_Extra_Format$utcIsoString = function (date) {
 };
 var _rluiten$elm_date_extra$Date_Extra_Format$isoFormat = '%Y-%m-%dT%H:%M:%S';
 
-var _user$project$Data_Chain$decodeContracts = A2(
+var _user$project$Data_Chain$decodeContractIDs = A2(
 	_elm_lang$core$Json_Decode$field,
 	'ok',
 	_elm_lang$core$Json_Decode$list(_elm_lang$core$Json_Decode$string));
@@ -15140,25 +15140,25 @@ var _user$project$Data_Chain$loadingKeys = function (model) {
 		model,
 		{keys: _krisajenkins$remotedata$RemoteData$Loading});
 };
-var _user$project$Data_Chain$loadingContracts = function (model) {
+var _user$project$Data_Chain$loadingContractIDs = function (model) {
 	return _elm_lang$core$Native_Utils.update(
 		model,
-		{contracts: _krisajenkins$remotedata$RemoteData$Loading});
+		{contractIDs: _krisajenkins$remotedata$RemoteData$Loading});
 };
-var _user$project$Data_Chain$loadContractsError = F2(
+var _user$project$Data_Chain$loadContractIDsError = F2(
 	function (model, error) {
 		return _elm_lang$core$Native_Utils.update(
 			model,
 			{
-				contracts: _krisajenkins$remotedata$RemoteData$Failure(error)
+				contractIDs: _krisajenkins$remotedata$RemoteData$Failure(error)
 			});
 	});
-var _user$project$Data_Chain$loadContracts = F2(
-	function (model, contracts) {
+var _user$project$Data_Chain$loadContractIDs = F2(
+	function (model, contractIDs) {
 		return _elm_lang$core$Native_Utils.update(
 			model,
 			{
-				contracts: _krisajenkins$remotedata$RemoteData$Success(contracts)
+				contractIDs: _krisajenkins$remotedata$RemoteData$Success(contractIDs)
 			});
 	});
 var _user$project$Data_Chain$loadParsedOperation = F3(
@@ -15417,7 +15417,7 @@ var _user$project$Data_Chain$init = {
 	operations: _elm_lang$core$Dict$empty,
 	parsedOperations: _elm_lang$core$Dict$empty,
 	blockOperations: _elm_lang$core$Dict$empty,
-	contracts: _krisajenkins$remotedata$RemoteData$NotAsked,
+	contractIDs: _krisajenkins$remotedata$RemoteData$NotAsked,
 	keys: _krisajenkins$remotedata$RemoteData$NotAsked,
 	peers: _krisajenkins$remotedata$RemoteData$NotAsked,
 	contract: _krisajenkins$remotedata$RemoteData$NotAsked
@@ -15592,7 +15592,7 @@ var _user$project$Data_Chain$decodeContract = A2(
 	_elm_lang$core$Json_Decode$value);
 var _user$project$Data_Chain$Model = F9(
 	function (a, b, c, d, e, f, g, h, i) {
-		return {heads: a, blocks: b, operations: c, parsedOperations: d, blockOperations: e, contracts: f, keys: g, peers: h, contract: i};
+		return {heads: a, blocks: b, operations: c, parsedOperations: d, blockOperations: e, contractIDs: f, keys: g, peers: h, contract: i};
 	});
 var _user$project$Data_Chain$Delegation = function (a) {
 	return {ctor: 'Delegation', _0: a};
@@ -16606,9 +16606,9 @@ var _user$project$Request_Block$getKeys = function (nodeUrl) {
 	var url = A2(_elm_lang$core$Basics_ops['++'], nodeUrl, '/blocks/head/proto/context/keys');
 	return A3(_elm_lang$http$Http$post, url, _user$project$Data_Request$emptyJsonBody, _user$project$Data_Chain$decodeKeys);
 };
-var _user$project$Request_Block$getContracts = function (nodeUrl) {
+var _user$project$Request_Block$getContractIDs = function (nodeUrl) {
 	var url = A2(_elm_lang$core$Basics_ops['++'], nodeUrl, '/blocks/head/proto/context/contracts');
-	return A3(_elm_lang$http$Http$post, url, _user$project$Data_Request$emptyJsonBody, _user$project$Data_Chain$decodeContracts);
+	return A3(_elm_lang$http$Http$post, url, _user$project$Data_Request$emptyJsonBody, _user$project$Data_Chain$decodeContractIDs);
 };
 var _user$project$Request_Block$getChainStartingAt = F3(
 	function (nodeUrl, length, blockhash) {
@@ -16833,14 +16833,14 @@ var _user$project$Update$getKeys = function (model) {
 		_user$project$Update$LoadKeys,
 		_user$project$Request_Block$getKeys(model.nodeUrl));
 };
-var _user$project$Update$LoadContracts = function (a) {
-	return {ctor: 'LoadContracts', _0: a};
+var _user$project$Update$LoadContractIDs = function (a) {
+	return {ctor: 'LoadContractIDs', _0: a};
 };
-var _user$project$Update$getContracts = function (model) {
+var _user$project$Update$getContractIDs = function (model) {
 	return A2(
 		_elm_lang$http$Http$send,
-		_user$project$Update$LoadContracts,
-		_user$project$Request_Block$getContracts(model.nodeUrl));
+		_user$project$Update$LoadContractIDs,
+		_user$project$Request_Block$getContractIDs(model.nodeUrl));
 };
 var _user$project$Update$LoadHeads = function (a) {
 	return {ctor: 'LoadHeads', _0: a};
@@ -17076,9 +17076,9 @@ var _user$project$Update$setRoute = F2(
 							model,
 							{
 								pageState: _user$project$Model$Loaded(_user$project$Page$Contracts),
-								chain: _user$project$Data_Chain$loadingContracts(model.chain)
+								chain: _user$project$Data_Chain$loadingContractIDs(model.chain)
 							}),
-						_1: _user$project$Update$getContracts(model)
+						_1: _user$project$Update$getContractIDs(model)
 					};
 				case 'Keys':
 					return {
@@ -17382,7 +17382,7 @@ var _user$project$Update$updatePage = F3(
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				}
-			case 'LoadContracts':
+			case 'LoadContractIDs':
 				var _p18 = _p7._0._0;
 				if (_p18.ctor === 'Ok') {
 					return {
@@ -17390,7 +17390,7 @@ var _user$project$Update$updatePage = F3(
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								chain: A2(_user$project$Data_Chain$loadContracts, model.chain, _p18._0)
+								chain: A2(_user$project$Data_Chain$loadContractIDs, model.chain, _p18._0)
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
@@ -17406,7 +17406,7 @@ var _user$project$Update$updatePage = F3(
 									_0: _user$project$Model$HttpError(_p19),
 									_1: model.errors
 								},
-								chain: A2(_user$project$Data_Chain$loadContractsError, model.chain, _p19)
+								chain: A2(_user$project$Data_Chain$loadContractIDsError, model.chain, _p19)
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
@@ -18129,7 +18129,7 @@ var _user$project$View$viewKeys = function (keysData) {
 			}
 		});
 };
-var _user$project$View$viewContractList = function (contracts) {
+var _user$project$View$viewContractList = function (contractIDs) {
 	var viewContract = function (contract) {
 		return A2(
 			_elm_lang$html$Html$li,
@@ -18162,7 +18162,7 @@ var _user$project$View$viewContractList = function (contracts) {
 		A2(
 			_elm_lang$core$List$map,
 			viewContract,
-			_elm_lang$core$List$sort(contracts)));
+			_elm_lang$core$List$sort(contractIDs)));
 };
 var _user$project$View$viewContracts = function (model) {
 	return A2(
@@ -18181,7 +18181,7 @@ var _user$project$View$viewContracts = function (model) {
 			_1: {
 				ctor: '::',
 				_0: function () {
-					var _p3 = model.chain.contracts;
+					var _p3 = model.chain.contractIDs;
 					switch (_p3.ctor) {
 						case 'Success':
 							return _user$project$View$viewContractList(_p3._0);
@@ -18189,7 +18189,7 @@ var _user$project$View$viewContracts = function (model) {
 							return _elm_lang$html$Html$text('loading ...');
 						default:
 							return _elm_lang$html$Html$text(
-								_elm_lang$core$Basics$toString(model.chain.contracts));
+								_elm_lang$core$Basics$toString(model.chain.contractIDs));
 					}
 				}(),
 				_1: {ctor: '[]'}

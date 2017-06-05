@@ -36,13 +36,13 @@ getChainStartingAt nodeUrl length blockhash =
         Http.post url body Chain.decodeBlocks
 
 
-getContracts : URL -> Http.Request Chain.Contracts
-getContracts nodeUrl =
+getContractIDs : URL -> Http.Request (List Chain.ContractID)
+getContractIDs nodeUrl =
     let
         url =
             nodeUrl ++ "/blocks/head/proto/context/contracts"
     in
-        Http.post url emptyJsonBody Chain.decodeContracts
+        Http.post url emptyJsonBody Chain.decodeContractIDs
 
 
 getKeys : URL -> Http.Request (List Chain.Key)

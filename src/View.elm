@@ -486,20 +486,20 @@ viewContracts : Model -> Html Msg
 viewContracts model =
     H.div []
         [ H.h3 [] [ H.text "Contracts" ]
-        , case model.chain.contracts of
-            RemoteData.Success contracts ->
-                viewContractList contracts
+        , case model.chain.contractIDs of
+            RemoteData.Success contractIDs ->
+                viewContractList contractIDs
 
             RemoteData.Loading ->
                 H.text "loading ..."
 
             _ ->
-                H.text (toString model.chain.contracts)
+                H.text (toString model.chain.contractIDs)
         ]
 
 
-viewContractList : Chain.Contracts -> Html Msg
-viewContractList contracts =
+viewContractList : (List Chain.ContractID) -> Html Msg
+viewContractList contractIDs =
     let
         viewContract contract =
             H.li []
@@ -510,7 +510,7 @@ viewContractList contracts =
                     [ H.text contract ]
                 ]
     in
-        H.ul [] (List.map viewContract (List.sort contracts))
+        H.ul [] (List.map viewContract (List.sort contractIDs))
 
 
 viewKeys : RemoteData Http.Error (List Chain.Key) -> Html Msg
