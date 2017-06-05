@@ -290,6 +290,9 @@ fitnessGreaterDebug a b =
 fitnessGreater : List Fitness -> List Fitness -> Bool
 fitnessGreater a b =
     case ( a, b ) of
+        ( [], [] ) ->
+            False
+
         ( aFirst :: aRest, bFirst :: bRest ) ->
             ParseInt.parseIntHex aFirst
                 |> Result.andThen

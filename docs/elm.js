@@ -15185,34 +15185,50 @@ var _user$project$Data_Chain$addChainBlocks = F2(
 var _user$project$Data_Chain$fitnessGreater = F2(
 	function (a, b) {
 		var _p3 = {ctor: '_Tuple2', _0: a, _1: b};
-		if (((_p3.ctor === '_Tuple2') && (_p3._0.ctor === '::')) && (_p3._1.ctor === '::')) {
-			return A2(
-				_elm_lang$core$Result$withDefault,
-				false,
-				A2(
-					_elm_lang$core$Result$mapError,
-					_elm_lang$core$Debug$log('fitnessGreater error'),
-					A2(
-						_elm_lang$core$Result$andThen,
-						function (aInt) {
-							return A2(
-								_elm_lang$core$Result$map,
-								function (bInt) {
-									return _elm_lang$core$Native_Utils.eq(aInt, bInt) ? A2(_user$project$Data_Chain$fitnessGreater, _p3._0._1, _p3._1._1) : (_elm_lang$core$Native_Utils.cmp(aInt, bInt) > 0);
-								},
-								_fredcy$elm_parseint$ParseInt$parseIntHex(_p3._1._0));
-						},
-						_fredcy$elm_parseint$ParseInt$parseIntHex(_p3._0._0))));
-		} else {
-			return A2(
-				_elm_lang$core$Debug$log,
-				A2(
-					_elm_lang$core$Basics_ops['++'],
-					'error: fitnessGreater-2: ',
-					_elm_lang$core$Basics$toString(
-						{ctor: '_Tuple2', _0: a, _1: b})),
-				false);
-		}
+		_v4_2:
+		do {
+			if (_p3.ctor === '_Tuple2') {
+				if (_p3._0.ctor === '[]') {
+					if (_p3._1.ctor === '[]') {
+						return false;
+					} else {
+						break _v4_2;
+					}
+				} else {
+					if (_p3._1.ctor === '::') {
+						return A2(
+							_elm_lang$core$Result$withDefault,
+							false,
+							A2(
+								_elm_lang$core$Result$mapError,
+								_elm_lang$core$Debug$log('fitnessGreater error'),
+								A2(
+									_elm_lang$core$Result$andThen,
+									function (aInt) {
+										return A2(
+											_elm_lang$core$Result$map,
+											function (bInt) {
+												return _elm_lang$core$Native_Utils.eq(aInt, bInt) ? A2(_user$project$Data_Chain$fitnessGreater, _p3._0._1, _p3._1._1) : (_elm_lang$core$Native_Utils.cmp(aInt, bInt) > 0);
+											},
+											_fredcy$elm_parseint$ParseInt$parseIntHex(_p3._1._0));
+									},
+									_fredcy$elm_parseint$ParseInt$parseIntHex(_p3._0._0))));
+					} else {
+						break _v4_2;
+					}
+				}
+			} else {
+				break _v4_2;
+			}
+		} while(false);
+		return A2(
+			_elm_lang$core$Debug$log,
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				'error: fitnessGreater-2: ',
+				_elm_lang$core$Basics$toString(
+					{ctor: '_Tuple2', _0: a, _1: b})),
+			false);
 	});
 var _user$project$Data_Chain$fitnessGreaterDebug = F2(
 	function (a, b) {

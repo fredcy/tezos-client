@@ -26,12 +26,9 @@
         // Get all the text received since the stream last settled with a valid chunk.
         var new_response = xhr.responseText.substring(lengthParsed);
 
-        console.log("updateProgress text", new_response);
-
         // One new chunk in the response stream can contain several JSON
         // units. Try to break them apart and handle separately.
         var units = new_response.split(/}{/);
-        console.log("units", units.length);
 
         for (var i = 0; i < units.length; i++) {
             var unit = units[i];
@@ -45,14 +42,14 @@
             try {
                 var parsed = JSON.parse(unit);
             } catch (e) {
-                console.log("parse failure", i, unit.length, e);
+                //console.log("parse failure", i, unit.length, e);
                 break;
             }
-            console.log("parsed", i, parsed);
+            //console.log("parsed", i, parsed);
             app.ports.monitor.send(parsed);
         }
 
-        console.log("parsed n of m:", i, units.length);
+        //console.log("parsed n of m:", i, units.length);
 
         // It's possible for one JSON unit to be large enough to require
         // multiple response chunks, so we determine how much of the new input
