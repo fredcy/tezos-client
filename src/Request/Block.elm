@@ -2,7 +2,7 @@ module Request.Block exposing (..)
 
 import Json.Encode as Encode
 import Http
-import Data.Chain as Chain exposing (BlockID)
+import Data.Chain as Chain exposing (BlockID, Contract, ContractID)
 import Data.Request exposing (URL, emptyJsonBody)
 
 
@@ -63,3 +63,12 @@ getPeers nodeUrl =
             nodeUrl ++ "/network/peer_id"
     in
         Http.post url emptyJsonBody Chain.decodePeers
+
+
+getContract : URL -> ContractID -> Http.Request Contract
+getContract nodeUrl contractId =
+    let
+        url =
+            nodeUrl ++ "/blocks/head/proto/context/contracts/" ++ contractId
+    in
+        Http.post url emptyJsonBody Chain.decodeContract

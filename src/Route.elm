@@ -4,7 +4,7 @@ import Html as H
 import Html.Attributes as HA
 import UrlParser as Url exposing (parseHash, s, (</>), string, oneOf, Parser)
 import Navigation exposing (Location)
-import Data.Chain as Chain exposing (BlockID, OperationID)
+import Data.Chain as Chain exposing (BlockID, OperationID, ContractID)
 
 
 type Route
@@ -16,6 +16,7 @@ type Route
     | Contracts
     | Keys
     | Peers
+    | Contract ContractID
     | Schema
     | Heads
     | Errors
@@ -35,6 +36,7 @@ route =
         , Url.map Contracts (s "contracts")
         , Url.map Keys (s "keys")
         , Url.map Peers (s "peers")
+        , Url.map Contract (s "contract" </> Url.string)
         , Url.map Schema (s "schema")
         , Url.map Debug (s "debug")
         , Url.map Errors (s "errors")
@@ -69,6 +71,9 @@ routeToString route =
 
                 Peers ->
                     [ "peers" ]
+
+                Contract contractId ->
+                    [ "contract", contractId ]
 
                 Schema ->
                     [ "schema" ]

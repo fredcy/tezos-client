@@ -1,6 +1,6 @@
 module Page exposing (Page(..))
 
-import Data.Chain exposing (BlockID, OperationID)
+import Data.Chain exposing (BlockID, ContractID, OperationID)
 
 
 type Page
@@ -16,5 +16,6 @@ type Page
     | Contracts
     | Keys
     | Peers
+    | Contract ContractID
     | Errors
     | Debug

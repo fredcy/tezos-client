@@ -74,6 +74,9 @@ view model =
                 Loaded Page.Peers ->
                     viewPeers model.chain.peers
 
+                Loaded (Page.Contract contractId) ->
+                    viewContract contractId model.chain.contract
+
                 Loaded Page.Errors ->
                     viewError model.nodeUrl model.errors
 
@@ -499,7 +502,13 @@ viewContractList : Chain.Contracts -> Html Msg
 viewContractList contracts =
     let
         viewContract contract =
-            H.li [] [ H.span [ HA.class "hash" ] [ H.text contract ] ]
+            H.li []
+                [ H.span
+                    [ HA.class "hash link"
+                    , HE.onClick (ShowContract contract)
+                    ]
+                    [ H.text contract ]
+                ]
     in
         H.ul [] (List.map viewContract (List.sort contracts))
 
@@ -617,6 +626,17 @@ viewPeersList peers =
             H.tbody [] (List.map row peers)
     in
         H.table [ HA.class "peers" ] [ thead, tbody ]
+
+
+viewContract : Chain.ContractID -> RemoteData Http.Error Chain.Contract -> Html Msg
+viewContract contractId contract =
+    H.div []
+        [ H.h3 []
+            [ H.text "Contract "
+            , H.span [ HA.class "hash" ] [ H.text contractId ]
+            ]
+        , H.text (toString contract)
+        ]
 
 
 viewError : String -> List Error -> Html Msg

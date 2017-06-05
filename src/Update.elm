@@ -31,10 +31,12 @@ type Msg
     | ShowBlock BlockID
     | ShowOperation OperationID
     | ShowBranch BlockID
+    | ShowContract Chain.ContractID
     | LoadHeads (Result Http.Error Chain.BlocksData)
     | LoadContracts (Result Http.Error Chain.Contracts)
     | LoadKeys (Result Http.Error (List Chain.Key))
     | LoadPeers (Result Http.Error (List Chain.Peer))
+    | LoadContract (Result Http.Error Chain.Contract)
     | Tick Time
     | SetRoute (Maybe Route)
     | ClearErrors
@@ -146,7 +148,7 @@ updatePage page msg model =
                 Err error ->
                     ( { model
                         | errors = HttpError error :: model.errors
-                        , chain = Chain.loadContractError model.chain error
+                        , chain = Chain.loadContractsError model.chain error
                       }
                     , Cmd.none
                     )
@@ -177,6 +179,19 @@ updatePage page msg model =
                     , Cmd.none
                     )
 
+        ( LoadContract contractResult, _ ) ->
+            case contractResult of
+                Ok contract ->
+                    ( { model | chain = Chain.loadContract model.chain contract }, Cmd.none )
+
+                Err error ->
+                    ( { model
+                        | errors = HttpError error :: model.errors
+                        , chain = Chain.loadContractError model.chain error
+                      }
+                    , Cmd.none
+                    )
+
         ( ShowBlock blockhash, _ ) ->
             ( model
             , Cmd.batch
@@ -189,9 +204,10 @@ updatePage page msg model =
             ( model, Route.newUrl (Route.Operation operationId) )
 
         ( ShowBranch hash, _ ) ->
-            ( model
-            , Route.newUrl (Route.ChainAt hash)
-            )
+            ( model, Route.newUrl (Route.ChainAt hash) )
+
+        ( ShowContract contractId, _ ) ->
+            ( model, Route.newUrl (Route.Contract contractId) )
 
         ( Tick time, _ ) ->
             ( { model | now = Date.fromTime time }
@@ -265,6 +281,14 @@ setRoute routeMaybe model =
                 , chain = Chain.loadingPeers model.chain
               }
             , getPeers model
+            )
+
+        Just (Route.Contract contractId) ->
+            ( { model
+                | pageState = Loaded (Page.Contract contractId)
+                , chain = Chain.loadingContract model.chain
+              }
+            , Request.Block.getContract model.nodeUrl contractId |> Http.send LoadContract
             )
 
         Just Route.Schema ->

@@ -39,6 +39,10 @@ type alias TransactionID =
     Base58CheckEncodedSHA256
 
 
+type alias ContractID =
+    Base58CheckEncodedSHA256
+
+
 type alias Fitness =
     List Int
 
@@ -145,6 +149,10 @@ type alias PeerStats =
     }
 
 
+type alias Contract =
+    Decode.Value
+
+
 type alias Model =
     { heads : List BlockID
     , blocks : Dict BlockID Block
@@ -154,6 +162,7 @@ type alias Model =
     , contracts : RemoteData Http.Error Contracts
     , keys : RemoteData Http.Error (List Key)
     , peers : RemoteData Http.Error (List Peer)
+    , contract : RemoteData Http.Error Contract
     }
 
 
@@ -167,6 +176,7 @@ init =
     , contracts = RemoteData.NotAsked
     , keys = RemoteData.NotAsked
     , peers = RemoteData.NotAsked
+    , contract = RemoteData.NotAsked
     }
 
 
@@ -376,8 +386,8 @@ loadContracts model contracts =
     { model | contracts = RemoteData.Success contracts }
 
 
-loadContractError : Model -> Http.Error -> Model
-loadContractError model error =
+loadContractsError : Model -> Http.Error -> Model
+loadContractsError model error =
     { model | contracts = RemoteData.Failure error }
 
 
@@ -414,6 +424,21 @@ loadPeers model peers =
 loadPeersError : Model -> Http.Error -> Model
 loadPeersError model error =
     { model | peers = RemoteData.Failure error }
+
+
+loadingContract : Model -> Model
+loadingContract model =
+    { model | contract = RemoteData.Loading }
+
+
+loadContract : Model -> Contract -> Model
+loadContract model contract =
+    { model | contract = RemoteData.Success contract }
+
+
+loadContractError : Model -> Http.Error -> Model
+loadContractError model error =
+    { model | contract = RemoteData.Failure error }
 
 
 
@@ -584,3 +609,8 @@ decodeAddress =
     Decode.succeed Address
         |> Decode.required "addr" Decode.string
         |> Decode.required "port" Decode.int
+
+
+decodeContract : Decode.Decoder Contract
+decodeContract =
+    Decode.value
