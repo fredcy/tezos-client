@@ -28,15 +28,11 @@ type Msg
     | LoadBlockOperations BlockID (Result Http.Error Chain.BlockOperations)
     | LoadParsedOperation OperationID (Result Http.Error Chain.ParsedOperation)
     | SchemaMsg SchemaName Schema.Msg
-    | ShowBlock BlockID
-    | ShowOperation OperationID
-    | ShowBranch BlockID
-    | ShowContract Chain.ContractID
     | LoadHeads (Result Http.Error Chain.BlocksData)
     | LoadContractIDs (Result Http.Error (List Chain.ContractID))
     | LoadKeys (Result Http.Error (List Chain.Key))
     | LoadPeers (Result Http.Error (List Chain.Peer))
-    | LoadContract (Result Http.Error Chain.Contract)
+    | LoadContract Chain.ContractID (Result Http.Error Chain.Contract)
     | Tick Time
     | SetRoute (Maybe Route)
     | ClearErrors
@@ -142,7 +138,7 @@ updatePage page msg model =
             case contractsResult of
                 Ok contractIDs ->
                     ( { model | chain = Chain.loadContractIDs model.chain contractIDs }
-                    , Cmd.none
+                    , getContractDetails model.nodeUrl contractIDs
                     )
 
                 Err error ->
@@ -179,10 +175,10 @@ updatePage page msg model =
                     , Cmd.none
                     )
 
-        ( LoadContract contractResult, _ ) ->
+        ( LoadContract contractId contractResult, _ ) ->
             case contractResult of
                 Ok contract ->
-                    ( { model | chain = Chain.loadContract model.chain contract }, Cmd.none )
+                    ( { model | chain = Chain.loadContract model.chain contractId contract }, Cmd.none )
 
                 Err error ->
                     ( { model
@@ -191,23 +187,6 @@ updatePage page msg model =
                       }
                     , Cmd.none
                     )
-
-        ( ShowBlock blockhash, _ ) ->
-            ( model
-            , Cmd.batch
-                [ getBlockOperationDetails model blockhash
-                , Route.newUrl (Route.Block blockhash)
-                ]
-            )
-
-        ( ShowOperation operationId, _ ) ->
-            ( model, Route.newUrl (Route.Operation operationId) )
-
-        ( ShowBranch hash, _ ) ->
-            ( model, Route.newUrl (Route.ChainAt hash) )
-
-        ( ShowContract contractId, _ ) ->
-            ( model, Route.newUrl (Route.Contract contractId) )
 
         ( Tick time, _ ) ->
             ( { model | now = Date.fromTime time }
@@ -242,7 +221,7 @@ setRoute routeMaybe model =
 
         Just (Route.Block hash) ->
             ( { model | pageState = Loaded (Page.Block hash) }
-            , getBlock model hash
+            , Cmd.batch [ getBlock model hash, getBlockOperationDetails model hash ]
             )
 
         Just Route.Operations ->
@@ -288,7 +267,7 @@ setRoute routeMaybe model =
                 | pageState = Loaded (Page.Contract contractId)
                 , chain = Chain.loadingContract model.chain
               }
-            , Request.Block.getContract model.nodeUrl contractId |> Http.send LoadContract
+            , Request.Block.getContract model.nodeUrl contractId |> Http.send (LoadContract contractId)
             )
 
         Just Route.Schema ->
@@ -405,6 +384,15 @@ getAllBlocksOperations model =
 getContractIDs : Model -> Cmd Msg
 getContractIDs model =
     Request.Block.getContractIDs model.nodeUrl |> Http.send LoadContractIDs
+
+
+getContractDetails : URL -> List Chain.ContractID -> Cmd Msg
+getContractDetails nodeUrl contractIDs =
+    let
+        get contractId =
+            Request.Block.getContract nodeUrl contractId |> Http.send (LoadContract contractId)
+    in
+        List.map get contractIDs |> Cmd.batch
 
 
 getKeys : Model -> Cmd Msg

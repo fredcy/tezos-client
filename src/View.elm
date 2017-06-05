@@ -14,10 +14,11 @@ import Dict exposing (Dict)
 import List.Extra as List
 import ParseInt
 import RemoteData exposing (RemoteData)
-import Data.Chain as Chain exposing (BlockID, Block, OperationID, ParsedOperation, Base58CheckEncodedSHA256, SubOperation(..), getBranchList)
+import Data.Chain as Chain exposing (BlockID, Block, Contract, ContractID, OperationID, ParsedOperation, Base58CheckEncodedSHA256, SubOperation(..), getBranchList)
 import Data.Schema as Schema
 import Model exposing (..)
 import Page
+import Route
 import Update exposing (Msg(..))
 import View.Page
 
@@ -171,10 +172,11 @@ viewHeads model =
                 [ H.td [ HA.class "index" ] [ H.text (toString i) ]
                 , H.td
                     [ HA.class "hash"
-                    , HE.onClick (ShowBranch block.hash)
                     , HA.title block.hash
                     ]
-                    [ H.text (shortHash block.hash) ]
+                    [ H.a [ Route.href (Route.ChainAt block.hash) ]
+                        [ H.text (shortHash block.hash) ]
+                    ]
                 , H.td [ HA.class "timestamp" ] [ H.text (formatDate block.timestamp) ]
                 , H.td [ HA.class "age" ] [ H.text (Date.Distance.inWords model.now block.timestamp) ]
                 , H.td [ HA.class "fitness" ] [ H.text (toString (canonFitness block.fitness)) ]
@@ -239,17 +241,13 @@ blockOperationCount model block =
 
 viewBlock2 : Model -> Maybe BlockID -> Int -> Block -> Html Msg
 viewBlock2 model blockhashMaybe n block =
-    H.tr
-        [ HA.classList
-            [ ( "block", True ) ]
-        ]
+    H.tr [ HA.class "block" ]
         [ H.td [] [ H.text (toString block.level) ]
         , H.td
             [ HA.class "hash"
             , HA.title block.hash
-            , HE.onClick (ShowBlock block.hash)
             ]
-            [ H.text (shortHash block.hash) ]
+            [ H.a [ Route.href (Route.Block block.hash) ] [ H.text (shortHash block.hash) ] ]
         , H.td [ HA.class "timestamp" ]
             [ H.text (formatDate block.timestamp) ]
         , H.td [ HA.class "age" ]
@@ -261,7 +259,8 @@ viewBlock2 model blockhashMaybe n block =
 
 blockFullLink : BlockID -> Html Msg
 blockFullLink hash =
-    H.span [ HA.class "hash link", HE.onClick (ShowBlock hash) ] [ H.text hash ]
+    H.span [ HA.class "hash" ]
+        [ H.a [ Route.href (Route.Block hash) ] [ H.text hash ] ]
 
 
 viewProperty : String -> Html Msg -> Html Msg
@@ -394,6 +393,16 @@ formatInt number =
             |> FormatNumber.format { usLocale | decimals = 0 }
 
 
+formatCentiles : Int -> String
+formatCentiles number =
+    let
+        usLocale =
+            FormatNumber.Locales.usLocale
+    in
+        (toFloat number / 100)
+            |> FormatNumber.format { usLocale | decimals = 2 }
+
+
 viewSuboperation : SubOperation -> Html Msg
 viewSuboperation suboperation =
     case suboperation of
@@ -445,9 +454,15 @@ viewOperationsTable operations =
 
         tableRow operation =
             H.tr []
-                [ H.td [ HA.class "hash link", HA.title operation.hash, HE.onClick (ShowOperation operation.hash) ]
-                    [ H.text (shortHash operation.hash) ]
-                , H.td [ HA.class "hash", HA.title (sourceTitle operation.source) ] [ H.text (viewSourceMaybe operation.source) ]
+                [ H.td [ HA.class "hash" ]
+                    [ H.a
+                        [ Route.href (Route.Operation operation.hash)
+                        , HA.title operation.hash
+                        ]
+                        [ H.text (shortHash operation.hash) ]
+                    ]
+                , H.td [ HA.class "hash", HA.title (sourceTitle operation.source) ]
+                    [ H.text (viewSourceMaybe operation.source) ]
                 , H.td [] [ H.ul [] (List.map (\so -> H.li [] [ viewSuboperation so ]) operation.operations) ]
                 ]
     in
@@ -488,7 +503,7 @@ viewContracts model =
         [ H.h3 [] [ H.text "Contracts" ]
         , case model.chain.contractIDs of
             RemoteData.Success contractIDs ->
-                viewContractList contractIDs
+                viewContractTable contractIDs model.chain.contracts
 
             RemoteData.Loading ->
                 H.text "loading ..."
@@ -498,19 +513,45 @@ viewContracts model =
         ]
 
 
-viewContractList : (List Chain.ContractID) -> Html Msg
-viewContractList contractIDs =
+viewContractTable : List ContractID -> Dict ContractID Contract -> Html Msg
+viewContractTable contractIDs contracts =
     let
-        viewContract contract =
-            H.li []
-                [ H.span
-                    [ HA.class "hash link"
-                    , HE.onClick (ShowContract contract)
-                    ]
-                    [ H.text contract ]
+        thead =
+            H.tr []
+                [ H.th [] [ H.text "contractID" ]
+                , H.th [] [ H.text "balance (ꜩ)" ]
+                , H.th [] [ H.text "manager" ]
                 ]
+
+        trow contractId =
+            let
+                contractMaybe =
+                    Dict.get contractId contracts
+            in
+                case contractMaybe of
+                    Just contract ->
+                        H.tr []
+                            [ H.td [ HA.class "hash" ]
+                                [ H.a [ Route.href (Route.Contract contractId) ]
+                                    [ H.text (shortHash contractId) ]
+                                ]
+                            , H.td [ HA.class "balance" ] [ H.text (formatCentiles contract.balance) ]
+                            , H.td [ HA.class "hash" ]
+                                [ H.a [ Route.href (Route.Contract contract.manager) ]
+                                    [ H.text (shortHash contract.manager) ]
+                                ]
+                            ]
+
+                    Nothing ->
+                        H.tr []
+                            [ H.td [ HA.class "hash link" ] [ H.text (shortHash contractId) ]
+                            , H.td [] [ H.text "..." ]
+                            ]
+
+        tbody =
+            H.tbody [] (List.map trow (List.sort contractIDs))
     in
-        H.ul [] (List.map viewContract (List.sort contractIDs))
+        H.table [ HA.class "contracts" ] [ thead, tbody ]
 
 
 viewKeys : RemoteData Http.Error (List Chain.Key) -> Html Msg
@@ -628,13 +669,21 @@ viewPeersList peers =
         H.table [ HA.class "peers" ] [ thead, tbody ]
 
 
-viewContract : Chain.ContractID -> RemoteData Http.Error Chain.Contract -> Html Msg
+viewContract : ContractID -> RemoteData Http.Error Contract -> Html Msg
 viewContract contractId contractData =
     let
         viewDelegate delegate =
             H.span []
                 [ H.span [ HA.class "hash" ] [ H.text delegate.value ]
-                , H.text (" (" ++ (if delegate.setable then "setable" else "not setable") ++ ")")
+                , H.text
+                    (" ("
+                        ++ (if delegate.setable then
+                                "setable"
+                            else
+                                "not setable"
+                           )
+                        ++ ")"
+                    )
                 ]
 
         viewScript scriptMaybe =

@@ -163,6 +163,15 @@ table.peers th {
     padding: .4em;
 }
 
+table.contracts td,
+table.contracts th {
+    padding: .4em;
+}
+
+table.contracts td.balance {
+    text-align: right;
+}
+
 .connection .timestamp {
     white-space: nowrap;
 }
@@ -181,6 +190,7 @@ table.blockchain tr.block td.hash,
 table.heads td.hash,
 .link {
     color: blue;
+    text-decoration: none;
 }
 
 table.blockchain tr.block td.hash:hover,
@@ -189,6 +199,11 @@ table.heads td.hash:hover,
     color: red;
     text-decoration: underline;
 }
+
+A {
+    text-decoration: none;
+}
+
 
 td.hash, div.hash, span.hash,
 td.predecessor, div.predecessor,
