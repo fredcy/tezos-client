@@ -521,6 +521,8 @@ viewContractTable contractIDs contracts =
                 [ H.th [] [ H.text "contractID" ]
                 , H.th [] [ H.text "balance (ꜩ)" ]
                 , H.th [] [ H.text "manager" ]
+                , H.th [] [ H.text "counter" ]
+                , H.th [] [ H.text "script prefix" ]
                 ]
 
         trow contractId =
@@ -539,6 +541,13 @@ viewContractTable contractIDs contracts =
                             , H.td [ HA.class "hash" ]
                                 [ H.a [ Route.href (Route.Contract contract.manager) ]
                                     [ H.text (shortHash contract.manager) ]
+                                ]
+                            , H.td [ HA.class "number" ] [ H.text (toString contract.counter) ]
+                            , H.td []
+                                [ contract.script
+                                    |> Maybe.map (toString >> String.left 16)
+                                    |> Maybe.withDefault ""
+                                    |> H.text
                                 ]
                             ]
 
