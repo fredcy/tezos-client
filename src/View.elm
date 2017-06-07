@@ -416,9 +416,16 @@ viewSuboperation suboperation =
         Transaction address amount ->
             H.span []
                 [ H.text "Transaction of "
-                , H.text (formatInt amount)
-                , H.text " to "
+                , H.text (formatCentiles amount)
+                , H.text " ꜩ to "
                 , H.span [ HA.title address, HA.class "hash" ] [ H.text (shortHash address) ]
+                ]
+
+        Delegation delegatee ->
+            H.span []
+                [ H.text "Delegation to "
+                , H.span [ HA.class "hash" ]
+                    [ H.a [ Route.href (Route.Contract delegatee) ] [ H.text (shortHash delegatee) ] ]
                 ]
 
         _ ->
@@ -522,7 +529,7 @@ viewContractTable contractIDs contracts =
                 , H.th [] [ H.text "balance (ꜩ)" ]
                 , H.th [] [ H.text "manager" ]
                 , H.th [] [ H.text "counter" ]
-                , H.th [] [ H.text "script prefix" ]
+                , H.th [] [ H.text "script size" ]
                 ]
 
         trow contractId =
@@ -543,9 +550,9 @@ viewContractTable contractIDs contracts =
                                     [ H.text (shortHash contract.manager) ]
                                 ]
                             , H.td [ HA.class "number" ] [ H.text (toString contract.counter) ]
-                            , H.td []
+                            , H.td [ HA.class "number" ]
                                 [ contract.script
-                                    |> Maybe.map (toString >> String.left 16)
+                                    |> Maybe.map (toString >> String.length >> toString)
                                     |> Maybe.withDefault ""
                                     |> H.text
                                 ]
@@ -683,7 +690,8 @@ viewContract contractId contractData =
     let
         viewDelegate delegate =
             H.span []
-                [ H.span [ HA.class "hash" ] [ H.text delegate.value ]
+                [ H.span [ HA.class "hash" ]
+                    [ H.text (Maybe.withDefault "" delegate.value) ]
                 , H.text
                     (" ("
                         ++ (if delegate.setable then
@@ -716,6 +724,7 @@ viewContract contractId contractData =
                         , viewProperty "spendable" (H.text (toString contract.spendable))
                         , viewProperty "counter" (H.text (toString contract.counter))
                         , viewProperty "delegate" (viewDelegate contract.delegate)
+                        , viewProperty "script" (H.text (toString contract.script))
 
                         --, viewProperty "raw data" (H.text (toString contract.raw))
                         ]

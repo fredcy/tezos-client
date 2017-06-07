@@ -146,8 +146,8 @@ type alias PeerStats =
 
 
 type alias Delegate =
-    { value : ContractID
-    , setable : Bool
+    { setable : Bool
+    , value : Maybe ContractID
     }
 
 
@@ -647,5 +647,6 @@ decodeContract =
 decodeDelegate : Decode.Decoder Delegate
 decodeDelegate =
     Decode.succeed Delegate
-        |> Decode.required "value" Decode.string
         |> Decode.required "setable" Decode.bool
+        |> Decode.optional "value" (Decode.string |> Decode.map Just) Nothing
+
