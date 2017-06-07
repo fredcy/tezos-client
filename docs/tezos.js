@@ -9,6 +9,8 @@
     function transferCancelled(evt) {
         // This happens when reloading the page.
         console.log("transferCancelled", timeDisplay(), evt);
+
+        window.setTimeout(sendRequest, 5000);
     }
 
     function transferFailed(evt) {
