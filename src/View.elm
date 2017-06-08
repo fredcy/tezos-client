@@ -720,7 +720,7 @@ viewContract contractId contractData =
                 RemoteData.Success contract ->
                     H.div []
                         [ viewProperty "manager" (H.span [ HA.class "hash" ] [ H.text contract.manager ])
-                        , viewProperty "balance" (H.text (formatInt contract.balance))
+                        , viewProperty "balance (ꜩ)" (H.text (formatCentiles contract.balance))
                         , viewProperty "spendable" (H.text (toString contract.spendable))
                         , viewProperty "counter" (H.text (toString contract.counter))
                         , viewProperty "delegate" (viewDelegate contract.delegate)

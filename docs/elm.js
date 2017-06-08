@@ -19269,9 +19269,9 @@ var _user$project$View$viewContract = F2(
 											ctor: '::',
 											_0: A2(
 												_user$project$View$viewProperty,
-												'balance',
+												'balance (ꜩ)',
 												_elm_lang$html$Html$text(
-													_user$project$View$formatInt(_p17.balance))),
+													_user$project$View$formatCentiles(_p17.balance))),
 											_1: {
 												ctor: '::',
 												_0: A2(
