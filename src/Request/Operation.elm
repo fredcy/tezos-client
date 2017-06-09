@@ -6,7 +6,7 @@ import Json.Decode.Pipeline as Decode
 import Json.Encode as Encode
 import Data.Chain as Chain exposing (BlockID, Operation, ParsedOperation, SubOperation(..))
 import Data.Request exposing (URL)
-import Request exposing (decodeDebug)
+import Request.Lib
 
 
 getBlockOperations : URL -> BlockID -> Http.Request Chain.BlockOperations
@@ -93,5 +93,5 @@ decodeEndorsement =
                             (Decode.field "delegate" Decode.string)
 
                     _ ->
-                        decodeDebug "unknown kind" |> Decode.map Unknown
+                        Request.Lib.decodeDebug "unknown kind" |> Decode.map Unknown
             )

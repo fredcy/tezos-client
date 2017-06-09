@@ -13,6 +13,7 @@ import Model exposing (..)
 import Page
 import Update exposing (update, Msg(..))
 import View exposing (view)
+import Request
 import Request.Block
 
 
@@ -50,7 +51,7 @@ init flags location =
     in
         ( routedModel
         , Cmd.batch
-            [ Request.Block.getHeads routedModel.nodeUrl |> Http.send LoadHeads
+            [ Request.Block.getHeads routedModel.nodeUrl |> Http.send (Result.map Request.Heads >> RpcResponse)
             , routeCmd
             ]
         )
