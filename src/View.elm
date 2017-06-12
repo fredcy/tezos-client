@@ -732,9 +732,34 @@ viewContract contractId contractData =
                 RemoteData.Loading ->
                     H.text "loading ..."
 
-                _ ->
-                    H.text (toString contractData)
+                RemoteData.Failure error ->
+                    viewFailure error
+
+                RemoteData.NotAsked ->
+                    H.text "not asked"
             ]
+
+
+viewFailure : Http.Error -> Html Msg
+viewFailure error =
+    case error of
+        Http.BadPayload message response ->
+            H.div []
+                [ H.h4 [] [ H.text "Error: Bad Payload" ]
+                , H.div [] [ H.text message ]
+                , H.h5 [] [ H.text "Response" ]
+                , H.div [] [ H.text (toString response) ]
+                , H.h5 [] [ H.text "Body" ]
+                , viewResponseBody response.body
+                ]
+
+        _ ->
+            H.text (toString error)
+
+
+viewResponseBody : String -> Html Msg
+viewResponseBody body =
+    H.div [ HA.style [ ( "white-space", "pre" ) ] ] [ H.text body ]
 
 
 viewError : String -> List Error -> Html Msg
@@ -752,6 +777,8 @@ viewErrorInfo nodeUrl error =
             H.div []
                 [ H.h4 [] [ H.text "Bad Payload (JSON parsing problem)" ]
                 , H.div [] [ H.text message ]
+                , H.h5 [] [ H.text "Response body" ]
+                , H.pre [] [ H.text response.body ]
                 ]
 
         HttpError (Http.BadStatus response) ->

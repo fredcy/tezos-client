@@ -158,8 +158,32 @@ type alias Contract =
     , spendable : Bool
     , manager : ContractID
     , delegate : Delegate
-    , script : Maybe Decode.Value
+    , script : Maybe Script
     }
+
+
+type alias Script =
+    { code : Code
+    , storage : Storage
+    }
+
+
+type alias Code =
+    { code : Program
+    , argType : String
+    , retType : String
+    , storageType : Decode.Value
+    }
+
+
+type alias Storage =
+    { storage : Decode.Value
+    , storageType : Decode.Value
+    }
+
+
+type alias Program =
+    List Decode.Value
 
 
 type alias Model =
@@ -639,7 +663,7 @@ decodeContract =
                         |> Decode.required "spendable" Decode.bool
                         |> Decode.required "manager" Decode.string
                         |> Decode.required "delegate" decodeDelegate
-                        |> Decode.optional "script" (Decode.value |> Decode.map Just) Nothing
+                        |> Decode.optional "script" (decodeScript |> Decode.map Just) Nothing
                     )
             )
 
@@ -650,3 +674,30 @@ decodeDelegate =
         |> Decode.required "setable" Decode.bool
         |> Decode.optional "value" (Decode.string |> Decode.map Just) Nothing
 
+
+decodeScript : Decode.Decoder Script
+decodeScript =
+    Decode.succeed Script
+        |> Decode.required "code" decodeCode
+        |> Decode.required "storage" decodeStorage
+
+
+decodeCode : Decode.Decoder Code
+decodeCode =
+    Decode.succeed Code
+        |> Decode.required "code" decodeProgram
+        |> Decode.required "argType" Decode.string
+        |> Decode.required "retType" Decode.string
+        |> Decode.required "storageType" Decode.value
+
+
+decodeStorage : Decode.Decoder Storage
+decodeStorage =
+    Decode.succeed Storage
+        |> Decode.required "storage" Decode.value
+        |> Decode.required "storageType" Decode.value
+
+
+decodeProgram : Decode.Decoder Program
+decodeProgram =
+    Decode.list Decode.value

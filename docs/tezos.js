@@ -107,5 +107,5 @@
     // Keep state on stream received so far, up through latest complete chunk.
     var lengthParsed = 0;
 
-    // sendRequest(); // TODO re-enable
+    sendRequest();
 })();
