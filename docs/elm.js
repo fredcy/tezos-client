@@ -15037,7 +15037,129 @@ var _rluiten$elm_date_extra$Date_Extra_Format$utcIsoString = function (date) {
 };
 var _rluiten$elm_date_extra$Date_Extra_Format$isoFormat = '%Y-%m-%dT%H:%M:%S';
 
-var _user$project$Data_Chain$decodeProgram = _elm_lang$core$Json_Decode$list(_elm_lang$core$Json_Decode$value);
+var _user$project$Data_Michelson$Script = F2(
+	function (a, b) {
+		return {code: a, storage: b};
+	});
+var _user$project$Data_Michelson$Code = F4(
+	function (a, b, c, d) {
+		return {code: a, argType: b, retType: c, storageType: d};
+	});
+var _user$project$Data_Michelson$Storage = F2(
+	function (a, b) {
+		return {storage: a, storageType: b};
+	});
+var _user$project$Data_Michelson$decodeStorage = A3(
+	_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+	'storageType',
+	_elm_lang$core$Json_Decode$value,
+	A3(
+		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+		'storage',
+		_elm_lang$core$Json_Decode$value,
+		_elm_lang$core$Json_Decode$succeed(_user$project$Data_Michelson$Storage)));
+var _user$project$Data_Michelson$PrimArgT = F2(
+	function (a, b) {
+		return {ctor: 'PrimArgT', _0: a, _1: b};
+	});
+var _user$project$Data_Michelson$PrimT = function (a) {
+	return {ctor: 'PrimT', _0: a};
+};
+var _user$project$Data_Michelson$decodePrimT = A2(_elm_lang$core$Json_Decode$map, _user$project$Data_Michelson$PrimT, _elm_lang$core$Json_Decode$string);
+var _user$project$Data_Michelson$SeqT = function (a) {
+	return {ctor: 'SeqT', _0: a};
+};
+var _user$project$Data_Michelson$StringT = function (a) {
+	return {ctor: 'StringT', _0: a};
+};
+var _user$project$Data_Michelson$decodeStringT = A2(
+	_elm_lang$core$Json_Decode$map,
+	_user$project$Data_Michelson$StringT,
+	A2(_elm_lang$core$Json_Decode$field, 'string', _elm_lang$core$Json_Decode$string));
+var _user$project$Data_Michelson$IntT = function (a) {
+	return {ctor: 'IntT', _0: a};
+};
+var _user$project$Data_Michelson$decodeIntT = A2(
+	_elm_lang$core$Json_Decode$map,
+	_user$project$Data_Michelson$IntT,
+	A2(_elm_lang$core$Json_Decode$field, 'int', _elm_lang$core$Json_Decode$string));
+var _user$project$Data_Michelson$decodeAST = _elm_lang$core$Json_Decode$lazy(
+	function (_p0) {
+		return _elm_lang$core$Json_Decode$oneOf(
+			{
+				ctor: '::',
+				_0: _user$project$Data_Michelson$decodeIntT,
+				_1: {
+					ctor: '::',
+					_0: _user$project$Data_Michelson$decodeStringT,
+					_1: {
+						ctor: '::',
+						_0: _user$project$Data_Michelson$decodeSeqT,
+						_1: {
+							ctor: '::',
+							_0: _user$project$Data_Michelson$decodePrimT,
+							_1: {
+								ctor: '::',
+								_0: _user$project$Data_Michelson$decodePrimArgT,
+								_1: {ctor: '[]'}
+							}
+						}
+					}
+				}
+			});
+	});
+var _user$project$Data_Michelson$decodePrimArgT = A2(
+	_elm_lang$core$Json_Decode$andThen,
+	function (kvPairs) {
+		var _p1 = kvPairs;
+		if (((_p1.ctor === '::') && (_p1._0.ctor === '_Tuple2')) && (_p1._1.ctor === '[]')) {
+			return _elm_lang$core$Json_Decode$succeed(
+				A2(_user$project$Data_Michelson$PrimArgT, _p1._0._0, _p1._0._1));
+		} else {
+			return _elm_lang$core$Json_Decode$fail('bad kvPairs');
+		}
+	},
+	_elm_lang$core$Json_Decode$keyValuePairs(
+		_elm_lang$core$Json_Decode$lazy(
+			function (_p2) {
+				return _user$project$Data_Michelson$decodeAST;
+			})));
+var _user$project$Data_Michelson$decodeSeqT = A2(
+	_elm_lang$core$Json_Decode$map,
+	_user$project$Data_Michelson$SeqT,
+	_elm_lang$core$Json_Decode$list(
+		_elm_lang$core$Json_Decode$lazy(
+			function (_p3) {
+				return _user$project$Data_Michelson$decodeAST;
+			})));
+var _user$project$Data_Michelson$decodeProgram = _user$project$Data_Michelson$decodeSeqT;
+var _user$project$Data_Michelson$decodeCode = A3(
+	_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+	'storageType',
+	_elm_lang$core$Json_Decode$value,
+	A3(
+		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+		'retType',
+		_elm_lang$core$Json_Decode$string,
+		A3(
+			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+			'argType',
+			_elm_lang$core$Json_Decode$string,
+			A3(
+				_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+				'code',
+				_user$project$Data_Michelson$decodeProgram,
+				_elm_lang$core$Json_Decode$succeed(_user$project$Data_Michelson$Code)))));
+var _user$project$Data_Michelson$decodeScript = A3(
+	_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+	'storage',
+	_user$project$Data_Michelson$decodeStorage,
+	A3(
+		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+		'code',
+		_user$project$Data_Michelson$decodeCode,
+		_elm_lang$core$Json_Decode$succeed(_user$project$Data_Michelson$Script)));
+
 var _user$project$Data_Chain$decodeContractIDs = A2(
 	_elm_lang$core$Json_Decode$field,
 	'ok',
@@ -15557,53 +15679,6 @@ var _user$project$Data_Chain$Contract = F7(
 	function (a, b, c, d, e, f, g) {
 		return {raw: a, counter: b, balance: c, spendable: d, manager: e, delegate: f, script: g};
 	});
-var _user$project$Data_Chain$Script = F2(
-	function (a, b) {
-		return {code: a, storage: b};
-	});
-var _user$project$Data_Chain$Code = F4(
-	function (a, b, c, d) {
-		return {code: a, argType: b, retType: c, storageType: d};
-	});
-var _user$project$Data_Chain$decodeCode = A3(
-	_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-	'storageType',
-	_elm_lang$core$Json_Decode$value,
-	A3(
-		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-		'retType',
-		_elm_lang$core$Json_Decode$string,
-		A3(
-			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-			'argType',
-			_elm_lang$core$Json_Decode$string,
-			A3(
-				_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-				'code',
-				_user$project$Data_Chain$decodeProgram,
-				_elm_lang$core$Json_Decode$succeed(_user$project$Data_Chain$Code)))));
-var _user$project$Data_Chain$Storage = F2(
-	function (a, b) {
-		return {storage: a, storageType: b};
-	});
-var _user$project$Data_Chain$decodeStorage = A3(
-	_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-	'storageType',
-	_elm_lang$core$Json_Decode$value,
-	A3(
-		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-		'storage',
-		_elm_lang$core$Json_Decode$value,
-		_elm_lang$core$Json_Decode$succeed(_user$project$Data_Chain$Storage)));
-var _user$project$Data_Chain$decodeScript = A3(
-	_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-	'storage',
-	_user$project$Data_Chain$decodeStorage,
-	A3(
-		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-		'code',
-		_user$project$Data_Chain$decodeCode,
-		_elm_lang$core$Json_Decode$succeed(_user$project$Data_Chain$Script)));
 var _user$project$Data_Chain$decodeContract = A2(
 	_elm_lang$core$Json_Decode$andThen,
 	function (raw) {
@@ -15613,7 +15688,7 @@ var _user$project$Data_Chain$decodeContract = A2(
 			A4(
 				_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$optional,
 				'script',
-				A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _user$project$Data_Chain$decodeScript),
+				A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _user$project$Data_Michelson$decodeScript),
 				_elm_lang$core$Maybe$Nothing,
 				A3(
 					_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
