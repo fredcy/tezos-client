@@ -160,8 +160,8 @@ type alias Contract =
     , manager : ContractID
     , delegate : Delegate
     , script : Maybe Michelson.Script
+    , rawBody : String
     }
-
 
 
 type alias Model =
@@ -642,7 +642,18 @@ decodeContract =
                         |> Decode.required "manager" Decode.string
                         |> Decode.required "delegate" decodeDelegate
                         |> Decode.optional "script" (Michelson.decodeScript |> Decode.map Just) Nothing
+                        |> Decode.hardcoded "[placeholder]"
                     )
+            )
+
+
+decodeContractResponse : Http.Response String -> Result String Contract
+decodeContractResponse response =
+    -- Decode full response so we can save the raw string body for viewing later
+    Decode.decodeString decodeContract response.body
+        |> Result.map
+            (\contract ->
+                { contract | rawBody = response.body }
             )
 
 

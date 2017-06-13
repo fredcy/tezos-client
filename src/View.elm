@@ -725,8 +725,9 @@ viewContract contractId contractData =
                         , viewProperty "counter" (H.text (toString contract.counter))
                         , viewProperty "delegate" (viewDelegate contract.delegate)
                         , viewProperty "script" (H.text (toString contract.script))
-
-                        --, viewProperty "raw data" (H.text (toString contract.raw))
+                        --, viewProperty "raw data" (H.div [] [ H.text (toString contract.raw) ])
+                        , H.h5 [] [ H.text "Raw response" ]
+                        , H.pre [] [ H.text contract.rawBody ]
                         ]
 
                 RemoteData.Loading ->

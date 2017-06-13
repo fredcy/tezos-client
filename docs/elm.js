@@ -15675,9 +15675,9 @@ var _user$project$Data_Chain$decodeDelegate = A4(
 		'setable',
 		_elm_lang$core$Json_Decode$bool,
 		_elm_lang$core$Json_Decode$succeed(_user$project$Data_Chain$Delegate)));
-var _user$project$Data_Chain$Contract = F7(
-	function (a, b, c, d, e, f, g) {
-		return {raw: a, counter: b, balance: c, spendable: d, manager: e, delegate: f, script: g};
+var _user$project$Data_Chain$Contract = F8(
+	function (a, b, c, d, e, f, g, h) {
+		return {raw: a, counter: b, balance: c, spendable: d, manager: e, delegate: f, script: g, rawBody: h};
 	});
 var _user$project$Data_Chain$decodeContract = A2(
 	_elm_lang$core$Json_Decode$andThen,
@@ -15685,37 +15685,50 @@ var _user$project$Data_Chain$decodeContract = A2(
 		return A2(
 			_elm_lang$core$Json_Decode$field,
 			'ok',
-			A4(
-				_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$optional,
-				'script',
-				A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _user$project$Data_Michelson$decodeScript),
-				_elm_lang$core$Maybe$Nothing,
-				A3(
-					_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-					'delegate',
-					_user$project$Data_Chain$decodeDelegate,
+			A2(
+				_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$hardcoded,
+				'[placeholder]',
+				A4(
+					_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$optional,
+					'script',
+					A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _user$project$Data_Michelson$decodeScript),
+					_elm_lang$core$Maybe$Nothing,
 					A3(
 						_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-						'manager',
-						_elm_lang$core$Json_Decode$string,
+						'delegate',
+						_user$project$Data_Chain$decodeDelegate,
 						A3(
 							_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-							'spendable',
-							_elm_lang$core$Json_Decode$bool,
+							'manager',
+							_elm_lang$core$Json_Decode$string,
 							A3(
 								_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-								'balance',
-								_elm_lang$core$Json_Decode$int,
+								'spendable',
+								_elm_lang$core$Json_Decode$bool,
 								A3(
 									_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-									'counter',
+									'balance',
 									_elm_lang$core$Json_Decode$int,
-									A2(
-										_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$hardcoded,
-										raw,
-										_elm_lang$core$Json_Decode$succeed(_user$project$Data_Chain$Contract)))))))));
+									A3(
+										_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+										'counter',
+										_elm_lang$core$Json_Decode$int,
+										A2(
+											_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$hardcoded,
+											raw,
+											_elm_lang$core$Json_Decode$succeed(_user$project$Data_Chain$Contract))))))))));
 	},
 	_elm_lang$core$Json_Decode$value);
+var _user$project$Data_Chain$decodeContractResponse = function (response) {
+	return A2(
+		_elm_lang$core$Result$map,
+		function (contract) {
+			return _elm_lang$core$Native_Utils.update(
+				contract,
+				{rawBody: response.body});
+		},
+		A2(_elm_lang$core$Json_Decode$decodeString, _user$project$Data_Chain$decodeContract, response.body));
+};
 var _user$project$Data_Chain$Model = function (a) {
 	return function (b) {
 		return function (c) {
@@ -16733,6 +16746,27 @@ var _user$project$Model$HttpError = function (a) {
 	return {ctor: 'HttpError', _0: a};
 };
 
+var _user$project$Request_Block$getContract2 = F2(
+	function (nodeUrl, contractId) {
+		var url = A2(
+			_elm_lang$core$Basics_ops['++'],
+			nodeUrl,
+			A2(_elm_lang$core$Basics_ops['++'], '/blocks/head/proto/context/contracts/', contractId));
+		return _elm_lang$http$Http$request(
+			{
+				method: 'POST',
+				headers: {
+					ctor: '::',
+					_0: A2(_elm_lang$http$Http$header, 'Content-Type', 'application/json'),
+					_1: {ctor: '[]'}
+				},
+				url: url,
+				body: _user$project$Data_Request$emptyJsonBody,
+				expect: _elm_lang$http$Http$expectStringResponse(_user$project$Data_Chain$decodeContractResponse),
+				timeout: _elm_lang$core$Maybe$Nothing,
+				withCredentials: false
+			});
+	});
 var _user$project$Request_Block$getContract = F2(
 	function (nodeUrl, contractId) {
 		var url = A2(
@@ -17383,7 +17417,7 @@ var _user$project$Update$setRoute = F2(
 						_1: A2(
 							_elm_lang$http$Http$send,
 							_user$project$Update$LoadContract(_p11),
-							A2(_user$project$Request_Block$getContract, model.nodeUrl, _p11))
+							A2(_user$project$Request_Block$getContract2, model.nodeUrl, _p11))
 					};
 				case 'Schema':
 					var schemaQuery2 = '/describe/blocks/head/proto';
@@ -19539,7 +19573,29 @@ var _user$project$View$viewContract = F2(
 																'script',
 																_elm_lang$html$Html$text(
 																	_elm_lang$core$Basics$toString(_p19.script))),
-															_1: {ctor: '[]'}
+															_1: {
+																ctor: '::',
+																_0: A2(
+																	_elm_lang$html$Html$h5,
+																	{ctor: '[]'},
+																	{
+																		ctor: '::',
+																		_0: _elm_lang$html$Html$text('Raw response'),
+																		_1: {ctor: '[]'}
+																	}),
+																_1: {
+																	ctor: '::',
+																	_0: A2(
+																		_elm_lang$html$Html$pre,
+																		{ctor: '[]'},
+																		{
+																			ctor: '::',
+																			_0: _elm_lang$html$Html$text(_p19.rawBody),
+																			_1: {ctor: '[]'}
+																		}),
+																	_1: {ctor: '[]'}
+																}
+															}
 														}
 													}
 												}

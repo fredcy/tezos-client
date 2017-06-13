@@ -72,3 +72,21 @@ getContract nodeUrl contractId =
             nodeUrl ++ "/blocks/head/proto/context/contracts/" ++ contractId
     in
         Http.post url emptyJsonBody Chain.decodeContract
+
+
+getContract2 : URL -> ContractID -> Http.Request Contract
+getContract2 nodeUrl contractId =
+    let
+        url =
+            nodeUrl ++ "/blocks/head/proto/context/contracts/" ++ contractId
+
+    in
+        Http.request
+            { method = "POST"
+            , headers = [ Http.header "Content-Type" "application/json" ]
+            , url = url
+            , body = emptyJsonBody
+            , expect = Http.expectStringResponse Chain.decodeContractResponse
+            , timeout = Nothing
+            , withCredentials = False
+            }
