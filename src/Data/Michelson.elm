@@ -12,8 +12,10 @@ type alias Script =
 
 type alias Code =
     { code : Program
-    , argType : String
-    , retType : String
+
+    -- TODO : decode structure of the following
+    , argType : Decode.Value
+    , retType : Decode.Value
     , storageType : Decode.Value
     }
 
@@ -35,8 +37,8 @@ decodeCode : Decode.Decoder Code
 decodeCode =
     Decode.succeed Code
         |> Decode.required "code" decodeProgram
-        |> Decode.required "argType" Decode.string
-        |> Decode.required "retType" Decode.string
+        |> Decode.required "argType" Decode.value
+        |> Decode.required "retType" Decode.value
         |> Decode.required "storageType" Decode.value
 
 

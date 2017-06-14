@@ -15140,11 +15140,11 @@ var _user$project$Data_Michelson$decodeCode = A3(
 	A3(
 		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
 		'retType',
-		_elm_lang$core$Json_Decode$string,
+		_elm_lang$core$Json_Decode$value,
 		A3(
 			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
 			'argType',
-			_elm_lang$core$Json_Decode$string,
+			_elm_lang$core$Json_Decode$value,
 			A3(
 				_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
 				'code',
