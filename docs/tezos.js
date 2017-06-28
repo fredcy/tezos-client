@@ -44,10 +44,10 @@
             try {
                 var parsed = JSON.parse(unit);
             } catch (e) {
-                //console.log("parse failure", i, unit.length, e);
+                console.log("parse failure", i, unit.length, e);
                 break;
             }
-            //console.log("parsed", i, parsed);
+            console.log("parsed", i, parsed);
             app.ports.monitor.send(parsed);
         }
 

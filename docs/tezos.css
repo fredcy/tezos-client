@@ -282,3 +282,7 @@ table.operations td ul {
 .page-header .nav-links {
     clear: both;
 }
+
+div.sequence {
+    display: inline;
+}

@@ -13,9 +13,11 @@ import Http
 import Dict exposing (Dict)
 import List.Extra as List
 import ParseInt
+import Regex
 import RemoteData exposing (RemoteData)
 import Data.Chain as Chain exposing (BlockID, Block, Contract, ContractID, OperationID, ParsedOperation, Base58CheckEncodedSHA256, SubOperation(..), getBranchList)
 import Data.Schema as Schema
+import Data.Michelson as Michelson
 import Model exposing (..)
 import Page
 import Route
@@ -710,6 +712,14 @@ viewContract contractId contractData =
                         viewProperty "script" (H.text (toString script))
                     )
                 |> Maybe.withDefault (H.text "")
+
+        viewProg scriptMaybe =
+            scriptMaybe
+                |> Maybe.map
+                    (\script ->
+                        viewProperty "program" (simplifyProgram1 script.code.code |> viewProgram)
+                    )
+                |> Maybe.withDefault (H.text "")
     in
         H.div []
             [ H.h3 []
@@ -724,7 +734,9 @@ viewContract contractId contractData =
                         , viewProperty "spendable" (H.text (toString contract.spendable))
                         , viewProperty "counter" (H.text (toString contract.counter))
                         , viewProperty "delegate" (viewDelegate contract.delegate)
-                        , viewProperty "script" (H.text (toString contract.script))
+                        , viewScript contract.script
+                        , viewProg contract.script
+
                         --, viewProperty "raw data" (H.div [] [ H.text (toString contract.raw) ])
                         , H.h5 [] [ H.text "Raw response" ]
                         , H.pre [] [ H.text contract.rawBody ]
@@ -739,6 +751,84 @@ viewContract contractId contractData =
                 RemoteData.NotAsked ->
                     H.text "not asked"
             ]
+
+
+viewProgram : Michelson.Program -> Html Msg
+viewProgram program =
+    case program of
+        Michelson.IntT i ->
+            H.text (toString i)
+
+        Michelson.StringT s ->
+            H.text ("\"" ++ s ++ "\"")
+
+        Michelson.PrimT p ->
+            H.text p
+
+        Michelson.SeqT seq ->
+            H.div [ HA.class "sequence" ]
+                ([ H.text " [ " ]
+                    ++ (List.map viewProgram seq |> List.intersperse (H.text ", "))
+                    ++ [ H.text " ] " ]
+                )
+
+        Michelson.PrimArgT p arg ->
+            H.div [ HA.class "primarg" ]
+                [ H.text (" { " ++ p)
+                , viewProgram arg
+                , H.text " } "
+                ]
+
+
+simplifyProgram1 program =
+    simplifyProgram (Debug.log "simplifyProgram" program)
+
+
+simplifyProgram : Michelson.Program -> Michelson.Program
+simplifyProgram program =
+    let
+        simplifySeq item sofar =
+            case ( item, sofar ) |> Debug.log "simplifySeq" of
+                ( Michelson.PrimT prim1, (Michelson.PrimT prim2) :: rest ) ->
+                    combinePrims prim1 prim2
+                        |> Maybe.map (\newprim -> Michelson.PrimT newprim :: rest)
+                        |> Maybe.withDefault (item :: sofar)
+
+                _ ->
+                    simplifyProgram item :: sofar
+
+        cxrLetters : String -> Maybe String
+        cxrLetters prim =
+            -- cxrLetters "CDAAR" == Just "DAA"
+            -- cxrLetters "DUP" == Nothing
+            Regex.find (Regex.AtMost 1) (Regex.regex "^C([AD])+R$") prim
+                |> List.head
+                |> Maybe.map .submatches
+                -- should be exactly one submatch
+                |> Maybe.andThen List.head
+                |> Maybe.withDefault Nothing
+
+        combinePrims : String -> String -> Maybe String
+        combinePrims prim1 prim2 =
+            cxrLetters prim1
+                |> Maybe.andThen
+                    (\letters1 ->
+                        cxrLetters prim2
+                            |> Maybe.andThen
+                                (\letters2 ->
+                                    Just ("C" ++ letters1 ++ letters2 ++ "R")
+                                )
+                    )
+    in
+        case program of
+            Michelson.SeqT seq ->
+                Michelson.SeqT (List.foldr simplifySeq [] seq)
+
+            Michelson.PrimArgT prim arg ->
+                Michelson.PrimArgT prim (simplifyProgram arg)
+
+            _ ->
+                program
 
 
 viewFailure : Http.Error -> Html Msg
