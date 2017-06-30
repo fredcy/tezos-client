@@ -283,6 +283,27 @@ table.operations td ul {
     clear: both;
 }
 
-div.sequence {
+
+/* Try some code layout via CSS. (Might be a failed experiment.) */
+
+div.primarg,
+div.sequence,
+div.primargarg {
     display: inline;
+}
+
+
+div.primarg-IF,
+div.primarg-IF-NONE,
+div.primarg-PUSH,
+div.primarg-DIP
+{
+    display: block;
+}
+
+div.primargarg-IF,
+div.primargarg-IF-NONE,
+ {
+    display: block;
+    margin-left: 2em;
 }

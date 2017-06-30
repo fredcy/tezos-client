@@ -753,6 +753,20 @@ viewContract contractId contractData =
             ]
 
 
+{-| Convert primtive name to valid CSS class name.
+-}
+primCss : String -> String
+primCss prim =
+    String.map
+        (\c ->
+            if c == '_' then
+                '-'
+            else
+                c
+        )
+        prim
+
+
 viewProgram : Michelson.Program -> Html Msg
 viewProgram program =
     case program of
@@ -763,29 +777,30 @@ viewProgram program =
             H.text ("\"" ++ s ++ "\"")
 
         Michelson.PrimT p ->
-            H.text p
+            H.span [ HA.class ("prim-" ++ primCss p) ] [ H.text p ]
 
         Michelson.SeqT seq ->
             H.div [ HA.class "sequence" ]
-                ([ H.text " [ " ]
-                    ++ (List.map viewProgram seq |> List.intersperse (H.text ", "))
-                    ++ [ H.text " ] " ]
+                ([ H.text " { " ]
+                    ++ (List.map viewProgram seq |> List.intersperse (H.text " ; "))
+                    ++ [ H.text " } " ]
                 )
 
         Michelson.PrimArgT p arg ->
-            H.div [ HA.class "primarg" ]
-                [ H.text (" { " ++ p)
-                , viewProgram arg
-                , H.text " } "
+            H.div [ HA.class ("primarg primarg-" ++ primCss p) ]
+                [ H.span [ HA.class ("prim-" ++ primCss p) ] [ H.text p ]
+                , H.div [ HA.class ("primargarg primargarg-" ++ primCss p) ]
+                    [ viewProgram arg ]
                 ]
 
 
 simplifyProgram1 program =
-    simplifyProgram (Debug.log "simplifyProgram" program)
+    combinePrimitives program
+        |> hoistSingletonLists
 
 
-simplifyProgram : Michelson.Program -> Michelson.Program
-simplifyProgram program =
+combinePrimitives : Michelson.Program -> Michelson.Program
+combinePrimitives program =
     let
         simplifySeq item sofar =
             case ( item, sofar ) |> Debug.log "simplifySeq" of
@@ -795,7 +810,7 @@ simplifyProgram program =
                         |> Maybe.withDefault (item :: sofar)
 
                 _ ->
-                    simplifyProgram item :: sofar
+                    combinePrimitives item :: sofar
 
         cxrLetters : String -> Maybe String
         cxrLetters prim =
@@ -825,10 +840,26 @@ simplifyProgram program =
                 Michelson.SeqT (List.foldr simplifySeq [] seq)
 
             Michelson.PrimArgT prim arg ->
-                Michelson.PrimArgT prim (simplifyProgram arg)
+                Michelson.PrimArgT prim (combinePrimitives arg)
 
             _ ->
                 program
+
+
+hoistSingletonLists : Michelson.Program -> Michelson.Program
+hoistSingletonLists program =
+    case program of
+        Michelson.SeqT [ singleton ] ->
+            hoistSingletonLists singleton
+
+        Michelson.SeqT seq ->
+            Michelson.SeqT (List.map hoistSingletonLists seq)
+
+        Michelson.PrimArgT prim arg ->
+            Michelson.PrimArgT prim (hoistSingletonLists arg)
+
+        _ ->
+            program
 
 
 viewFailure : Http.Error -> Html Msg

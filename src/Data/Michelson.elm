@@ -59,7 +59,7 @@ type alias Program =
 
 
 type AST
-    = IntT String --TODO
+    = IntT Int
     | StringT String
     | SeqT (List AST)
     | PrimT String
@@ -89,7 +89,17 @@ decodeStringT =
 
 decodeIntT : Decode.Decoder AST
 decodeIntT =
-    Decode.field "int" Decode.string |> Decode.map IntT
+    Decode.field "int" Decode.string
+        |> Decode.map String.toInt
+        |> Decode.andThen
+            (\result ->
+                case result of
+                    Ok int ->
+                        Decode.succeed (IntT int)
+
+                    Err _ ->
+                        Decode.fail "bad int"
+            )
 
 
 decodePrimT : Decode.Decoder AST
