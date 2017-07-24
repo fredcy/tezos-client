@@ -637,13 +637,35 @@ decodeContract =
                     (Decode.succeed Contract
                         |> Decode.hardcoded raw
                         |> Decode.required "counter" Decode.int
-                        |> Decode.required "balance" Decode.int
+                        |> Decode.required "balance" decodeBalance
                         |> Decode.required "spendable" Decode.bool
                         |> Decode.required "manager" Decode.string
                         |> Decode.required "delegate" decodeDelegate
                         |> Decode.optional "script" (Michelson.decodeScript |> Decode.map Just) Nothing
                         |> Decode.hardcoded "[placeholder]"
                     )
+            )
+
+
+decodeBalance : Decode.Decoder Int
+decodeBalance =
+    Decode.oneOf
+        [ Decode.int
+        , decodeStringToInt
+        ]
+
+
+decodeStringToInt : Decode.Decoder Int
+decodeStringToInt =
+    Decode.string
+        |> Decode.andThen
+            (\intString ->
+                case String.toInt intString of
+                    Ok int ->
+                        Decode.succeed int
+
+                    Err err ->
+                        Decode.fail err
             )
 
 

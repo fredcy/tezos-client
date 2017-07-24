@@ -15171,6 +15171,27 @@ var _user$project$Data_Michelson$decodeScript = A3(
 		_user$project$Data_Michelson$decodeCode,
 		_elm_lang$core$Json_Decode$succeed(_user$project$Data_Michelson$Script)));
 
+var _user$project$Data_Chain$decodeStringToInt = A2(
+	_elm_lang$core$Json_Decode$andThen,
+	function (intString) {
+		var _p0 = _elm_lang$core$String$toInt(intString);
+		if (_p0.ctor === 'Ok') {
+			return _elm_lang$core$Json_Decode$succeed(_p0._0);
+		} else {
+			return _elm_lang$core$Json_Decode$fail(_p0._0);
+		}
+	},
+	_elm_lang$core$Json_Decode$string);
+var _user$project$Data_Chain$decodeBalance = _elm_lang$core$Json_Decode$oneOf(
+	{
+		ctor: '::',
+		_0: _elm_lang$core$Json_Decode$int,
+		_1: {
+			ctor: '::',
+			_0: _user$project$Data_Chain$decodeStringToInt,
+			_1: {ctor: '[]'}
+		}
+	});
 var _user$project$Data_Chain$decodeContractIDs = A2(
 	_elm_lang$core$Json_Decode$field,
 	'ok',
@@ -15190,23 +15211,23 @@ var _user$project$Data_Chain$decodeLevel = A2(
 var _user$project$Data_Chain$decodeTimestamp = A2(
 	_elm_lang$core$Json_Decode$andThen,
 	function (dateResult) {
-		var _p0 = dateResult;
-		if (_p0.ctor === 'Ok') {
-			return _elm_lang$core$Json_Decode$succeed(_p0._0);
+		var _p1 = dateResult;
+		if (_p1.ctor === 'Ok') {
+			return _elm_lang$core$Json_Decode$succeed(_p1._0);
 		} else {
-			return _elm_lang$core$Json_Decode$fail(_p0._0);
+			return _elm_lang$core$Json_Decode$fail(_p1._0);
 		}
 	},
 	A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Date$fromString, _elm_lang$core$Json_Decode$string));
 var _user$project$Data_Chain$decodeHexString = A2(
 	_elm_lang$core$Json_Decode$andThen,
 	function (hexString) {
-		var _p1 = _fredcy$elm_parseint$ParseInt$parseIntHex(hexString);
-		if (_p1.ctor === 'Ok') {
-			return _elm_lang$core$Json_Decode$succeed(_p1._0);
+		var _p2 = _fredcy$elm_parseint$ParseInt$parseIntHex(hexString);
+		if (_p2.ctor === 'Ok') {
+			return _elm_lang$core$Json_Decode$succeed(_p2._0);
 		} else {
 			return _elm_lang$core$Json_Decode$fail(
-				_elm_lang$core$Basics$toString(_p1._0));
+				_elm_lang$core$Basics$toString(_p2._0));
 		}
 	},
 	_elm_lang$core$Json_Decode$string);
@@ -15317,16 +15338,16 @@ var _user$project$Data_Chain$getBranchList = F2(
 				helper:
 				while (true) {
 					var blockMaybe = A2(_elm_lang$core$Dict$get, hash, model.blocks);
-					var _p2 = blockMaybe;
-					if (_p2.ctor === 'Just') {
-						var _p3 = _p2._0;
-						if (_elm_lang$core$Native_Utils.eq(_p3.predecessor, hash)) {
+					var _p3 = blockMaybe;
+					if (_p3.ctor === 'Just') {
+						var _p4 = _p3._0;
+						if (_elm_lang$core$Native_Utils.eq(_p4.predecessor, hash)) {
 							return blockList;
 						} else {
-							var _v3 = _p3.predecessor,
-								_v4 = {ctor: '::', _0: _p3, _1: blockList};
-							hash = _v3;
-							blockList = _v4;
+							var _v4 = _p4.predecessor,
+								_v5 = {ctor: '::', _0: _p4, _1: blockList};
+							hash = _v4;
+							blockList = _v5;
 							continue helper;
 						}
 					} else {
@@ -15355,33 +15376,33 @@ var _user$project$Data_Chain$fitnessGreater = F2(
 	function (a, b) {
 		fitnessGreater:
 		while (true) {
-			var _p4 = {ctor: '_Tuple2', _0: a, _1: b};
-			_v5_2:
+			var _p5 = {ctor: '_Tuple2', _0: a, _1: b};
+			_v6_2:
 			do {
-				if (_p4.ctor === '_Tuple2') {
-					if (_p4._0.ctor === '[]') {
-						if (_p4._1.ctor === '[]') {
+				if (_p5.ctor === '_Tuple2') {
+					if (_p5._0.ctor === '[]') {
+						if (_p5._1.ctor === '[]') {
 							return false;
 						} else {
-							break _v5_2;
+							break _v6_2;
 						}
 					} else {
-						if (_p4._1.ctor === '::') {
-							if (_elm_lang$core$Native_Utils.cmp(_p4._0._0, _p4._1._0) > 0) {
+						if (_p5._1.ctor === '::') {
+							if (_elm_lang$core$Native_Utils.cmp(_p5._0._0, _p5._1._0) > 0) {
 								return true;
 							} else {
-								var _v6 = _p4._0._1,
-									_v7 = _p4._1._1;
-								a = _v6;
-								b = _v7;
+								var _v7 = _p5._0._1,
+									_v8 = _p5._1._1;
+								a = _v7;
+								b = _v8;
 								continue fitnessGreater;
 							}
 						} else {
-							break _v5_2;
+							break _v6_2;
 						}
 					}
 				} else {
-					break _v5_2;
+					break _v6_2;
 				}
 			} while(false);
 			return A2(
@@ -15396,23 +15417,23 @@ var _user$project$Data_Chain$fitnessGreater = F2(
 	});
 var _user$project$Data_Chain$insertHead = F3(
 	function (blocks, newHead, heads) {
-		var _p5 = heads;
-		if (_p5.ctor === '[]') {
+		var _p6 = heads;
+		if (_p6.ctor === '[]') {
 			return {ctor: '[]'};
 		} else {
-			var _p8 = _p5._1;
-			var _p7 = _p5._0;
-			var blockMaybe = A2(_elm_lang$core$Dict$get, _p7, blocks);
-			var _p6 = blockMaybe;
-			if (_p6.ctor === 'Just') {
-				return A2(_user$project$Data_Chain$fitnessGreater, newHead.fitness, _p6._0.fitness) ? {
+			var _p9 = _p6._1;
+			var _p8 = _p6._0;
+			var blockMaybe = A2(_elm_lang$core$Dict$get, _p8, blocks);
+			var _p7 = blockMaybe;
+			if (_p7.ctor === 'Just') {
+				return A2(_user$project$Data_Chain$fitnessGreater, newHead.fitness, _p7._0.fitness) ? {
 					ctor: '::',
 					_0: newHead.hash,
-					_1: {ctor: '::', _0: _p7, _1: _p8}
+					_1: {ctor: '::', _0: _p8, _1: _p9}
 				} : {
 					ctor: '::',
-					_0: _p7,
-					_1: A3(_user$project$Data_Chain$insertHead, blocks, newHead, _p8)
+					_0: _p8,
+					_1: A3(_user$project$Data_Chain$insertHead, blocks, newHead, _p9)
 				};
 			} else {
 				return A2(_elm_lang$core$Debug$log, 'error: insertHead failed', heads);
@@ -15423,13 +15444,13 @@ var _user$project$Data_Chain$updateExistingHead = F3(
 	function (newHead, predHash, heads) {
 		return A2(
 			_elm_lang$core$Maybe$map,
-			function (_p9) {
+			function (_p10) {
 				return A3(
 					_elm_community$list_extra$List_Extra$updateIf,
 					function (h) {
 						return _elm_lang$core$Native_Utils.eq(h, predHash);
 					},
-					function (_p10) {
+					function (_p11) {
 						return newHead;
 					},
 					heads);
@@ -15452,9 +15473,9 @@ var _user$project$Data_Chain$updateHeads = F3(
 					return A2(
 						_elm_lang$core$Maybe$map,
 						function (newpredhash) {
-							var _p11 = A3(_user$project$Data_Chain$updateExistingHead, newhead.hash, newpredhash, heads);
-							if (_p11.ctor === 'Just') {
-								return _p11._0;
+							var _p12 = A3(_user$project$Data_Chain$updateExistingHead, newhead.hash, newpredhash, heads);
+							if (_p12.ctor === 'Just') {
+								return _p12._0;
 							} else {
 								return A3(_user$project$Data_Chain$insertHead, blocks, newhead, heads);
 							}
@@ -15719,7 +15740,7 @@ var _user$project$Data_Chain$decodeContract = A2(
 								A3(
 									_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
 									'balance',
-									_elm_lang$core$Json_Decode$int,
+									_user$project$Data_Chain$decodeBalance,
 									A3(
 										_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
 										'counter',
@@ -15809,10 +15830,10 @@ var _user$project$Data_Chain$decodeConnection = function () {
 	return A2(
 		_elm_lang$core$Json_Decode$andThen,
 		function (list) {
-			var _p12 = list;
-			if (((((_p12.ctor === '::') && (_p12._0.ctor === 'AddressAddr')) && (_p12._1.ctor === '::')) && (_p12._1._0.ctor === 'AddressTime')) && (_p12._1._1.ctor === '[]')) {
+			var _p13 = list;
+			if (((((_p13.ctor === '::') && (_p13._0.ctor === 'AddressAddr')) && (_p13._1.ctor === '::')) && (_p13._1._0.ctor === 'AddressTime')) && (_p13._1._1.ctor === '[]')) {
 				return _elm_lang$core$Json_Decode$succeed(
-					A2(_user$project$Data_Chain$Connection, _p12._0._0, _p12._1._0._0));
+					A2(_user$project$Data_Chain$Connection, _p13._0._0, _p13._1._0._0));
 			} else {
 				return _elm_lang$core$Json_Decode$fail('address decode failed');
 			}
@@ -15865,10 +15886,10 @@ var _user$project$Data_Chain$decodePeer = function () {
 	return A2(
 		_elm_lang$core$Json_Decode$andThen,
 		function (list) {
-			var _p13 = list;
-			if (((((_p13.ctor === '::') && (_p13._0.ctor === 'ItemString')) && (_p13._1.ctor === '::')) && (_p13._1._0.ctor === 'ItemValue')) && (_p13._1._1.ctor === '[]')) {
+			var _p14 = list;
+			if (((((_p14.ctor === '::') && (_p14._0.ctor === 'ItemString')) && (_p14._1.ctor === '::')) && (_p14._1._0.ctor === 'ItemValue')) && (_p14._1._1.ctor === '[]')) {
 				return _elm_lang$core$Json_Decode$succeed(
-					A2(_user$project$Data_Chain$Peer, _p13._0._0, _p13._1._0._0));
+					A2(_user$project$Data_Chain$Peer, _p14._0._0, _p14._1._0._0));
 			} else {
 				return _elm_lang$core$Json_Decode$fail('bad peer');
 			}
@@ -18307,10 +18328,7 @@ var _user$project$View$combinePrimitives = function (program) {
 		});
 	var simplifySeq = F2(
 		function (item, sofar) {
-			var _p5 = A2(
-				_elm_lang$core$Debug$log,
-				'simplifySeq',
-				{ctor: '_Tuple2', _0: item, _1: sofar});
+			var _p5 = {ctor: '_Tuple2', _0: item, _1: sofar};
 			if ((((_p5.ctor === '_Tuple2') && (_p5._0.ctor === 'PrimT')) && (_p5._1.ctor === '::')) && (_p5._1._0.ctor === 'PrimT')) {
 				return A2(
 					_elm_lang$core$Maybe$withDefault,
@@ -18369,14 +18387,36 @@ var _user$project$View$viewProgram = function (program) {
 	var _p7 = program;
 	switch (_p7.ctor) {
 		case 'IntT':
-			return _elm_lang$html$Html$text(
-				_elm_lang$core$Basics$toString(_p7._0));
+			return A2(
+				_elm_lang$html$Html$span,
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html_Attributes$class('IntT'),
+					_1: {ctor: '[]'}
+				},
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html$text(
+						_elm_lang$core$Basics$toString(_p7._0)),
+					_1: {ctor: '[]'}
+				});
 		case 'StringT':
-			return _elm_lang$html$Html$text(
-				A2(
-					_elm_lang$core$Basics_ops['++'],
-					'\"',
-					A2(_elm_lang$core$Basics_ops['++'], _p7._0, '\"')));
+			return A2(
+				_elm_lang$html$Html$span,
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html_Attributes$class('StringT'),
+					_1: {ctor: '[]'}
+				},
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html$text(
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							'\"',
+							A2(_elm_lang$core$Basics_ops['++'], _p7._0, '\"'))),
+					_1: {ctor: '[]'}
+				});
 		case 'PrimT':
 			var _p8 = _p7._0;
 			return A2(
@@ -18386,7 +18426,7 @@ var _user$project$View$viewProgram = function (program) {
 					_0: _elm_lang$html$Html_Attributes$class(
 						A2(
 							_elm_lang$core$Basics_ops['++'],
-							'prim-',
+							'PrimT prim-',
 							_user$project$View$primCss(_p8))),
 					_1: {ctor: '[]'}
 				},
@@ -18400,7 +18440,7 @@ var _user$project$View$viewProgram = function (program) {
 				_elm_lang$html$Html$div,
 				{
 					ctor: '::',
-					_0: _elm_lang$html$Html_Attributes$class('sequence'),
+					_0: _elm_lang$html$Html_Attributes$class('SeqT sequence'),
 					_1: {ctor: '[]'}
 				},
 				A2(
@@ -18412,10 +18452,7 @@ var _user$project$View$viewProgram = function (program) {
 					},
 					A2(
 						_elm_lang$core$Basics_ops['++'],
-						A2(
-							_elm_lang$core$List$intersperse,
-							_elm_lang$html$Html$text(' ; '),
-							A2(_elm_lang$core$List$map, _user$project$View$viewProgram, _p7._0)),
+						A2(_elm_lang$core$List$map, _user$project$View$viewProgram, _p7._0),
 						{
 							ctor: '::',
 							_0: _elm_lang$html$Html$text(' } '),
@@ -18430,7 +18467,7 @@ var _user$project$View$viewProgram = function (program) {
 					_0: _elm_lang$html$Html_Attributes$class(
 						A2(
 							_elm_lang$core$Basics_ops['++'],
-							'primarg primarg-',
+							'PrimArgT primarg primarg-',
 							_user$project$View$primCss(_p9))),
 					_1: {ctor: '[]'}
 				},
@@ -18443,7 +18480,7 @@ var _user$project$View$viewProgram = function (program) {
 							_0: _elm_lang$html$Html_Attributes$class(
 								A2(
 									_elm_lang$core$Basics_ops['++'],
-									'prim-',
+									'PrimT prim-',
 									_user$project$View$primCss(_p9))),
 							_1: {ctor: '[]'}
 						},
@@ -19829,32 +19866,28 @@ var _user$project$View$viewContract = F2(
 															viewDelegate(_p25.delegate)),
 														_1: {
 															ctor: '::',
-															_0: viewScript(_p25.script),
+															_0: viewProg(_p25.script),
 															_1: {
 																ctor: '::',
-																_0: viewProg(_p25.script),
+																_0: A2(
+																	_elm_lang$html$Html$h5,
+																	{ctor: '[]'},
+																	{
+																		ctor: '::',
+																		_0: _elm_lang$html$Html$text('Raw response'),
+																		_1: {ctor: '[]'}
+																	}),
 																_1: {
 																	ctor: '::',
 																	_0: A2(
-																		_elm_lang$html$Html$h5,
+																		_elm_lang$html$Html$pre,
 																		{ctor: '[]'},
 																		{
 																			ctor: '::',
-																			_0: _elm_lang$html$Html$text('Raw response'),
+																			_0: _elm_lang$html$Html$text(_p25.rawBody),
 																			_1: {ctor: '[]'}
 																		}),
-																	_1: {
-																		ctor: '::',
-																		_0: A2(
-																			_elm_lang$html$Html$pre,
-																			{ctor: '[]'},
-																			{
-																				ctor: '::',
-																				_0: _elm_lang$html$Html$text(_p25.rawBody),
-																				_1: {ctor: '[]'}
-																			}),
-																		_1: {ctor: '[]'}
-																	}
+																	_1: {ctor: '[]'}
 																}
 															}
 														}

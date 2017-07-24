@@ -734,7 +734,8 @@ viewContract contractId contractData =
                         , viewProperty "spendable" (H.text (toString contract.spendable))
                         , viewProperty "counter" (H.text (toString contract.counter))
                         , viewProperty "delegate" (viewDelegate contract.delegate)
-                        , viewScript contract.script
+
+                        --, viewScript contract.script
                         , viewProg contract.script
 
                         --, viewProperty "raw data" (H.div [] [ H.text (toString contract.raw) ])
@@ -753,7 +754,7 @@ viewContract contractId contractData =
             ]
 
 
-{-| Convert primtive name to valid CSS class name.
+{-| Convert Michelson primitive name to valid CSS class name.
 -}
 primCss : String -> String
 primCss prim =
@@ -771,24 +772,24 @@ viewProgram : Michelson.Program -> Html Msg
 viewProgram program =
     case program of
         Michelson.IntT i ->
-            H.text (toString i)
+            H.span [ HA.class "IntT" ] [ H.text (toString i) ]
 
         Michelson.StringT s ->
-            H.text ("\"" ++ s ++ "\"")
+            H.span [ HA.class "StringT" ] [ H.text ("\"" ++ s ++ "\"") ]
 
         Michelson.PrimT p ->
-            H.span [ HA.class ("prim-" ++ primCss p) ] [ H.text p ]
+            H.span [ HA.class ("PrimT prim-" ++ primCss p) ] [ H.text p ]
 
         Michelson.SeqT seq ->
-            H.div [ HA.class "sequence" ]
+            H.div [ HA.class "SeqT sequence" ]
                 ([ H.text " { " ]
-                    ++ (List.map viewProgram seq |> List.intersperse (H.text " ; "))
+                    ++ (List.map viewProgram seq)
                     ++ [ H.text " } " ]
                 )
 
         Michelson.PrimArgT p arg ->
-            H.div [ HA.class ("primarg primarg-" ++ primCss p) ]
-                [ H.span [ HA.class ("prim-" ++ primCss p) ] [ H.text p ]
+            H.div [ HA.class ("PrimArgT primarg primarg-" ++ primCss p) ]
+                [ H.span [ HA.class ("PrimT prim-" ++ primCss p) ] [ H.text p ]
                 , H.div [ HA.class ("primargarg primargarg-" ++ primCss p) ]
                     [ viewProgram arg ]
                 ]
@@ -803,7 +804,7 @@ combinePrimitives : Michelson.Program -> Michelson.Program
 combinePrimitives program =
     let
         simplifySeq item sofar =
-            case ( item, sofar ) |> Debug.log "simplifySeq" of
+            case ( item, sofar ) of
                 ( Michelson.PrimT prim1, (Michelson.PrimT prim2) :: rest ) ->
                     combinePrims prim1 prim2
                         |> Maybe.map (\newprim -> Michelson.PrimT newprim :: rest)
@@ -814,6 +815,7 @@ combinePrimitives program =
 
         cxrLetters : String -> Maybe String
         cxrLetters prim =
+            -- Extract letter(s) from middle of CxR primitive name. E.g.:
             -- cxrLetters "CDAAR" == Just "DAA"
             -- cxrLetters "DUP" == Nothing
             Regex.find (Regex.AtMost 1) (Regex.regex "^C([AD])+R$") prim
@@ -823,6 +825,7 @@ combinePrimitives program =
                 |> Maybe.andThen List.head
                 |> Maybe.withDefault Nothing
 
+        -- Try to combine two primitives into one.
         combinePrims : String -> String -> Maybe String
         combinePrims prim1 prim2 =
             cxrLetters prim1

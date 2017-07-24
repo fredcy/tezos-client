@@ -286,6 +286,7 @@ table.operations td ul {
 
 /* Try some code layout via CSS. (Might be a failed experiment.) */
 
+/* 
 div.primarg,
 div.sequence,
 div.primargarg {
@@ -307,3 +308,25 @@ div.primargarg-IF-NONE,
     display: block;
     margin-left: 2em;
 }
+
+*/
+
+div.SeqT {
+    display: inline;
+}
+
+div.PrimArgT {
+    display: inline;
+}
+
+div.primargarg {
+    display: inline;
+}
+
+.PrimT {
+    display: block;
+    margin-left: 0.25em;
+    margin-right: 0.25em;
+}
+
+

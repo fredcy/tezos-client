@@ -74,12 +74,13 @@ getContract nodeUrl contractId =
         Http.post url emptyJsonBody Chain.decodeContract
 
 
+{-| Request Contract data in such a way that the raw response string is available to save and view.
+-}
 getContract2 : URL -> ContractID -> Http.Request Contract
 getContract2 nodeUrl contractId =
     let
         url =
             nodeUrl ++ "/blocks/head/proto/context/contracts/" ++ contractId
-
     in
         Http.request
             { method = "POST"
