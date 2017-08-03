@@ -941,12 +941,14 @@ viewAbout model =
     H.div []
         [ H.h3 [] [ H.text "About" ]
         , H.p []
-            [ H.text """This Tezos blockchain explorer displays data from the Tezos alphanet, the "testnet" for Tezos. """
+            [ H.text "This Tezos blockchain explorer displays data from the Tezos "
+            , H.i [] [ H.text "alphanet" ]
+            , H.text ", the testnet for Tezos."
             ]
         , H.p []
-            [ H.text "The data comes from a single node on the network ("
+            [ H.text "The data comes via the Tezos RPC over HTTPS from a single node on the network ("
             , H.text model.nodeUrl
-            , H.text ") and therefore depends on the status of that node. Being a test network that node may occasionally out of service or out of sync with the current alphanet chain. "
+            , H.text ") and therefore depends on the status of that node. Being a test network, sometimes that node may be out of service or out of sync with the current alphanet chain. "
             ]
         , H.p []
             [ H.text """This Tezos Explorer client was developed by Fred Yankowski (@fredcy) and is under """

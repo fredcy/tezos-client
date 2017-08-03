@@ -18016,8 +18016,23 @@ var _user$project$View$viewAbout = function (model) {
 					{ctor: '[]'},
 					{
 						ctor: '::',
-						_0: _elm_lang$html$Html$text('This Tezos blockchain explorer displays data from the Tezos alphanet, the \"testnet\" for Tezos. '),
-						_1: {ctor: '[]'}
+						_0: _elm_lang$html$Html$text('This Tezos blockchain explorer displays data from the Tezos '),
+						_1: {
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$i,
+								{ctor: '[]'},
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html$text('alphanet'),
+									_1: {ctor: '[]'}
+								}),
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$html$Html$text(', the testnet for Tezos.'),
+								_1: {ctor: '[]'}
+							}
+						}
 					}),
 				_1: {
 					ctor: '::',
@@ -18026,13 +18041,13 @@ var _user$project$View$viewAbout = function (model) {
 						{ctor: '[]'},
 						{
 							ctor: '::',
-							_0: _elm_lang$html$Html$text('The data comes from a single node on the network ('),
+							_0: _elm_lang$html$Html$text('The data comes via the Tezos RPC over HTTPS from a single node on the network ('),
 							_1: {
 								ctor: '::',
 								_0: _elm_lang$html$Html$text(model.nodeUrl),
 								_1: {
 									ctor: '::',
-									_0: _elm_lang$html$Html$text(') and therefore depends on the status of that node. Being a test network that node may occasionally out of service or out of sync with the current alphanet chain. '),
+									_0: _elm_lang$html$Html$text(') and therefore depends on the status of that node. Being a test network, sometimes that node may be out of service or out of sync with the current alphanet chain. '),
 									_1: {ctor: '[]'}
 								}
 							}
