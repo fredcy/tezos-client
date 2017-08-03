@@ -85,6 +85,9 @@ view model =
 
                 Loaded Page.NotFound ->
                     H.text "page not found"
+
+                Loaded Page.About ->
+                    viewAbout model
     in
         View.Page.frame context content
 
@@ -930,4 +933,24 @@ viewDebug model =
     H.div [ HA.class "debug" ]
         [ H.h2 [] [ H.text "Raw model" ]
         , H.text <| toString model
+        ]
+
+
+viewAbout : Model -> Html Msg
+viewAbout model =
+    H.div []
+        [ H.h3 [] [ H.text "About" ]
+        , H.p []
+            [ H.text """This Tezos blockchain explorer displays data from the Tezos alphanet, the "testnet" for Tezos. """
+            ]
+        , H.p []
+            [ H.text "The data comes from a single node on the network ("
+            , H.text model.nodeUrl
+            , H.text ") and therefore depends on the status of that node. Being a test network that node may occasionally out of service or out of sync with the current alphanet chain. "
+            ]
+        , H.p []
+            [ H.text """This Tezos Explorer client was developed by Fred Yankowski (@fredcy) and is under """
+            , H.a [ HA.href "https://github.com/fredcy/tezos-client" ] [ H.text "active development. " ]
+            , H.text "Suggestions for additions or changes to this client are welcome. "
+            ]
         ]

@@ -255,6 +255,10 @@ table.operations td ul {
     background-color: gray;
 }
 
+.nav-links .active a {
+    color: #A6E000;
+}
+
 .error-count {
     display: none;
 }

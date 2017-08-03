@@ -1,4 +1,4 @@
-module Update exposing (update, Msg(..), setRoute)
+module Update exposing (update, Msg(..), setRoute, toPage)
 
 import Date
 import Dict exposing (Dict)
@@ -183,6 +183,56 @@ updatePage page msg model =
                 ( newModel, Cmd.batch [ cmd, Task.perform Now Time.now ] )
 
 
+{-| Determine Page for given Route. (TODO: The distinction between Route and
+Page is perhaps unnecessary. Can we combine the types somehow and eliminate
+these kind of mappings?)
+-}
+toPage : Route -> Page
+toPage route =
+    case route of
+        Route.Home ->
+            Page.Home
+
+        Route.Block hash ->
+            Page.Block hash
+
+        Route.Operations ->
+            Page.Operations
+
+        Route.Operation operationId ->
+            Page.Operation operationId
+
+        Route.Heads ->
+            Page.Heads
+
+        Route.ChainAt hash ->
+            Page.ChainAt hash
+
+        Route.Contracts ->
+            Page.Contracts
+
+        Route.Keys ->
+            Page.Keys
+
+        Route.Peers ->
+            Page.Peers
+
+        Route.Contract contractId ->
+            Page.Contract contractId
+
+        Route.Schema ->
+            Page.Schema
+
+        Route.Errors ->
+            Page.Errors
+
+        Route.Debug ->
+            Page.Debug
+
+        Route.About ->
+            Page.About
+
+
 setRoute : Maybe Route -> Model -> ( Model, Cmd Msg )
 setRoute routeMaybe model =
     case routeMaybe |> Debug.log "setRoute" of
@@ -203,15 +253,6 @@ setRoute routeMaybe model =
                 , Request.getBlockOperationDetails model hash |> Cmd.map RpcResponse
                 ]
             )
-
-        Just Route.Operations ->
-            ( { model | pageState = Loaded Page.Operations }, Cmd.none )
-
-        Just (Route.Operation operationId) ->
-            ( { model | pageState = Loaded (Page.Operation operationId) }, Cmd.none )
-
-        Just Route.Heads ->
-            ( { model | pageState = Loaded Page.Heads }, Cmd.none )
 
         Just (Route.ChainAt hash) ->
             ( { model | pageState = Loaded (Page.ChainAt hash) }
@@ -265,11 +306,9 @@ setRoute routeMaybe model =
                     ]
                 )
 
-        Just Route.Debug ->
-            ( { model | pageState = Loaded Page.Debug }, Cmd.none )
-
-        Just Route.Errors ->
-            ( { model | pageState = Loaded Page.Errors }, Cmd.none )
+        Just route ->
+            -- Handle those routes that require no command to get data
+            ( { model | pageState = Loaded (toPage route) }, Cmd.none )
 
 
 loadBlocks : Model -> Chain.BlocksData -> ( Model, Cmd Msg )

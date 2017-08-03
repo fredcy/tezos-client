@@ -19,3 +19,4 @@ type Page
     | Contract ContractID
     | Errors
     | Debug
+    | About

@@ -21,6 +21,7 @@ type Route
     | Heads
     | Errors
     | Debug
+    | About
 
 
 route : Parser (Route -> a) a
@@ -40,6 +41,7 @@ route =
         , Url.map Schema (s "schema")
         , Url.map Debug (s "debug")
         , Url.map Errors (s "errors")
+        , Url.map About (s "about")
         ]
 
 
@@ -86,6 +88,9 @@ routeToString route =
 
                 Errors ->
                     [ "errors" ]
+
+                About ->
+                    [ "about" ]
     in
         "#/" ++ (String.join "/" pieces)
 

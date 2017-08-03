@@ -7,6 +7,7 @@ import Date.Extra.Format
 import Date.Extra.Config.Config_en_us
 import Model
 import Route exposing (Route)
+import Update
 
 
 type alias Context =
@@ -32,7 +33,7 @@ viewHeader context =
         [ H.h1 [] [ H.text "Tezos Explorer" ]
         , viewNow context.now
         , viewErrorCount context.errorCount
-        , navLinks
+        , navLinks context.pageState
         ]
 
 
@@ -59,18 +60,25 @@ links =
     , ( "Keys", Route.Keys )
     , ( "Peers", Route.Peers )
     , ( "Schemas", Route.Schema )
+    , ( "About", Route.About )
 
     --, ( "Debug", Route.Debug )
     ]
 
 
-navLinks : Html msg
-navLinks =
+navLinks : Model.PageState -> Html msg
+navLinks pageState =
     let
         makeNavLink ( label, route ) =
-            H.li [] [ H.a [ Route.href route ] [ H.text label ] ]
+            H.li [ HA.classList [ ( "active", isRouteForPage route pageState ) ] ]
+                [ H.a [ Route.href route ] [ H.text label ] ]
     in
         H.ul [ HA.class "nav-links" ] (List.map makeNavLink links)
+
+
+isRouteForPage : Route -> Model.PageState -> Bool
+isRouteForPage route (Model.Loaded page) =
+    Update.toPage route == page
 
 
 viewErrorCount : Int -> Html msg
