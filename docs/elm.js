@@ -16966,30 +16966,6 @@ var _user$project$Request_Operation$decodeBlockOperationDetails = A2(
 	'ok',
 	_elm_lang$core$Json_Decode$list(
 		_elm_lang$core$Json_Decode$list(_user$project$Request_Operation$decodeParsedOperation)));
-var _user$project$Request_Operation$getParsed = F2(
-	function (nodeUrl, operation) {
-		var body = _elm_lang$http$Http$jsonBody(
-			_elm_lang$core$Json_Encode$object(
-				{
-					ctor: '::',
-					_0: {
-						ctor: '_Tuple2',
-						_0: 'data',
-						_1: _elm_lang$core$Json_Encode$string(operation.data)
-					},
-					_1: {
-						ctor: '::',
-						_0: {
-							ctor: '_Tuple2',
-							_0: 'net_id',
-							_1: _elm_lang$core$Json_Encode$string(operation.netID)
-						},
-						_1: {ctor: '[]'}
-					}
-				}));
-		var url = A2(_elm_lang$core$Basics_ops['++'], nodeUrl, '/blocks/head/proto/helpers/parse/operation');
-		return A3(_elm_lang$http$Http$post, url, body, _user$project$Request_Operation$decodeParsedOperation);
-	});
 var _user$project$Request_Operation$getBlockOperations = F2(
 	function (nodeUrl, blockHash) {
 		var url = A2(
@@ -19835,7 +19811,7 @@ var _user$project$View$viewOperation = F2(
 						if (_p23.ctor === 'Just') {
 							return viewOperationFields(_p23._0);
 						} else {
-							return _elm_lang$html$Html$text('operation not found');
+							return _elm_lang$html$Html$text('(loading operation data...)');
 						}
 					}(),
 					_1: {ctor: '[]'}

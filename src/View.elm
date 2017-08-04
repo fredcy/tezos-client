@@ -382,7 +382,7 @@ viewOperation model operationId =
                     viewOperationFields operation
 
                 Nothing ->
-                    H.text "operation not found"
+                    H.text "(loading operation data...)"
             ]
 
 

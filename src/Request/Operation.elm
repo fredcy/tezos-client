@@ -9,6 +9,8 @@ import Data.Request exposing (URL)
 import Request.Lib
 
 
+{-| Get parsed operations for block.
+-}
 getBlockOperations : URL -> BlockID -> Http.Request Chain.BlockOperations
 getBlockOperations nodeUrl blockHash =
     let
@@ -16,25 +18,6 @@ getBlockOperations nodeUrl blockHash =
             nodeUrl ++ "/blocks/" ++ blockHash ++ "/proto/operations"
     in
         Http.post url Data.Request.emptyJsonBody decodeBlockOperationDetails
-
-
-{-| Form RPC command to parse the given operation.
-Used ???
--}
-getParsed : String -> Operation -> Http.Request Chain.ParsedOperation
-getParsed nodeUrl operation =
-    let
-        url =
-            nodeUrl ++ "/blocks/head/proto/helpers/parse/operation"
-
-        body =
-            [ ( "data", Encode.string operation.data )
-            , ( "net_id", Encode.string operation.netID )
-            ]
-                |> Encode.object
-                |> Http.jsonBody
-    in
-        Http.post url body decodeParsedOperation
 
 
 decodeBlockOperationDetails : Decode.Decoder Chain.BlockOperations
