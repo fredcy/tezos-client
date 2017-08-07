@@ -288,7 +288,7 @@ setRoute routeMaybe model =
                 | pageState = Loaded (Page.Contract contractId)
                 , chain = Chain.loadingContract model.chain
               }
-            , Request.Block.getContract2 model.nodeUrl contractId |> Http.send (LoadContract contractId)
+            , Request.Block.getContract model.nodeUrl contractId |> Http.send (LoadContract contractId)
             )
 
         Just Route.Schema ->

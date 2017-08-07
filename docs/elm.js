@@ -16793,7 +16793,7 @@ var _user$project$Model$HttpError = function (a) {
 	return {ctor: 'HttpError', _0: a};
 };
 
-var _user$project$Request_Block$getContract2 = F2(
+var _user$project$Request_Block$getContract = F2(
 	function (nodeUrl, contractId) {
 		var url = A2(
 			_elm_lang$core$Basics_ops['++'],
@@ -16813,14 +16813,6 @@ var _user$project$Request_Block$getContract2 = F2(
 				timeout: _elm_lang$core$Maybe$Nothing,
 				withCredentials: false
 			});
-	});
-var _user$project$Request_Block$getContract = F2(
-	function (nodeUrl, contractId) {
-		var url = A2(
-			_elm_lang$core$Basics_ops['++'],
-			nodeUrl,
-			A2(_elm_lang$core$Basics_ops['++'], '/blocks/head/proto/context/contracts/', contractId));
-		return A3(_elm_lang$http$Http$post, url, _user$project$Data_Request$emptyJsonBody, _user$project$Data_Chain$decodeContract);
 	});
 var _user$project$Request_Block$getPeers = function (nodeUrl) {
 	var url = A2(_elm_lang$core$Basics_ops['++'], nodeUrl, '/network/peer_id');
@@ -17442,7 +17434,7 @@ var _user$project$Update$setRoute = F2(
 						_1: A2(
 							_elm_lang$http$Http$send,
 							_user$project$Update$LoadContract(_p12),
-							A2(_user$project$Request_Block$getContract2, model.nodeUrl, _p12))
+							A2(_user$project$Request_Block$getContract, model.nodeUrl, _p12))
 					};
 				case 'Schema':
 					var schemaQuery2 = '/describe/blocks/head/proto';
