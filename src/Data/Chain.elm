@@ -173,8 +173,7 @@ type alias Model =
     , contractIDs : RemoteData Http.Error (List ContractID)
     , keys : RemoteData Http.Error (List Key)
     , peers : RemoteData Http.Error (List Peer)
-    , contract : RemoteData Http.Error Contract
-    , contracts : Dict ContractID Contract
+    , contracts : Dict ContractID (RemoteData Http.Error Contract)
     }
 
 
@@ -188,7 +187,6 @@ init =
     , contractIDs = RemoteData.NotAsked
     , keys = RemoteData.NotAsked
     , peers = RemoteData.NotAsked
-    , contract = RemoteData.NotAsked
     , contracts = Dict.empty
     }
 
@@ -439,22 +437,21 @@ loadPeersError model error =
     { model | peers = RemoteData.Failure error }
 
 
-loadingContract : Model -> Model
-loadingContract model =
-    { model | contract = RemoteData.Loading }
+loadingContract : Model -> ContractID -> Model
+loadingContract model contractId =
+    { model | contracts = Dict.insert contractId RemoteData.Loading model.contracts }
 
 
 loadContract : Model -> ContractID -> Contract -> Model
 loadContract model contractId contract =
     { model
-        | contract = RemoteData.Success contract
-        , contracts = Dict.insert contractId contract model.contracts
+        | contracts = Dict.insert contractId (RemoteData.Success contract) model.contracts
     }
 
 
-loadContractError : Model -> Http.Error -> Model
-loadContractError model error =
-    { model | contract = RemoteData.Failure error }
+loadContractError : Model -> ContractID -> Http.Error -> Model
+loadContractError model contractId error =
+    { model | contracts = Dict.insert contractId (RemoteData.Failure error) model.contracts }
 
 
 

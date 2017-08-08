@@ -78,7 +78,7 @@ view model =
                     viewPeers model.chain.peers
 
                 Loaded (Page.Contract contractId) ->
-                    viewContract contractId model.chain.contract
+                    viewContract contractId model.chain.contracts
 
                 Loaded Page.Errors ->
                     viewError model.nodeUrl model.errors
@@ -525,7 +525,7 @@ viewContracts model =
         ]
 
 
-viewContractTable : List ContractID -> Dict ContractID Contract -> Html Msg
+viewContractTable : List ContractID -> Dict ContractID (RemoteData Http.Error Contract) -> Html Msg
 viewContractTable contractIDs contracts =
     let
         thead =
@@ -539,11 +539,12 @@ viewContractTable contractIDs contracts =
 
         trow contractId =
             let
-                contractMaybe =
+                contractData =
                     Dict.get contractId contracts
+                        |> Maybe.withDefault RemoteData.NotAsked
             in
-                case contractMaybe of
-                    Just contract ->
+                case contractData of
+                    RemoteData.Success contract ->
                         H.tr []
                             [ H.td [ HA.class "hash" ]
                                 [ H.a [ Route.href (Route.Contract contractId) ]
@@ -563,10 +564,22 @@ viewContractTable contractIDs contracts =
                                 ]
                             ]
 
-                    Nothing ->
+                    RemoteData.NotAsked ->
                         H.tr []
                             [ H.td [ HA.class "hash link" ] [ H.text (shortHash contractId) ]
                             , H.td [] [ H.text "..." ]
+                            ]
+
+                    RemoteData.Loading ->
+                        H.tr []
+                            [ H.td [ HA.class "hash link" ] [ H.text (shortHash contractId) ]
+                            , H.td [] [ H.text "......" ]
+                            ]
+
+                    RemoteData.Failure error ->
+                        H.tr []
+                            [ H.td [ HA.class "hash link" ] [ H.text (shortHash contractId) ]
+                            , H.td [] [ H.text (toString error) ]
                             ]
 
         tbody =
@@ -690,9 +703,13 @@ viewPeersList peers =
         H.table [ HA.class "peers" ] [ thead, tbody ]
 
 
-viewContract : ContractID -> RemoteData Http.Error Contract -> Html Msg
-viewContract contractId contractData =
+viewContract : ContractID -> Dict ContractID (RemoteData Http.Error Contract) -> Html Msg
+viewContract contractId contracts =
     let
+        contractData =
+            Dict.get contractId contracts
+                |> Maybe.withDefault RemoteData.NotAsked
+
         viewDelegate delegate =
             H.span []
                 [ H.span [ HA.class "hash" ]

@@ -156,7 +156,7 @@ updatePage page msg model =
                 Err error ->
                     ( { model
                         | errors = HttpError error :: model.errors
-                        , chain = Chain.loadContractError model.chain error
+                        , chain = Chain.loadContractError model.chain contractId error
                       }
                     , Cmd.none
                     )
@@ -286,7 +286,7 @@ setRoute routeMaybe model =
         Just (Route.Contract contractId) ->
             ( { model
                 | pageState = Loaded (Page.Contract contractId)
-                , chain = Chain.loadingContract model.chain
+                , chain = Chain.loadingContract model.chain contractId
               }
             , Request.Block.getContract model.nodeUrl contractId |> Http.send (LoadContract contractId)
             )
