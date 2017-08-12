@@ -207,6 +207,7 @@ A {
 
 td.hash, div.hash, span.hash,
 td.predecessor, div.predecessor,
+.property td.branch, .property div.branch,
 .property > .net_id,
 .property > .source
 ,property > .signature {

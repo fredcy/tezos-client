@@ -369,6 +369,7 @@ viewOperation model operationId =
             H.div []
                 [ viewProperty "hash" (H.text operation.hash)
                 , viewProperty "net_id" (H.text operation.net_id)
+                , viewProperty "branch" (H.text operation.branch)
                 , viewPropertyMaybe "source" operation.source
                 , viewPropertyMaybe "signature" operation.signature
                 , H.h4 [] [ H.text "operations" ]

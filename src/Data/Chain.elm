@@ -90,6 +90,7 @@ type SubOperation
 type alias ParsedOperation =
     { hash : OperationID
     , net_id : NetID
+    , branch : BlockID
     , operations : List SubOperation
     , source : Maybe SourceID
     , signature : Maybe Signature

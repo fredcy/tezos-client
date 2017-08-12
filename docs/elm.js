@@ -15635,9 +15635,9 @@ var _user$project$Data_Chain$Operation = F3(
 	function (a, b, c) {
 		return {hash: a, netID: b, data: c};
 	});
-var _user$project$Data_Chain$ParsedOperation = F5(
-	function (a, b, c, d, e) {
-		return {hash: a, net_id: b, operations: c, source: d, signature: e};
+var _user$project$Data_Chain$ParsedOperation = F6(
+	function (a, b, c, d, e, f) {
+		return {hash: a, net_id: b, branch: c, operations: d, source: e, signature: f};
 	});
 var _user$project$Data_Chain$Key = F2(
 	function (a, b) {
@@ -16938,13 +16938,17 @@ var _user$project$Request_Operation$decodeParsedOperation = A4(
 			_elm_lang$core$Json_Decode$list(_user$project$Request_Operation$decodeSubOperation),
 			A3(
 				_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-				'net_id',
+				'branch',
 				_elm_lang$core$Json_Decode$string,
 				A3(
 					_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-					'hash',
+					'net_id',
 					_elm_lang$core$Json_Decode$string,
-					_elm_lang$core$Json_Decode$succeed(_user$project$Data_Chain$ParsedOperation))))));
+					A3(
+						_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+						'hash',
+						_elm_lang$core$Json_Decode$string,
+						_elm_lang$core$Json_Decode$succeed(_user$project$Data_Chain$ParsedOperation)))))));
 var _user$project$Request_Operation$decodeBlockOperationDetails = A2(
 	_elm_lang$core$Json_Decode$field,
 	'ok',
@@ -19803,39 +19807,46 @@ var _user$project$View$viewOperation = F2(
 							_elm_lang$html$Html$text(operation.net_id)),
 						_1: {
 							ctor: '::',
-							_0: A2(_user$project$View$viewPropertyMaybe, 'source', operation.source),
+							_0: A2(
+								_user$project$View$viewProperty,
+								'branch',
+								_elm_lang$html$Html$text(operation.branch)),
 							_1: {
 								ctor: '::',
-								_0: A2(_user$project$View$viewPropertyMaybe, 'signature', operation.signature),
+								_0: A2(_user$project$View$viewPropertyMaybe, 'source', operation.source),
 								_1: {
 									ctor: '::',
-									_0: A2(
-										_elm_lang$html$Html$h4,
-										{ctor: '[]'},
-										{
-											ctor: '::',
-											_0: _elm_lang$html$Html$text('operations'),
-											_1: {ctor: '[]'}
-										}),
+									_0: A2(_user$project$View$viewPropertyMaybe, 'signature', operation.signature),
 									_1: {
 										ctor: '::',
 										_0: A2(
-											_elm_lang$html$Html$ul,
+											_elm_lang$html$Html$h4,
 											{ctor: '[]'},
-											A2(
-												_elm_lang$core$List$map,
-												function (so) {
-													return A2(
-														_elm_lang$html$Html$li,
-														{ctor: '[]'},
-														{
-															ctor: '::',
-															_0: _user$project$View$viewSuboperation(so),
-															_1: {ctor: '[]'}
-														});
-												},
-												operation.operations)),
-										_1: {ctor: '[]'}
+											{
+												ctor: '::',
+												_0: _elm_lang$html$Html$text('operations'),
+												_1: {ctor: '[]'}
+											}),
+										_1: {
+											ctor: '::',
+											_0: A2(
+												_elm_lang$html$Html$ul,
+												{ctor: '[]'},
+												A2(
+													_elm_lang$core$List$map,
+													function (so) {
+														return A2(
+															_elm_lang$html$Html$li,
+															{ctor: '[]'},
+															{
+																ctor: '::',
+																_0: _user$project$View$viewSuboperation(so),
+																_1: {ctor: '[]'}
+															});
+													},
+													operation.operations)),
+											_1: {ctor: '[]'}
+										}
 									}
 								}
 							}

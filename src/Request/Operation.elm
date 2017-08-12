@@ -31,6 +31,7 @@ decodeParsedOperation =
     Decode.succeed ParsedOperation
         |> Decode.required "hash" Decode.string
         |> Decode.required "net_id" Decode.string
+        |> Decode.required "branch" Decode.string
         |> Decode.required "operations" (Decode.list decodeSubOperation)
         |> Decode.optional "source" (Decode.map Just Decode.string) Nothing
         |> Decode.optional "signature" (Decode.map Just Decode.string) Nothing
