@@ -60,7 +60,7 @@ addErrorMaybe errorMaybe model =
 
 updatePage : Page -> Msg -> Model -> ( Model, Cmd Msg )
 updatePage page msg model =
-    case ( Debug.log "msg" msg, page ) of
+    case ( msg, page ) of
         ( RpcResponse response, _ ) ->
             let
                 ( newModel, cmd, errorMaybe ) =
@@ -235,7 +235,7 @@ toPage route =
 
 setRoute : Maybe Route -> Model -> ( Model, Cmd Msg )
 setRoute routeMaybe model =
-    case routeMaybe |> Debug.log "setRoute" of
+    case routeMaybe of
         Nothing ->
             ( { model | pageState = Loaded Page.NotFound }, Cmd.none )
 

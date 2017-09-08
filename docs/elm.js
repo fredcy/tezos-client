@@ -17310,7 +17310,7 @@ var _user$project$Update$LoadSchema = F2(
 	});
 var _user$project$Update$setRoute = F2(
 	function (routeMaybe, model) {
-		var _p8 = A2(_elm_lang$core$Debug$log, 'setRoute', routeMaybe);
+		var _p8 = routeMaybe;
 		if (_p8.ctor === 'Nothing') {
 			return {
 				ctor: '_Tuple2',
@@ -17475,11 +17475,7 @@ var _user$project$Update$setRoute = F2(
 	});
 var _user$project$Update$updatePage = F3(
 	function (page, msg, model) {
-		var _p13 = {
-			ctor: '_Tuple2',
-			_0: A2(_elm_lang$core$Debug$log, 'msg', msg),
-			_1: page
-		};
+		var _p13 = {ctor: '_Tuple2', _0: msg, _1: page};
 		switch (_p13._0.ctor) {
 			case 'RpcResponse':
 				var _p14 = A2(_user$project$Request$handleResponse, _p13._0._0, model);
@@ -19097,17 +19093,28 @@ var _user$project$View$viewAllOperations = function (model) {
 				}),
 			_1: {
 				ctor: '::',
-				_0: _user$project$View$viewOperationsTable(
-					A2(
-						_elm_lang$core$List$sortBy,
-						function (_) {
-							return _.hash;
-						},
+				_0: A2(
+					_elm_lang$html$Html$p,
+					{ctor: '[]'},
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html$text('(This displays only those operations that we have seen in the most\n                           recent blocks. This will be improved soon.)'),
+						_1: {ctor: '[]'}
+					}),
+				_1: {
+					ctor: '::',
+					_0: _user$project$View$viewOperationsTable(
 						A2(
-							_elm_lang$core$List$map,
-							_elm_lang$core$Tuple$second,
-							_elm_lang$core$Dict$toList(model.chain.parsedOperations)))),
-				_1: {ctor: '[]'}
+							_elm_lang$core$List$sortBy,
+							function (_) {
+								return _.hash;
+							},
+							A2(
+								_elm_lang$core$List$map,
+								_elm_lang$core$Tuple$second,
+								_elm_lang$core$Dict$toList(model.chain.parsedOperations)))),
+					_1: {ctor: '[]'}
+				}
 			}
 		});
 };
@@ -20585,7 +20592,7 @@ var _user$project$View$viewHome = function (model) {
 				}
 			});
 	} else {
-		return _elm_lang$html$Html$text('no head found');
+		return _elm_lang$html$Html$text('no head found yet ...');
 	}
 };
 var _user$project$View$BlockNotFound = function (a) {

@@ -109,7 +109,7 @@ viewHome model =
                     ]
 
             Nothing ->
-                H.text "no head found"
+                H.text "no head found yet ..."
 
 
 viewSchemas : Dict Schema.SchemaName Schema.SchemaData -> Html Msg
@@ -489,6 +489,8 @@ viewAllOperations : Model -> Html Msg
 viewAllOperations model =
     H.div []
         [ H.h3 [] [ H.text "All Operations" ]
+        , H.p [] [ H.text """(This displays only those operations that we have seen in the most
+                           recent blocks. This will be improved soon.)""" ]
         , Dict.toList model.chain.parsedOperations
             |> List.map Tuple.second
             |> List.sortBy .hash

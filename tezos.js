@@ -23,7 +23,7 @@
     }
 
     function updateProgress(evt) {
-        console.log("updateProgress", timeDisplay(), evt);
+        //console.log("updateProgress", timeDisplay(), evt);
 
         // Get all the text received since the stream last settled with a valid chunk.
         var new_response = xhr.responseText.substring(lengthParsed);
@@ -44,10 +44,10 @@
             try {
                 var parsed = JSON.parse(unit);
             } catch (e) {
-                console.log("parse failure", i, unit.length, e);
+                //console.log("parse failure", i, unit.length, e);
                 break;
             }
-            console.log("parsed", i, parsed);
+            //console.log("parsed", i, parsed);
             app.ports.monitor.send(parsed);
         }
 
