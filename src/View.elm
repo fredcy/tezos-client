@@ -804,16 +804,16 @@ viewProgram program =
             H.span [ HA.class ("PrimT prim-" ++ primCss p) ] [ H.text p ]
 
         Michelson.SeqT seq ->
-            H.div [ HA.class "SeqT sequence" ]
-                ([ H.text " { " ]
-                    ++ (List.map viewProgram seq)
-                    ++ [ H.text " } " ]
-                )
+            H.div [ HA.class "SeqT" ]
+                [ H.text " { "
+                , H.div [ HA.class "sequence" ] (List.map viewProgram seq)
+                , H.text " } "
+                ]
 
         Michelson.PrimArgT p arg ->
-            H.div [ HA.class ("PrimArgT primarg primarg-" ++ primCss p) ]
+            H.span [ HA.class ("PrimArgT primarg primarg-" ++ primCss p) ]
                 [ H.span [ HA.class ("PrimT prim-" ++ primCss p) ] [ H.text p ]
-                , H.div [ HA.class ("primargarg primargarg-" ++ primCss p) ]
+                , H.span [ HA.class ("primargarg primargarg-" ++ primCss p) ]
                     [ viewProgram arg ]
                 ]
 

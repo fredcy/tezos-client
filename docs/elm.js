@@ -18526,28 +18526,33 @@ var _user$project$View$viewProgram = function (program) {
 				_elm_lang$html$Html$div,
 				{
 					ctor: '::',
-					_0: _elm_lang$html$Html_Attributes$class('SeqT sequence'),
+					_0: _elm_lang$html$Html_Attributes$class('SeqT'),
 					_1: {ctor: '[]'}
 				},
-				A2(
-					_elm_lang$core$Basics_ops['++'],
-					{
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html$text(' { '),
+					_1: {
 						ctor: '::',
-						_0: _elm_lang$html$Html$text(' { '),
-						_1: {ctor: '[]'}
-					},
-					A2(
-						_elm_lang$core$Basics_ops['++'],
-						A2(_elm_lang$core$List$map, _user$project$View$viewProgram, _p7._0),
-						{
+						_0: A2(
+							_elm_lang$html$Html$div,
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html_Attributes$class('sequence'),
+								_1: {ctor: '[]'}
+							},
+							A2(_elm_lang$core$List$map, _user$project$View$viewProgram, _p7._0)),
+						_1: {
 							ctor: '::',
 							_0: _elm_lang$html$Html$text(' } '),
 							_1: {ctor: '[]'}
-						})));
+						}
+					}
+				});
 		default:
 			var _p9 = _p7._0;
 			return A2(
-				_elm_lang$html$Html$div,
+				_elm_lang$html$Html$span,
 				{
 					ctor: '::',
 					_0: _elm_lang$html$Html_Attributes$class(
@@ -18578,7 +18583,7 @@ var _user$project$View$viewProgram = function (program) {
 					_1: {
 						ctor: '::',
 						_0: A2(
-							_elm_lang$html$Html$div,
+							_elm_lang$html$Html$span,
 							{
 								ctor: '::',
 								_0: _elm_lang$html$Html_Attributes$class(

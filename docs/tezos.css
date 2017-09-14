@@ -289,49 +289,21 @@ table.operations td ul {
 }
 
 
-/* Try some code layout via CSS. (Might be a failed experiment.) */
+/* Try some code layout via CSS */
 
-/* 
-div.primarg,
-div.sequence,
-div.primargarg {
-    display: inline;
+.PrimT, .IntT, .StringT {
+    padding-right: .5em;
 }
 
+.sequence {
+    margin-left: .5em;
+}
 
-div.primarg-IF,
-div.primarg-IF-NONE,
-div.primarg-PUSH,
-div.primarg-DIP
+.primarg-DIP,
+.primarg-IF,
+.primarg-IF-LEFT,
+.primarg-IF-NONE,
+.primarg-LAMBDA
 {
     display: block;
 }
-
-div.primargarg-IF,
-div.primargarg-IF-NONE,
- {
-    display: block;
-    margin-left: 2em;
-}
-
-*/
-
-div.SeqT {
-    display: inline;
-}
-
-div.PrimArgT {
-    display: inline;
-}
-
-div.primargarg {
-    display: inline;
-}
-
-.PrimT {
-    display: block;
-    margin-left: 0.25em;
-    margin-right: 0.25em;
-}
-
-
