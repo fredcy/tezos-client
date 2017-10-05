@@ -15058,6 +15058,7 @@ var _user$project$Data_Michelson$decodeStorage = A3(
 		'storage',
 		_elm_lang$core$Json_Decode$value,
 		_elm_lang$core$Json_Decode$succeed(_user$project$Data_Michelson$Storage)));
+var _user$project$Data_Michelson$EmptyT = {ctor: 'EmptyT'};
 var _user$project$Data_Michelson$PrimArgT = F2(
 	function (a, b) {
 		return {ctor: 'PrimArgT', _0: a, _1: b};
@@ -15123,11 +15124,15 @@ var _user$project$Data_Michelson$decodePrimArgT = A2(
 	_elm_lang$core$Json_Decode$andThen,
 	function (kvPairs) {
 		var _p2 = kvPairs;
-		if (((_p2.ctor === '::') && (_p2._0.ctor === '_Tuple2')) && (_p2._1.ctor === '[]')) {
-			return _elm_lang$core$Json_Decode$succeed(
-				A2(_user$project$Data_Michelson$PrimArgT, _p2._0._0, _p2._0._1));
+		if (_p2.ctor === '::') {
+			if ((_p2._0.ctor === '_Tuple2') && (_p2._1.ctor === '[]')) {
+				return _elm_lang$core$Json_Decode$succeed(
+					A2(_user$project$Data_Michelson$PrimArgT, _p2._0._0, _p2._0._1));
+			} else {
+				return _elm_lang$core$Json_Decode$fail('bad kvPairs');
+			}
 		} else {
-			return _elm_lang$core$Json_Decode$fail('bad kvPairs');
+			return _elm_lang$core$Json_Decode$succeed(_user$project$Data_Michelson$EmptyT);
 		}
 	},
 	_elm_lang$core$Json_Decode$keyValuePairs(
@@ -18280,7 +18285,11 @@ var _user$project$View$viewFailure = function (error) {
 		var _p3 = _p2._1;
 		return A2(
 			_elm_lang$html$Html$div,
-			{ctor: '[]'},
+			{
+				ctor: '::',
+				_0: _elm_lang$html$Html_Attributes$class('badpayload'),
+				_1: {ctor: '[]'}
+			},
 			{
 				ctor: '::',
 				_0: A2(
@@ -18294,8 +18303,12 @@ var _user$project$View$viewFailure = function (error) {
 				_1: {
 					ctor: '::',
 					_0: A2(
-						_elm_lang$html$Html$div,
-						{ctor: '[]'},
+						_elm_lang$html$Html$pre,
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$class('payload-message'),
+							_1: {ctor: '[]'}
+						},
 						{
 							ctor: '::',
 							_0: _elm_lang$html$Html$text(_p2._0),
@@ -18549,7 +18562,7 @@ var _user$project$View$viewProgram = function (program) {
 						}
 					}
 				});
-		default:
+		case 'PrimArgT':
 			var _p9 = _p7._0;
 			return A2(
 				_elm_lang$html$Html$span,
@@ -18600,6 +18613,19 @@ var _user$project$View$viewProgram = function (program) {
 							}),
 						_1: {ctor: '[]'}
 					}
+				});
+		default:
+			return A2(
+				_elm_lang$html$Html$span,
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html_Attributes$class('EmptyT'),
+					_1: {ctor: '[]'}
+				},
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html$text('{}'),
+					_1: {ctor: '[]'}
 				});
 	}
 };

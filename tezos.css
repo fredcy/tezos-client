@@ -288,7 +288,6 @@ table.operations td ul {
     clear: both;
 }
 
-
 /* Try some code layout via CSS */
 
 .PrimT, .IntT, .StringT {
@@ -296,7 +295,7 @@ table.operations td ul {
 }
 
 .sequence {
-    margin-left: .5em;
+    margin-left: 1em;
 }
 
 .primarg-DIP,

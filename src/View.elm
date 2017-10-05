@@ -817,6 +817,8 @@ viewProgram program =
                     [ viewProgram arg ]
                 ]
 
+        Michelson.EmptyT ->
+            H.span [ HA.class "EmptyT" ] [ H.text "{}" ]
 
 simplifyProgram1 program =
     combinePrimitives program
@@ -892,9 +894,9 @@ viewFailure : Http.Error -> Html Msg
 viewFailure error =
     case error of
         Http.BadPayload message response ->
-            H.div []
+            H.div [ HA.class "badpayload" ]
                 [ H.h4 [] [ H.text "Error: Bad Payload" ]
-                , H.div [] [ H.text message ]
+                , H.pre [ HA.class "payload-message" ] [ H.text message ]
                 , H.h5 [] [ H.text "Response" ]
                 , H.div [] [ H.text (toString response) ]
                 , H.h5 [] [ H.text "Body" ]

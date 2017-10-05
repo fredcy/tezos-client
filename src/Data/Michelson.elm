@@ -64,6 +64,7 @@ type AST
     | SeqT (List AST)
     | PrimT String
     | PrimArgT String AST
+    | EmptyT
 
 
 decodeAST : Decode.Decoder AST
@@ -115,6 +116,9 @@ decodePrimArgT =
                 case kvPairs of
                     [ ( prim, ast ) ] ->
                         Decode.succeed (PrimArgT prim ast)
+
+                    [] ->
+                        Decode.succeed EmptyT
 
                     _ ->
                         Decode.fail "bad kvPairs"
