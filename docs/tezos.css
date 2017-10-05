@@ -307,3 +307,7 @@ table.operations td ul {
 {
     display: block;
 }
+
+div.program {
+    font-family: Consolas, "Lucida Sans Typewriter", "Lucida Console", monaco, "Bitstream Vera Sans Mono", monospace;
+}
