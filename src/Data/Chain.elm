@@ -478,6 +478,18 @@ decodeBlock =
         |> Decode.required "level" Decode.int
 
 
+decodeBlock2 : Decode.Decoder Block
+decodeBlock2 =
+    Decode.succeed Block
+        |> Decode.required "Hash" Decode.string
+        |> Decode.required "Predecessor" Decode.string
+        |> Decode.required "Fitness" (Decode.list Decode.int)
+        |> Decode.required "Timestamp" decodeTimestamp
+        |> Decode.hardcoded Nothing
+        |> Decode.hardcoded "fakenetid"
+        |> Decode.required "Level" Decode.int
+
+
 decodeFitness : Decode.Decoder Fitness
 decodeFitness =
     Decode.list decodeHexString

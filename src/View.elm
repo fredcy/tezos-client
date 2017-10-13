@@ -762,8 +762,8 @@ viewContract contractId contracts =
                         , viewProg contract.script
 
                         --, viewProperty "raw data" (H.div [] [ H.text (toString contract.raw) ])
-                        , H.h5 [] [ H.text "Raw response" ]
-                        , H.pre [] [ H.text contract.rawBody ]
+                        -- , H.h5 [] [ H.text "Raw response" ]
+                        -- , H.pre [] [ H.text contract.rawBody ]
                         ]
 
                 RemoteData.Loading ->
@@ -819,6 +819,7 @@ viewProgram program =
 
         Michelson.EmptyT ->
             H.span [ HA.class "EmptyT" ] [ H.text "{}" ]
+
 
 simplifyProgram1 program =
     combinePrimitives program

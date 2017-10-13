@@ -82,3 +82,8 @@ getContract nodeUrl contractId =
             , timeout = Nothing
             , withCredentials = False
             }
+
+getHead : URL -> Http.Request Chain.Block
+getHead nodeUrl =
+    Http.get (nodeUrl ++ "/api/head") Chain.decodeBlock2
+

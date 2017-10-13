@@ -22,6 +22,7 @@ type ResponseData
     = Blocks Chain.BlocksData
     | BlockOperations Chain.BlockID Chain.BlockOperations
     | Heads Chain.BlocksData
+    | Head Chain.Block
 
 
 handleResponse : Response -> Model base -> ( Model base, Cmd Response, Maybe Http.Error )
@@ -72,6 +73,14 @@ handleResponseData responseData model =
             ( { model | chain = Chain.addBlockOperations model.chain blockid operationsData }
             , Cmd.none
             )
+
+        Head block ->
+            -- TODO
+            let
+                _ =
+                    Debug.log "head" block
+            in
+                ( model, Cmd.none )
 
 
 getBlockOperationDetails : Model b -> Chain.BlockID -> Cmd Response

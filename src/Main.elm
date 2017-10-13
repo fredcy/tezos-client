@@ -52,6 +52,7 @@ init flags location =
         ( routedModel
         , Cmd.batch
             [ Request.Block.getHeads routedModel.nodeUrl |> Http.send (Result.map Request.Heads >> RpcResponse)
+            , Request.Block.getHead routedModel.nodeUrl |> Http.send (Result.map Request.Head >> RpcResponse)
             , routeCmd
             ]
         )

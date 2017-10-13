@@ -15636,6 +15636,33 @@ var _user$project$Data_Chain$decodeBlocks = A2(
 	'blocks',
 	_elm_lang$core$Json_Decode$list(
 		_elm_lang$core$Json_Decode$list(_user$project$Data_Chain$decodeBlock)));
+var _user$project$Data_Chain$decodeBlock2 = A3(
+	_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+	'Level',
+	_elm_lang$core$Json_Decode$int,
+	A2(
+		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$hardcoded,
+		'fakenetid',
+		A2(
+			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$hardcoded,
+			_elm_lang$core$Maybe$Nothing,
+			A3(
+				_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+				'Timestamp',
+				_user$project$Data_Chain$decodeTimestamp,
+				A3(
+					_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+					'Fitness',
+					_elm_lang$core$Json_Decode$list(_elm_lang$core$Json_Decode$int),
+					A3(
+						_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+						'Predecessor',
+						_elm_lang$core$Json_Decode$string,
+						A3(
+							_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+							'Hash',
+							_elm_lang$core$Json_Decode$string,
+							_elm_lang$core$Json_Decode$succeed(_user$project$Data_Chain$Block))))))));
 var _user$project$Data_Chain$Operation = F3(
 	function (a, b, c) {
 		return {hash: a, netID: b, data: c};
@@ -16790,6 +16817,12 @@ var _user$project$Model$HttpError = function (a) {
 	return {ctor: 'HttpError', _0: a};
 };
 
+var _user$project$Request_Block$getHead = function (nodeUrl) {
+	return A2(
+		_elm_lang$http$Http$get,
+		A2(_elm_lang$core$Basics_ops['++'], nodeUrl, '/api/head'),
+		_user$project$Data_Chain$decodeBlock2);
+};
 var _user$project$Request_Block$getContract = F2(
 	function (nodeUrl, contractId) {
 		var url = A2(
@@ -16971,6 +17004,9 @@ var _user$project$Request_Operation$getBlockOperations = F2(
 		return A3(_elm_lang$http$Http$post, url, _user$project$Data_Request$emptyJsonBody, _user$project$Request_Operation$decodeBlockOperationDetails);
 	});
 
+var _user$project$Request$Head = function (a) {
+	return {ctor: 'Head', _0: a};
+};
 var _user$project$Request$Heads = function (a) {
 	return {ctor: 'Heads', _0: a};
 };
@@ -17053,7 +17089,7 @@ var _user$project$Request$handleResponseData = F2(
 					_1: _elm_lang$core$Platform_Cmd$batch(
 						A2(_elm_lang$core$List$map, getBlockOperations, blocksToGet))
 				};
-			default:
+			case 'BlockOperations':
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
@@ -17063,22 +17099,25 @@ var _user$project$Request$handleResponseData = F2(
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
+			default:
+				var _p1 = A2(_elm_lang$core$Debug$log, 'head', _p0._0);
+				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 		}
 	});
 var _user$project$Request$handleResponse = F2(
 	function (response, model) {
-		var _p1 = response;
-		if (_p1.ctor === 'Ok') {
-			var _p2 = A2(_user$project$Request$handleResponseData, _p1._0, model);
-			var newModel = _p2._0;
-			var cmd = _p2._1;
+		var _p2 = response;
+		if (_p2.ctor === 'Ok') {
+			var _p3 = A2(_user$project$Request$handleResponseData, _p2._0, model);
+			var newModel = _p3._0;
+			var cmd = _p3._1;
 			return {ctor: '_Tuple3', _0: newModel, _1: cmd, _2: _elm_lang$core$Maybe$Nothing};
 		} else {
 			return {
 				ctor: '_Tuple3',
 				_0: model,
 				_1: _elm_lang$core$Platform_Cmd$none,
-				_2: _elm_lang$core$Maybe$Just(_p1._0)
+				_2: _elm_lang$core$Maybe$Just(_p2._0)
 			};
 		}
 	});
@@ -20075,29 +20114,7 @@ var _user$project$View$viewContract = F2(
 														_1: {
 															ctor: '::',
 															_0: viewProg(_p25.script),
-															_1: {
-																ctor: '::',
-																_0: A2(
-																	_elm_lang$html$Html$h5,
-																	{ctor: '[]'},
-																	{
-																		ctor: '::',
-																		_0: _elm_lang$html$Html$text('Raw response'),
-																		_1: {ctor: '[]'}
-																	}),
-																_1: {
-																	ctor: '::',
-																	_0: A2(
-																		_elm_lang$html$Html$pre,
-																		{ctor: '[]'},
-																		{
-																			ctor: '::',
-																			_0: _elm_lang$html$Html$text(_p25.rawBody),
-																			_1: {ctor: '[]'}
-																		}),
-																	_1: {ctor: '[]'}
-																}
-															}
+															_1: {ctor: '[]'}
 														}
 													}
 												}
@@ -21011,8 +21028,18 @@ var _user$project$Main$init = F2(
 						_user$project$Request_Block$getHeads(routedModel.nodeUrl)),
 					_1: {
 						ctor: '::',
-						_0: routeCmd,
-						_1: {ctor: '[]'}
+						_0: A2(
+							_elm_lang$http$Http$send,
+							function (_p2) {
+								return _user$project$Update$RpcResponse(
+									A2(_elm_lang$core$Result$map, _user$project$Request$Head, _p2));
+							},
+							_user$project$Request_Block$getHead(routedModel.nodeUrl)),
+						_1: {
+							ctor: '::',
+							_0: routeCmd,
+							_1: {ctor: '[]'}
+						}
 					}
 				})
 		};
@@ -21036,9 +21063,9 @@ var _user$project$Main$subscriptions = function (model) {
 };
 var _user$project$Main$main = A2(
 	_elm_lang$navigation$Navigation$programWithFlags,
-	function (_p2) {
+	function (_p3) {
 		return _user$project$Update$SetRoute(
-			_user$project$Route$fromLocation(_p2));
+			_user$project$Route$fromLocation(_p3));
 	},
 	{init: _user$project$Main$init, update: _user$project$Update$update, view: _user$project$View$view, subscriptions: _user$project$Main$subscriptions})(
 	A2(
