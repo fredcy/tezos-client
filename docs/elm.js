@@ -15640,9 +15640,10 @@ var _user$project$Data_Chain$decodeBlock2 = A3(
 	_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
 	'Level',
 	_elm_lang$core$Json_Decode$int,
-	A2(
-		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$hardcoded,
-		'fakenetid',
+	A3(
+		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+		'Network',
+		_elm_lang$core$Json_Decode$string,
 		A2(
 			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$hardcoded,
 			_elm_lang$core$Maybe$Nothing,

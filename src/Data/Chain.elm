@@ -478,6 +478,8 @@ decodeBlock =
         |> Decode.required "level" Decode.int
 
 
+{-| Decode block returned from new API.
+-}
 decodeBlock2 : Decode.Decoder Block
 decodeBlock2 =
     Decode.succeed Block
@@ -486,7 +488,8 @@ decodeBlock2 =
         |> Decode.required "Fitness" (Decode.list Decode.int)
         |> Decode.required "Timestamp" decodeTimestamp
         |> Decode.hardcoded Nothing
-        |> Decode.hardcoded "fakenetid"
+        -- ^ TODO ? operations
+        |> Decode.required "Network" Decode.string
         |> Decode.required "Level" Decode.int
 
 
