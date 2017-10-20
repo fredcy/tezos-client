@@ -16605,10 +16605,16 @@ var _user$project$Route$routeToString = function (route) {
 					_0: 'errors',
 					_1: {ctor: '[]'}
 				};
-			default:
+			case 'About':
 				return {
 					ctor: '::',
 					_0: 'about',
+					_1: {ctor: '[]'}
+				};
+			default:
+				return {
+					ctor: '::',
+					_0: 'chain2',
 					_1: {ctor: '[]'}
 				};
 		}
@@ -16630,6 +16636,7 @@ var _user$project$Route$newUrl = function (_p2) {
 	return _elm_lang$navigation$Navigation$newUrl(
 		_user$project$Route$routeToString(_p2));
 };
+var _user$project$Route$Chain2 = {ctor: 'Chain2'};
 var _user$project$Route$About = {ctor: 'About'};
 var _user$project$Route$Debug = {ctor: 'Debug'};
 var _user$project$Route$Errors = {ctor: 'Errors'};
@@ -16755,7 +16762,14 @@ var _user$project$Route$route = _evancz$url_parser$UrlParser$oneOf(
 																	_evancz$url_parser$UrlParser$map,
 																	_user$project$Route$About,
 																	_evancz$url_parser$UrlParser$s('about')),
-																_1: {ctor: '[]'}
+																_1: {
+																	ctor: '::',
+																	_0: A2(
+																		_evancz$url_parser$UrlParser$map,
+																		_user$project$Route$Chain2,
+																		_evancz$url_parser$UrlParser$s('chain2')),
+																	_1: {ctor: '[]'}
+																}
 															}
 														}
 													}
@@ -16775,6 +16789,7 @@ var _user$project$Route$fromLocation = function (location) {
 	return _elm_lang$core$String$isEmpty(location.hash) ? _elm_lang$core$Maybe$Just(_user$project$Route$Home) : A2(_evancz$url_parser$UrlParser$parseHash, _user$project$Route$route, location);
 };
 
+var _user$project$Page$Chain2 = {ctor: 'Chain2'};
 var _user$project$Page$About = {ctor: 'About'};
 var _user$project$Page$Debug = {ctor: 'Debug'};
 var _user$project$Page$Errors = {ctor: 'Errors'};
@@ -17155,6 +17170,8 @@ var _user$project$Update$toPage = function (route) {
 			return _user$project$Page$Heads;
 		case 'ChainAt':
 			return _user$project$Page$ChainAt(_p0._0);
+		case 'Chain2':
+			return _user$project$Page$Chain2;
 		case 'Contracts':
 			return _user$project$Page$Contracts;
 		case 'Keys':
@@ -17427,6 +17444,16 @@ var _user$project$Update$setRoute = F2(
 							_elm_lang$core$Platform_Cmd$map,
 							_user$project$Update$RpcResponse,
 							A3(_user$project$Request$getBranch, 24, model, _p11))
+					};
+				case 'Chain2':
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								pageState: _user$project$Model$Loaded(_user$project$Page$Chain2)
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				case 'Contracts':
 					return {
@@ -18833,6 +18860,23 @@ var _user$project$View$viewKeys = function (keysData) {
 				}(),
 				_1: {ctor: '[]'}
 			}
+		});
+};
+var _user$project$View$viewChain2 = function (model) {
+	return A2(
+		_elm_lang$html$Html$div,
+		{ctor: '[]'},
+		{
+			ctor: '::',
+			_0: A2(
+				_elm_lang$html$Html$h3,
+				{ctor: '[]'},
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html$text('Chain2'),
+					_1: {ctor: '[]'}
+				}),
+			_1: {ctor: '[]'}
 		});
 };
 var _user$project$View$shortHash = function (hash) {
@@ -20974,6 +21018,8 @@ var _user$project$View$view = function (model) {
 				}
 			case 'ChainAt':
 				return A2(_user$project$View$viewChainAt, model, _p32._0._0);
+			case 'Chain2':
+				return _user$project$View$viewChain2(model);
 			case 'Contracts':
 				return _user$project$View$viewContracts(model);
 			case 'Keys':

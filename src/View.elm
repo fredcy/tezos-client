@@ -68,6 +68,9 @@ view model =
                 Loaded (Page.ChainAt hash) ->
                     viewChainAt model hash
 
+                Loaded Page.Chain2 ->
+                    viewChain2 model
+
                 Loaded Page.Contracts ->
                     viewContracts model
 
@@ -511,6 +514,12 @@ viewChainAt model hash =
             |> viewBranch 24 model (Just hash)
         ]
 
+
+viewChain2 : Model -> Html Msg
+viewChain2 model =
+    H.div []
+        [ H.h3 [] [ H.text "Chain2" ]
+        ]
 
 viewContracts : Model -> Html Msg
 viewContracts model =

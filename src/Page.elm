@@ -20,3 +20,4 @@ type Page
     | Errors
     | Debug
     | About
+    | Chain2

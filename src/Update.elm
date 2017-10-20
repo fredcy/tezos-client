@@ -208,6 +208,9 @@ toPage route =
         Route.ChainAt hash ->
             Page.ChainAt hash
 
+        Route.Chain2 ->
+            Page.Chain2
+
         Route.Contracts ->
             Page.Contracts
 
@@ -257,6 +260,12 @@ setRoute routeMaybe model =
         Just (Route.ChainAt hash) ->
             ( { model | pageState = Loaded (Page.ChainAt hash) }
             , Request.getBranch 24 model hash |> Cmd.map RpcResponse
+            )
+
+        Just Route.Chain2 ->
+            ( { model | pageState = Loaded Page.Chain2 }
+            , Cmd.none
+              --Request.getChain2 model |> Cmd.map LoadChain2
             )
 
         Just Route.Contracts ->
