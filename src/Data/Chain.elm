@@ -44,6 +44,10 @@ type alias ContractID =
     Base58CheckEncodedSHA256
 
 
+type alias AccountID =
+    Base58CheckEncodedSHA256
+
+
 type alias Fitness =
     List Int
 
@@ -174,6 +178,21 @@ type alias AccountSummary =
     }
 
 
+type alias TransactionSummary =
+    { source : String
+    , destination : String
+    , amount : Int
+    , block : String
+    , timestamp : Timestamp
+    }
+
+
+type alias AccountInfo =
+    { hash : String
+    , transactions : List TransactionSummary
+    }
+
+
 type alias Model =
     { heads : List BlockID
     , blocks : Dict BlockID Block
@@ -185,6 +204,7 @@ type alias Model =
     , peers : RemoteData Http.Error (List Peer)
     , contracts : Dict ContractID (RemoteData Http.Error Contract)
     , accounts : RemoteData Http.Error (List AccountSummary)
+    , account : Maybe AccountInfo
     }
 
 
@@ -200,6 +220,7 @@ init =
     , peers = RemoteData.NotAsked
     , contracts = Dict.empty
     , accounts = RemoteData.NotAsked
+    , account = Nothing
     }
 
 
@@ -299,6 +320,11 @@ updateExistingHead newHead predHash heads =
 setAccountSummaries : Model -> List AccountSummary -> Model
 setAccountSummaries model summaries =
     { model | accounts = RemoteData.Success summaries }
+
+
+setAccountInfo : Model -> String -> List TransactionSummary -> Model
+setAccountInfo model accountHash transactions =
+    { model | account = Just (AccountInfo accountHash transactions) }
 
 
 insertHead : Dict BlockID Block -> Block -> List BlockID -> List BlockID
@@ -714,6 +740,7 @@ decodeDelegate =
         |> Decode.required "setable" Decode.bool
         |> Decode.optional "value" (Decode.string |> Decode.map Just) Nothing
 
+
 decodeAccountSummary : Decode.Decoder AccountSummary
 decodeAccountSummary =
     Decode.succeed AccountSummary
@@ -722,3 +749,13 @@ decodeAccountSummary =
         |> Decode.required "SourceSum" Decode.int
         |> Decode.required "DestCount" Decode.int
         |> Decode.required "DestSum" Decode.int
+
+
+decodeTransaction : Decode.Decoder TransactionSummary
+decodeTransaction =
+    Decode.succeed TransactionSummary
+        |> Decode.required "Source" Decode.string
+        |> Decode.required "Destination" Decode.string
+        |> Decode.required "Amount" Decode.int
+        |> Decode.required "Block" Decode.string
+        |> Decode.required "Timestamp" decodeTimestamp

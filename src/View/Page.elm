@@ -55,7 +55,7 @@ links : List ( String, Route )
 links =
     [ ( "Home", Route.Home )
     , ( "Heads", Route.Heads )
-    , ( "Operations", Route.Operations )
+    , ( "Accounts", Route.Accounts )
     , ( "Contracts", Route.Contracts )
     , ( "Keys", Route.Keys )
     , ( "Peers", Route.Peers )

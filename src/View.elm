@@ -77,6 +77,9 @@ view model =
                 Loaded Page.Accounts ->
                     viewAccounts model
 
+                Loaded (Page.Account hash) ->
+                    viewAccount model hash
+
                 Loaded Page.Keys ->
                     viewKeys model.chain.keys
 
@@ -559,7 +562,11 @@ viewAccountTable accounts =
 
         row a =
             H.tr []
-                [ H.td [ HA.class "hash" ] [ H.text a.hash ]
+                [ H.td [ HA.class "hash" ]
+                    [ H.a
+                        [ Route.href (Route.Account a.hash) ]
+                        [ H.text a.hash ]
+                    ]
                 , H.td [ HA.class "number" ] [ H.text (toString a.sourceCount) ]
                 , H.td [ HA.class "number" ] [ H.text (formatCentiles a.sourceSum) ]
                 , H.td [ HA.class "number" ] [ H.text (toString a.destCount) ]
@@ -569,6 +576,53 @@ viewAccountTable accounts =
         H.table [ HA.class "accounts" ]
             [ thead
             , H.tbody [] (List.map row accounts)
+            ]
+
+
+viewAccount : Model -> Chain.AccountID -> Html Msg
+viewAccount model accountHash =
+    H.div []
+        [ H.h3 [] [ H.text ("Account " ++ accountHash) ]
+        , case model.chain.account of
+            Just { hash, transactions } ->
+                viewTransactions hash transactions
+
+            _ ->
+                H.div [] [ H.text (toString model.chain.account) ]
+        ]
+
+
+viewTransactions : Chain.AccountID -> List Chain.TransactionSummary -> Html Msg
+viewTransactions accountHash transactions =
+    let
+        class : Chain.TransactionSummary -> String
+        class t =
+            if t.source == accountHash then
+                "source"
+            else if t.destination == accountHash then
+                "destination"
+            else
+                ""
+
+        thead =
+            H.tr []
+                [ H.th [] [ H.text "time" ]
+                , H.th [] [ H.text "source" ]
+                , H.th [] [ H.text "destination" ]
+                , H.th [] [ H.text "amount (ꜩ)" ]
+                ]
+
+        row t =
+            H.tr [ HA.class (class t) ]
+                [ H.td [] [ H.text (formatDate t.timestamp) ]
+                , H.td [ HA.class "hash" ] [ H.text (shortHash t.source) ]
+                , H.td [ HA.class "hash" ] [ H.text (shortHash t.destination) ]
+                , H.td [ HA.class "number amount" ] [ H.text (formatCentiles t.amount) ]
+                ]
+    in
+        H.table [ HA.class "transactions" ]
+            [ thead
+            , H.tbody [] (List.map row transactions)
             ]
 
 

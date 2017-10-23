@@ -1,6 +1,6 @@
 module Page exposing (Page(..))
 
-import Data.Chain exposing (BlockID, ContractID, OperationID)
+import Data.Chain exposing (BlockID, ContractID, OperationID, AccountID)
 
 
 type Page
@@ -22,3 +22,4 @@ type Page
     | About
     | Chain2
     | Accounts
+    | Account AccountID

@@ -92,3 +92,7 @@ getHead nodeUrl =
 requestAccounts : URL -> Http.Request (List Chain.AccountSummary)
 requestAccounts nodeUrl =
     Http.get (nodeUrl ++ "/api/accounts") (Decode.list Chain.decodeAccountSummary)
+
+requestTransactions : URL -> Chain.AccountID -> Http.Request (List Chain.TransactionSummary)
+requestTransactions nodeUrl accountHash =
+    Http.get (nodeUrl ++ "/api/account/" ++ accountHash) (Decode.list Chain.decodeTransaction)

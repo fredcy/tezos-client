@@ -24,6 +24,7 @@ type ResponseData
     | Heads Chain.BlocksData
     | Head Chain.Block
     | AccountSummaries (List Chain.AccountSummary)
+    | TransactionSummaries String (List Chain.TransactionSummary)
 
 
 handleResponse : Response -> Model base -> ( Model base, Cmd Response, Maybe Http.Error )
@@ -85,6 +86,11 @@ handleResponseData responseData model =
 
         AccountSummaries summaries ->
             ( { model | chain = Chain.setAccountSummaries model.chain summaries }
+            , Cmd.none
+            )
+
+        TransactionSummaries accountHash transactions ->
+            ( { model | chain = Chain.setAccountInfo model.chain accountHash transactions }
             , Cmd.none
             )
 

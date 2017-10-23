@@ -4,7 +4,7 @@ import Html as H
 import Html.Attributes as HA
 import UrlParser as Url exposing (parseHash, s, (</>), string, oneOf, Parser)
 import Navigation exposing (Location)
-import Data.Chain as Chain exposing (BlockID, OperationID, ContractID)
+import Data.Chain as Chain exposing (BlockID, OperationID, ContractID, AccountID)
 
 
 type Route
@@ -24,6 +24,7 @@ type Route
     | About
     | Chain2
     | Accounts
+    | Account AccountID
 
 
 route : Parser (Route -> a) a
@@ -46,6 +47,7 @@ route =
         , Url.map About (s "about")
         , Url.map Chain2 (s "chain2")
         , Url.map Accounts (s "accounts")
+        , Url.map Account (s "account" </> Url.string)
         ]
 
 
@@ -101,6 +103,10 @@ routeToString route =
 
                 Accounts ->
                     [ "accounts" ]
+
+                Account accountId ->
+                    [ "account", accountId ]
+
     in
         "#/" ++ (String.join "/" pieces)
 

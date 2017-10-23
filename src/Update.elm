@@ -217,6 +217,9 @@ toPage route =
         Route.Accounts ->
             Page.Accounts
 
+        Route.Account accountId ->
+            Page.Account accountId
+
         Route.Keys ->
             Page.Keys
 
@@ -282,6 +285,12 @@ setRoute routeMaybe model =
         Just Route.Accounts ->
             ( { model | pageState = Loaded Page.Accounts }
             , getAccounts model
+            )
+
+        Just (Route.Account accountId) ->
+            ( { model | pageState = Loaded (Page.Account accountId) }
+            , Request.Block.requestTransactions model.nodeUrl accountId
+                |> Http.send (Result.map (Request.TransactionSummaries accountId) >> RpcResponse)
             )
 
         Just Route.Keys ->

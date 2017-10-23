@@ -314,3 +314,15 @@ div.program {
 table.accounts td {
     padding: .35em 1em;
 }
+
+table.transactions td {
+    padding: .35em 1em;
+}
+
+table.transactions tr.source td.amount {
+    color :red;
+}
+
+table.transactions tr.destination td.amount {
+    color :green;
+}
