@@ -74,6 +74,9 @@ view model =
                 Loaded Page.Contracts ->
                     viewContracts model
 
+                Loaded Page.Accounts ->
+                    viewAccounts model
+
                 Loaded Page.Keys ->
                     viewKeys model.chain.keys
 
@@ -520,6 +523,54 @@ viewChain2 model =
     H.div []
         [ H.h3 [] [ H.text "Chain2" ]
         ]
+
+
+viewAccounts : Model -> Html Msg
+viewAccounts model =
+    H.div []
+        [ H.h3 [] [ H.text "Accounts" ]
+        , case model.chain.accounts of
+            RemoteData.Success accounts ->
+                viewAccountTable accounts
+
+            _ ->
+                H.div [] [ H.text (toString model.chain.accounts) ]
+        ]
+
+
+viewAccountTable : List Chain.AccountSummary -> Html Msg
+viewAccountTable accounts =
+    let
+        thead =
+            H.thead []
+                [ H.tr []
+                    [ H.th [] [ H.text "" ]
+                    , H.th [ HA.colspan 2 ] [ H.text "source" ]
+                    , H.th [ HA.colspan 2 ] [ H.text "destination" ]
+                    ]
+                , H.tr []
+                    [ H.th [] [ H.text "account hash" ]
+                    , H.th [] [ H.text "count" ]
+                    , H.th [] [ H.text "sum" ]
+                    , H.th [] [ H.text "count" ]
+                    , H.th [] [ H.text "sum" ]
+                    ]
+                ]
+
+        row a =
+            H.tr []
+                [ H.td [ HA.class "hash" ] [ H.text a.hash ]
+                , H.td [ HA.class "number" ] [ H.text (toString a.sourceCount) ]
+                , H.td [ HA.class "number" ] [ H.text (toString a.sourceSum) ]
+                , H.td [ HA.class "number" ] [ H.text (toString a.destCount) ]
+                , H.td [ HA.class "number" ] [ H.text (toString a.destSum) ]
+                ]
+    in
+        H.table [ HA.class "accounts" ]
+            [ thead
+            , H.tbody [] (List.map row accounts)
+            ]
+
 
 viewContracts : Model -> Html Msg
 viewContracts model =

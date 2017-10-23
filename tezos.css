@@ -310,3 +310,7 @@ table.operations td ul {
 div.program {
     font-family: Consolas, "Lucida Sans Typewriter", "Lucida Console", monaco, "Bitstream Vera Sans Mono", monospace;
 }
+
+table.accounts td {
+    padding: .35em 1em;
+}

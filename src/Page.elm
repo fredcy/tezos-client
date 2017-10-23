@@ -21,3 +21,4 @@ type Page
     | Debug
     | About
     | Chain2
+    | Accounts

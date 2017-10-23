@@ -165,6 +165,15 @@ type alias Contract =
     }
 
 
+type alias AccountSummary =
+    { hash : String
+    , sourceCount : Int
+    , sourceSum : Int
+    , destCount : Int
+    , destSum : Int
+    }
+
+
 type alias Model =
     { heads : List BlockID
     , blocks : Dict BlockID Block
@@ -175,6 +184,7 @@ type alias Model =
     , keys : RemoteData Http.Error (List Key)
     , peers : RemoteData Http.Error (List Peer)
     , contracts : Dict ContractID (RemoteData Http.Error Contract)
+    , accounts : RemoteData Http.Error (List AccountSummary)
     }
 
 
@@ -189,6 +199,7 @@ init =
     , keys = RemoteData.NotAsked
     , peers = RemoteData.NotAsked
     , contracts = Dict.empty
+    , accounts = RemoteData.NotAsked
     }
 
 
@@ -283,6 +294,11 @@ updateExistingHead newHead predHash heads =
     List.Extra.findIndex (\h -> h == predHash) heads
         |> Maybe.map
             (\_ -> List.Extra.updateIf (\h -> h == predHash) (\_ -> newHead) heads)
+
+
+setAccountSummaries : Model -> List AccountSummary -> Model
+setAccountSummaries model summaries =
+    { model | accounts = RemoteData.Success summaries }
 
 
 insertHead : Dict BlockID Block -> Block -> List BlockID -> List BlockID
@@ -697,3 +713,12 @@ decodeDelegate =
     Decode.succeed Delegate
         |> Decode.required "setable" Decode.bool
         |> Decode.optional "value" (Decode.string |> Decode.map Just) Nothing
+
+decodeAccountSummary : Decode.Decoder AccountSummary
+decodeAccountSummary =
+    Decode.succeed AccountSummary
+        |> Decode.required "Hash" Decode.string
+        |> Decode.required "SourceCount" Decode.int
+        |> Decode.required "SourceSum" Decode.int
+        |> Decode.required "DestCount" Decode.int
+        |> Decode.required "DestSum" Decode.int

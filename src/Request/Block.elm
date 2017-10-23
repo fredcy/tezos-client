@@ -1,6 +1,7 @@
 module Request.Block exposing (..)
 
 import Json.Encode as Encode
+import Json.Decode as Decode
 import Http
 import Data.Chain as Chain exposing (BlockID, Contract, ContractID)
 import Data.Request exposing (URL, emptyJsonBody)
@@ -87,3 +88,7 @@ getHead : URL -> Http.Request Chain.Block
 getHead nodeUrl =
     Http.get (nodeUrl ++ "/api/head") Chain.decodeBlock2
 
+
+requestAccounts : URL -> Http.Request (List Chain.AccountSummary)
+requestAccounts nodeUrl =
+    Http.get (nodeUrl ++ "/api/accounts") (Decode.list Chain.decodeAccountSummary)

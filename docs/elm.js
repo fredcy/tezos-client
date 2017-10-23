@@ -15455,6 +15455,14 @@ var _user$project$Data_Chain$insertHead = F3(
 			}
 		}
 	});
+var _user$project$Data_Chain$setAccountSummaries = F2(
+	function (model, summaries) {
+		return _elm_lang$core$Native_Utils.update(
+			model,
+			{
+				accounts: _krisajenkins$remotedata$RemoteData$Success(summaries)
+			});
+	});
 var _user$project$Data_Chain$updateExistingHead = F3(
 	function (newHead, predHash, heads) {
 		return A2(
@@ -15591,7 +15599,8 @@ var _user$project$Data_Chain$init = {
 	contractIDs: _krisajenkins$remotedata$RemoteData$NotAsked,
 	keys: _krisajenkins$remotedata$RemoteData$NotAsked,
 	peers: _krisajenkins$remotedata$RemoteData$NotAsked,
-	contracts: _elm_lang$core$Dict$empty
+	contracts: _elm_lang$core$Dict$empty,
+	accounts: _krisajenkins$remotedata$RemoteData$NotAsked
 };
 var _user$project$Data_Chain$Block = F7(
 	function (a, b, c, d, e, f, g) {
@@ -15803,10 +15812,52 @@ var _user$project$Data_Chain$decodeContractResponse = function (response) {
 		},
 		A2(_elm_lang$core$Json_Decode$decodeString, _user$project$Data_Chain$decodeContract, response.body));
 };
-var _user$project$Data_Chain$Model = F9(
-	function (a, b, c, d, e, f, g, h, i) {
-		return {heads: a, blocks: b, operations: c, parsedOperations: d, blockOperations: e, contractIDs: f, keys: g, peers: h, contracts: i};
+var _user$project$Data_Chain$AccountSummary = F5(
+	function (a, b, c, d, e) {
+		return {hash: a, sourceCount: b, sourceSum: c, destCount: d, destSum: e};
 	});
+var _user$project$Data_Chain$decodeAccountSummary = A3(
+	_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+	'DestSum',
+	_elm_lang$core$Json_Decode$int,
+	A3(
+		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+		'DestCount',
+		_elm_lang$core$Json_Decode$int,
+		A3(
+			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+			'SourceSum',
+			_elm_lang$core$Json_Decode$int,
+			A3(
+				_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+				'SourceCount',
+				_elm_lang$core$Json_Decode$int,
+				A3(
+					_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+					'Hash',
+					_elm_lang$core$Json_Decode$string,
+					_elm_lang$core$Json_Decode$succeed(_user$project$Data_Chain$AccountSummary))))));
+var _user$project$Data_Chain$Model = function (a) {
+	return function (b) {
+		return function (c) {
+			return function (d) {
+				return function (e) {
+					return function (f) {
+						return function (g) {
+							return function (h) {
+								return function (i) {
+									return function (j) {
+										return {heads: a, blocks: b, operations: c, parsedOperations: d, blockOperations: e, contractIDs: f, keys: g, peers: h, contracts: i, accounts: j};
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+};
 var _user$project$Data_Chain$Delegation = function (a) {
 	return {ctor: 'Delegation', _0: a};
 };
@@ -16611,10 +16662,16 @@ var _user$project$Route$routeToString = function (route) {
 					_0: 'about',
 					_1: {ctor: '[]'}
 				};
-			default:
+			case 'Chain2':
 				return {
 					ctor: '::',
 					_0: 'chain2',
+					_1: {ctor: '[]'}
+				};
+			default:
+				return {
+					ctor: '::',
+					_0: 'accounts',
 					_1: {ctor: '[]'}
 				};
 		}
@@ -16636,6 +16693,7 @@ var _user$project$Route$newUrl = function (_p2) {
 	return _elm_lang$navigation$Navigation$newUrl(
 		_user$project$Route$routeToString(_p2));
 };
+var _user$project$Route$Accounts = {ctor: 'Accounts'};
 var _user$project$Route$Chain2 = {ctor: 'Chain2'};
 var _user$project$Route$About = {ctor: 'About'};
 var _user$project$Route$Debug = {ctor: 'Debug'};
@@ -16768,7 +16826,14 @@ var _user$project$Route$route = _evancz$url_parser$UrlParser$oneOf(
 																		_evancz$url_parser$UrlParser$map,
 																		_user$project$Route$Chain2,
 																		_evancz$url_parser$UrlParser$s('chain2')),
-																	_1: {ctor: '[]'}
+																	_1: {
+																		ctor: '::',
+																		_0: A2(
+																			_evancz$url_parser$UrlParser$map,
+																			_user$project$Route$Accounts,
+																			_evancz$url_parser$UrlParser$s('accounts')),
+																		_1: {ctor: '[]'}
+																	}
 																}
 															}
 														}
@@ -16789,6 +16854,7 @@ var _user$project$Route$fromLocation = function (location) {
 	return _elm_lang$core$String$isEmpty(location.hash) ? _elm_lang$core$Maybe$Just(_user$project$Route$Home) : A2(_evancz$url_parser$UrlParser$parseHash, _user$project$Route$route, location);
 };
 
+var _user$project$Page$Accounts = {ctor: 'Accounts'};
 var _user$project$Page$Chain2 = {ctor: 'Chain2'};
 var _user$project$Page$About = {ctor: 'About'};
 var _user$project$Page$Debug = {ctor: 'Debug'};
@@ -16833,6 +16899,12 @@ var _user$project$Model$HttpError = function (a) {
 	return {ctor: 'HttpError', _0: a};
 };
 
+var _user$project$Request_Block$requestAccounts = function (nodeUrl) {
+	return A2(
+		_elm_lang$http$Http$get,
+		A2(_elm_lang$core$Basics_ops['++'], nodeUrl, '/api/accounts'),
+		_elm_lang$core$Json_Decode$list(_user$project$Data_Chain$decodeAccountSummary));
+};
 var _user$project$Request_Block$getHead = function (nodeUrl) {
 	return A2(
 		_elm_lang$http$Http$get,
@@ -17020,6 +17092,9 @@ var _user$project$Request_Operation$getBlockOperations = F2(
 		return A3(_elm_lang$http$Http$post, url, _user$project$Data_Request$emptyJsonBody, _user$project$Request_Operation$decodeBlockOperationDetails);
 	});
 
+var _user$project$Request$AccountSummaries = function (a) {
+	return {ctor: 'AccountSummaries', _0: a};
+};
 var _user$project$Request$Head = function (a) {
 	return {ctor: 'Head', _0: a};
 };
@@ -17115,9 +17190,19 @@ var _user$project$Request$handleResponseData = F2(
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
-			default:
+			case 'Head':
 				var _p1 = A2(_elm_lang$core$Debug$log, 'head', _p0._0);
 				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+			default:
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							chain: A2(_user$project$Data_Chain$setAccountSummaries, model.chain, _p0._0)
+						}),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
 		}
 	});
 var _user$project$Request$handleResponse = F2(
@@ -17174,6 +17259,8 @@ var _user$project$Update$toPage = function (route) {
 			return _user$project$Page$Chain2;
 		case 'Contracts':
 			return _user$project$Page$Contracts;
+		case 'Accounts':
+			return _user$project$Page$Accounts;
 		case 'Keys':
 			return _user$project$Page$Keys;
 		case 'Peers':
@@ -17254,16 +17341,25 @@ var _user$project$Update$loadBlocks = F2(
 			_1: _user$project$Update$getAllBlocksOperations(newModel)
 		};
 	});
+var _user$project$Update$getAccounts = function (model) {
+	return A2(
+		_elm_lang$http$Http$send,
+		function (_p5) {
+			return _user$project$Update$RpcResponse(
+				A2(_elm_lang$core$Result$map, _user$project$Request$AccountSummaries, _p5));
+		},
+		_user$project$Request_Block$requestAccounts(model.nodeUrl));
+};
 var _user$project$Update$updateMonitor = F2(
 	function (data, model) {
 		var blocksResult = A2(_elm_lang$core$Json_Decode$decodeValue, _user$project$Data_Chain$decodeBlocks, data);
 		var newModel = function () {
-			var _p5 = blocksResult;
-			if (_p5.ctor === 'Ok') {
+			var _p6 = blocksResult;
+			if (_p6.ctor === 'Ok') {
 				return _elm_lang$core$Native_Utils.update(
 					model,
 					{
-						chain: A2(_user$project$Data_Chain$updateMonitor, model.chain, _p5._0)
+						chain: A2(_user$project$Data_Chain$updateMonitor, model.chain, _p6._0)
 					});
 			} else {
 				return _elm_lang$core$Native_Utils.update(
@@ -17271,7 +17367,7 @@ var _user$project$Update$updateMonitor = F2(
 					{
 						errors: {
 							ctor: '::',
-							_0: _user$project$Model$OtherError(_p5._0),
+							_0: _user$project$Model$OtherError(_p6._0),
 							_1: model.errors
 						}
 					});
@@ -17282,23 +17378,23 @@ var _user$project$Update$updateMonitor = F2(
 			{ctor: '[]'},
 			A2(
 				_elm_lang$core$Result$map,
-				function (_p6) {
+				function (_p7) {
 					return A2(
 						_elm_lang$core$List$map,
 						function (_) {
 							return _.hash;
 						},
-						_elm_lang$core$List$concat(_p6));
+						_elm_lang$core$List$concat(_p7));
 				},
 				blocksResult));
 		var cmd = _elm_lang$core$Platform_Cmd$batch(
 			A2(
 				_elm_lang$core$List$map,
-				function (_p7) {
+				function (_p8) {
 					return A2(
 						_elm_lang$core$Platform_Cmd$map,
 						_user$project$Update$RpcResponse,
-						A2(_user$project$Request$getBlockOperationDetails, model, _p7));
+						A2(_user$project$Request$getBlockOperationDetails, model, _p8));
 				},
 				blockHashes));
 		return {ctor: '_Tuple2', _0: newModel, _1: cmd};
@@ -17372,8 +17468,8 @@ var _user$project$Update$LoadSchema = F2(
 	});
 var _user$project$Update$setRoute = F2(
 	function (routeMaybe, model) {
-		var _p8 = routeMaybe;
-		if (_p8.ctor === 'Nothing') {
+		var _p9 = routeMaybe;
+		if (_p9.ctor === 'Nothing') {
 			return {
 				ctor: '_Tuple2',
 				_0: _elm_lang$core$Native_Utils.update(
@@ -17384,7 +17480,7 @@ var _user$project$Update$setRoute = F2(
 				_1: _elm_lang$core$Platform_Cmd$none
 			};
 		} else {
-			switch (_p8._0.ctor) {
+			switch (_p9._0.ctor) {
 				case 'Home':
 					return {
 						ctor: '_Tuple2',
@@ -17398,52 +17494,52 @@ var _user$project$Update$setRoute = F2(
 							_elm_lang$core$Platform_Cmd$none,
 							A2(
 								_elm_lang$core$Maybe$map,
-								function (_p9) {
+								function (_p10) {
 									return A2(
 										_elm_lang$core$Platform_Cmd$map,
 										_user$project$Update$RpcResponse,
-										A3(_user$project$Request$getBranch, 24, model, _p9));
+										A3(_user$project$Request$getBranch, 24, model, _p10));
 								},
 								_elm_lang$core$List$head(model.chain.heads)))
 					};
 				case 'Block':
-					var _p10 = _p8._0._0;
+					var _p11 = _p9._0._0;
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
 								pageState: _user$project$Model$Loaded(
-									_user$project$Page$Block(_p10))
+									_user$project$Page$Block(_p11))
 							}),
 						_1: _elm_lang$core$Platform_Cmd$batch(
 							{
 								ctor: '::',
-								_0: A2(_user$project$Update$getBlock, model, _p10),
+								_0: A2(_user$project$Update$getBlock, model, _p11),
 								_1: {
 									ctor: '::',
 									_0: A2(
 										_elm_lang$core$Platform_Cmd$map,
 										_user$project$Update$RpcResponse,
-										A2(_user$project$Request$getBlockOperationDetails, model, _p10)),
+										A2(_user$project$Request$getBlockOperationDetails, model, _p11)),
 									_1: {ctor: '[]'}
 								}
 							})
 					};
 				case 'ChainAt':
-					var _p11 = _p8._0._0;
+					var _p12 = _p9._0._0;
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
 								pageState: _user$project$Model$Loaded(
-									_user$project$Page$ChainAt(_p11))
+									_user$project$Page$ChainAt(_p12))
 							}),
 						_1: A2(
 							_elm_lang$core$Platform_Cmd$map,
 							_user$project$Update$RpcResponse,
-							A3(_user$project$Request$getBranch, 24, model, _p11))
+							A3(_user$project$Request$getBranch, 24, model, _p12))
 					};
 				case 'Chain2':
 					return {
@@ -17465,6 +17561,16 @@ var _user$project$Update$setRoute = F2(
 								chain: _user$project$Data_Chain$loadingContractIDs(model.chain)
 							}),
 						_1: _user$project$Update$getContractIDs(model)
+					};
+				case 'Accounts':
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								pageState: _user$project$Model$Loaded(_user$project$Page$Accounts)
+							}),
+						_1: _user$project$Update$getAccounts(model)
 					};
 				case 'Keys':
 					return {
@@ -17489,20 +17595,20 @@ var _user$project$Update$setRoute = F2(
 						_1: _user$project$Update$getPeers(model)
 					};
 				case 'Contract':
-					var _p12 = _p8._0._0;
+					var _p13 = _p9._0._0;
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
 								pageState: _user$project$Model$Loaded(
-									_user$project$Page$Contract(_p12)),
-								chain: A2(_user$project$Data_Chain$loadingContract, model.chain, _p12)
+									_user$project$Page$Contract(_p13)),
+								chain: A2(_user$project$Data_Chain$loadingContract, model.chain, _p13)
 							}),
 						_1: A2(
 							_elm_lang$http$Http$send,
-							_user$project$Update$LoadContract(_p12),
-							A2(_user$project$Request_Block$getContract, model.nodeUrl, _p12))
+							_user$project$Update$LoadContract(_p13),
+							A2(_user$project$Request_Block$getContract, model.nodeUrl, _p13))
 					};
 				case 'Schema':
 					var schemaQuery2 = '/describe/blocks/head/proto';
@@ -17538,7 +17644,7 @@ var _user$project$Update$setRoute = F2(
 							model,
 							{
 								pageState: _user$project$Model$Loaded(
-									_user$project$Update$toPage(_p8._0))
+									_user$project$Update$toPage(_p9._0))
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
@@ -17547,13 +17653,13 @@ var _user$project$Update$setRoute = F2(
 	});
 var _user$project$Update$updatePage = F3(
 	function (page, msg, model) {
-		var _p13 = {ctor: '_Tuple2', _0: msg, _1: page};
-		switch (_p13._0.ctor) {
+		var _p14 = {ctor: '_Tuple2', _0: msg, _1: page};
+		switch (_p14._0.ctor) {
 			case 'RpcResponse':
-				var _p14 = A2(_user$project$Request$handleResponse, _p13._0._0, model);
-				var newModel = _p14._0;
-				var cmd = _p14._1;
-				var errorMaybe = _p14._2;
+				var _p15 = A2(_user$project$Request$handleResponse, _p14._0._0, model);
+				var newModel = _p15._0;
+				var cmd = _p15._1;
+				var errorMaybe = _p15._2;
 				return {
 					ctor: '_Tuple2',
 					_0: A2(
@@ -17563,8 +17669,8 @@ var _user$project$Update$updatePage = F3(
 					_1: A2(_elm_lang$core$Platform_Cmd$map, _user$project$Update$RpcResponse, cmd)
 				};
 			case 'LoadSchema':
-				var _p15 = _p13._0._1;
-				if (_p15.ctor === 'Ok') {
+				var _p16 = _p14._0._1;
+				if (_p16.ctor === 'Ok') {
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
@@ -17572,8 +17678,8 @@ var _user$project$Update$updatePage = F3(
 							{
 								schemaData: A3(
 									_elm_lang$core$Dict$insert,
-									_p13._0._0,
-									_user$project$Data_Schema$collapseTrees(_p15._0),
+									_p14._0._0,
+									_user$project$Data_Schema$collapseTrees(_p16._0),
 									model.schemaData)
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
@@ -17586,7 +17692,7 @@ var _user$project$Update$updatePage = F3(
 							{
 								errors: {
 									ctor: '::',
-									_0: _user$project$Model$HttpError(_p15._0),
+									_0: _user$project$Model$HttpError(_p16._0),
 									_1: model.errors
 								}
 							}),
@@ -17594,30 +17700,30 @@ var _user$project$Update$updatePage = F3(
 					};
 				}
 			case 'SchemaMsg':
-				var _p18 = _p13._0._0;
+				var _p19 = _p14._0._0;
 				var newSchemaMaybe = A2(
 					_elm_lang$core$Maybe$map,
-					_user$project$Data_Schema$update(_p13._0._1),
-					A2(_elm_lang$core$Dict$get, _p18, model.schemaData));
-				var _p16 = newSchemaMaybe;
-				if (_p16.ctor === 'Just') {
+					_user$project$Data_Schema$update(_p14._0._1),
+					A2(_elm_lang$core$Dict$get, _p19, model.schemaData));
+				var _p17 = newSchemaMaybe;
+				if (_p17.ctor === 'Just') {
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								schemaData: A3(_elm_lang$core$Dict$insert, _p18, _p16._0, model.schemaData)
+								schemaData: A3(_elm_lang$core$Dict$insert, _p19, _p17._0, model.schemaData)
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				} else {
-					var _p17 = A2(_elm_lang$core$Debug$log, 'Failed to find schema', _p18);
+					var _p18 = A2(_elm_lang$core$Debug$log, 'Failed to find schema', _p19);
 					return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 				}
 			case 'LoadParsedOperation':
-				var _p19 = _p13._0._1;
-				if (_p19.ctor === 'Ok') {
-					var newChain = A3(_user$project$Data_Chain$loadParsedOperation, model.chain, _p13._0._0, _p19._0);
+				var _p20 = _p14._0._1;
+				if (_p20.ctor === 'Ok') {
+					var newChain = A3(_user$project$Data_Chain$loadParsedOperation, model.chain, _p14._0._0, _p20._0);
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
@@ -17633,7 +17739,7 @@ var _user$project$Update$updatePage = F3(
 							{
 								errors: {
 									ctor: '::',
-									_0: _user$project$Model$HttpError(_p19._0),
+									_0: _user$project$Model$HttpError(_p20._0),
 									_1: model.errors
 								}
 							}),
@@ -17641,20 +17747,20 @@ var _user$project$Update$updatePage = F3(
 					};
 				}
 			case 'LoadContractIDs':
-				var _p20 = _p13._0._0;
-				if (_p20.ctor === 'Ok') {
-					var _p21 = _p20._0;
+				var _p21 = _p14._0._0;
+				if (_p21.ctor === 'Ok') {
+					var _p22 = _p21._0;
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								chain: A2(_user$project$Data_Chain$loadContractIDs, model.chain, _p21)
+								chain: A2(_user$project$Data_Chain$loadContractIDs, model.chain, _p22)
 							}),
-						_1: A2(_user$project$Update$getContractDetails, model.nodeUrl, _p21)
+						_1: A2(_user$project$Update$getContractDetails, model.nodeUrl, _p22)
 					};
 				} else {
-					var _p22 = _p20._0;
+					var _p23 = _p21._0;
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
@@ -17662,28 +17768,28 @@ var _user$project$Update$updatePage = F3(
 							{
 								errors: {
 									ctor: '::',
-									_0: _user$project$Model$HttpError(_p22),
+									_0: _user$project$Model$HttpError(_p23),
 									_1: model.errors
 								},
-								chain: A2(_user$project$Data_Chain$loadContractIDsError, model.chain, _p22)
+								chain: A2(_user$project$Data_Chain$loadContractIDsError, model.chain, _p23)
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				}
 			case 'LoadKeys':
-				var _p23 = _p13._0._0;
-				if (_p23.ctor === 'Ok') {
+				var _p24 = _p14._0._0;
+				if (_p24.ctor === 'Ok') {
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								chain: A2(_user$project$Data_Chain$loadKeys, model.chain, _p23._0)
+								chain: A2(_user$project$Data_Chain$loadKeys, model.chain, _p24._0)
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				} else {
-					var _p24 = _p23._0;
+					var _p25 = _p24._0;
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
@@ -17691,28 +17797,28 @@ var _user$project$Update$updatePage = F3(
 							{
 								errors: {
 									ctor: '::',
-									_0: _user$project$Model$HttpError(_p24),
+									_0: _user$project$Model$HttpError(_p25),
 									_1: model.errors
 								},
-								chain: A2(_user$project$Data_Chain$loadKeysError, model.chain, _p24)
+								chain: A2(_user$project$Data_Chain$loadKeysError, model.chain, _p25)
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				}
 			case 'LoadPeers':
-				var _p25 = _p13._0._0;
-				if (_p25.ctor === 'Ok') {
+				var _p26 = _p14._0._0;
+				if (_p26.ctor === 'Ok') {
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								chain: A2(_user$project$Data_Chain$loadPeers, model.chain, _p25._0)
+								chain: A2(_user$project$Data_Chain$loadPeers, model.chain, _p26._0)
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				} else {
-					var _p26 = _p25._0;
+					var _p27 = _p26._0;
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
@@ -17720,29 +17826,29 @@ var _user$project$Update$updatePage = F3(
 							{
 								errors: {
 									ctor: '::',
-									_0: _user$project$Model$HttpError(_p26),
+									_0: _user$project$Model$HttpError(_p27),
 									_1: model.errors
 								},
-								chain: A2(_user$project$Data_Chain$loadPeersError, model.chain, _p26)
+								chain: A2(_user$project$Data_Chain$loadPeersError, model.chain, _p27)
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				}
 			case 'LoadContract':
-				var _p29 = _p13._0._0;
-				var _p27 = _p13._0._1;
-				if (_p27.ctor === 'Ok') {
+				var _p30 = _p14._0._0;
+				var _p28 = _p14._0._1;
+				if (_p28.ctor === 'Ok') {
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								chain: A3(_user$project$Data_Chain$loadContract, model.chain, _p29, _p27._0)
+								chain: A3(_user$project$Data_Chain$loadContract, model.chain, _p30, _p28._0)
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				} else {
-					var _p28 = _p27._0;
+					var _p29 = _p28._0;
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
@@ -17750,10 +17856,10 @@ var _user$project$Update$updatePage = F3(
 							{
 								errors: {
 									ctor: '::',
-									_0: _user$project$Model$HttpError(_p28),
+									_0: _user$project$Model$HttpError(_p29),
 									_1: model.errors
 								},
-								chain: A3(_user$project$Data_Chain$loadContractError, model.chain, _p29, _p28)
+								chain: A3(_user$project$Data_Chain$loadContractError, model.chain, _p30, _p29)
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
@@ -17764,13 +17870,13 @@ var _user$project$Update$updatePage = F3(
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							now: _elm_lang$core$Date$fromTime(_p13._0._0)
+							now: _elm_lang$core$Date$fromTime(_p14._0._0)
 						}),
 					_1: A2(
 						_elm_lang$http$Http$send,
-						function (_p30) {
+						function (_p31) {
 							return _user$project$Update$RpcResponse(
-								A2(_elm_lang$core$Result$map, _user$project$Request$Heads, _p30));
+								A2(_elm_lang$core$Result$map, _user$project$Request$Heads, _p31));
 						},
 						_user$project$Request_Block$getHeads(model.nodeUrl))
 				};
@@ -17780,12 +17886,12 @@ var _user$project$Update$updatePage = F3(
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							now: _elm_lang$core$Date$fromTime(_p13._0._0)
+							now: _elm_lang$core$Date$fromTime(_p14._0._0)
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			case 'SetRoute':
-				return A2(_user$project$Update$setRoute, _p13._0._0, model);
+				return A2(_user$project$Update$setRoute, _p14._0._0, model);
 			case 'ClearErrors':
 				return {
 					ctor: '_Tuple2',
@@ -17797,9 +17903,9 @@ var _user$project$Update$updatePage = F3(
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			default:
-				var _p31 = A2(_user$project$Update$updateMonitor, _p13._0._0, model);
-				var newModel = _p31._0;
-				var cmd = _p31._1;
+				var _p32 = A2(_user$project$Update$updateMonitor, _p14._0._0, model);
+				var newModel = _p32._0;
+				var cmd = _p32._1;
 				return {
 					ctor: '_Tuple2',
 					_0: newModel,
@@ -18862,6 +18968,262 @@ var _user$project$View$viewKeys = function (keysData) {
 			}
 		});
 };
+var _user$project$View$viewAccountTable = function (accounts) {
+	var row = function (a) {
+		return A2(
+			_elm_lang$html$Html$tr,
+			{ctor: '[]'},
+			{
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$td,
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html_Attributes$class('hash'),
+						_1: {ctor: '[]'}
+					},
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html$text(a.hash),
+						_1: {ctor: '[]'}
+					}),
+				_1: {
+					ctor: '::',
+					_0: A2(
+						_elm_lang$html$Html$td,
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$class('number'),
+							_1: {ctor: '[]'}
+						},
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html$text(
+								_elm_lang$core$Basics$toString(a.sourceCount)),
+							_1: {ctor: '[]'}
+						}),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$td,
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html_Attributes$class('number'),
+								_1: {ctor: '[]'}
+							},
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html$text(
+									_elm_lang$core$Basics$toString(a.sourceSum)),
+								_1: {ctor: '[]'}
+							}),
+						_1: {
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$td,
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html_Attributes$class('number'),
+									_1: {ctor: '[]'}
+								},
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html$text(
+										_elm_lang$core$Basics$toString(a.destCount)),
+									_1: {ctor: '[]'}
+								}),
+							_1: {
+								ctor: '::',
+								_0: A2(
+									_elm_lang$html$Html$td,
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html_Attributes$class('number'),
+										_1: {ctor: '[]'}
+									},
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html$text(
+											_elm_lang$core$Basics$toString(a.destSum)),
+										_1: {ctor: '[]'}
+									}),
+								_1: {ctor: '[]'}
+							}
+						}
+					}
+				}
+			});
+	};
+	var thead = A2(
+		_elm_lang$html$Html$thead,
+		{ctor: '[]'},
+		{
+			ctor: '::',
+			_0: A2(
+				_elm_lang$html$Html$tr,
+				{ctor: '[]'},
+				{
+					ctor: '::',
+					_0: A2(
+						_elm_lang$html$Html$th,
+						{ctor: '[]'},
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html$text(''),
+							_1: {ctor: '[]'}
+						}),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$th,
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html_Attributes$colspan(2),
+								_1: {ctor: '[]'}
+							},
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html$text('source'),
+								_1: {ctor: '[]'}
+							}),
+						_1: {
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$th,
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html_Attributes$colspan(2),
+									_1: {ctor: '[]'}
+								},
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html$text('destination'),
+									_1: {ctor: '[]'}
+								}),
+							_1: {ctor: '[]'}
+						}
+					}
+				}),
+			_1: {
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$tr,
+					{ctor: '[]'},
+					{
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$th,
+							{ctor: '[]'},
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html$text('account hash'),
+								_1: {ctor: '[]'}
+							}),
+						_1: {
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$th,
+								{ctor: '[]'},
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html$text('count'),
+									_1: {ctor: '[]'}
+								}),
+							_1: {
+								ctor: '::',
+								_0: A2(
+									_elm_lang$html$Html$th,
+									{ctor: '[]'},
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html$text('sum'),
+										_1: {ctor: '[]'}
+									}),
+								_1: {
+									ctor: '::',
+									_0: A2(
+										_elm_lang$html$Html$th,
+										{ctor: '[]'},
+										{
+											ctor: '::',
+											_0: _elm_lang$html$Html$text('count'),
+											_1: {ctor: '[]'}
+										}),
+									_1: {
+										ctor: '::',
+										_0: A2(
+											_elm_lang$html$Html$th,
+											{ctor: '[]'},
+											{
+												ctor: '::',
+												_0: _elm_lang$html$Html$text('sum'),
+												_1: {ctor: '[]'}
+											}),
+										_1: {ctor: '[]'}
+									}
+								}
+							}
+						}
+					}),
+				_1: {ctor: '[]'}
+			}
+		});
+	return A2(
+		_elm_lang$html$Html$table,
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html_Attributes$class('accounts'),
+			_1: {ctor: '[]'}
+		},
+		{
+			ctor: '::',
+			_0: thead,
+			_1: {
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$tbody,
+					{ctor: '[]'},
+					A2(_elm_lang$core$List$map, row, accounts)),
+				_1: {ctor: '[]'}
+			}
+		});
+};
+var _user$project$View$viewAccounts = function (model) {
+	return A2(
+		_elm_lang$html$Html$div,
+		{ctor: '[]'},
+		{
+			ctor: '::',
+			_0: A2(
+				_elm_lang$html$Html$h3,
+				{ctor: '[]'},
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html$text('Accounts'),
+					_1: {ctor: '[]'}
+				}),
+			_1: {
+				ctor: '::',
+				_0: function () {
+					var _p11 = model.chain.accounts;
+					if (_p11.ctor === 'Success') {
+						return _user$project$View$viewAccountTable(_p11._0);
+					} else {
+						return A2(
+							_elm_lang$html$Html$div,
+							{ctor: '[]'},
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html$text(
+									_elm_lang$core$Basics$toString(model.chain.accounts)),
+								_1: {ctor: '[]'}
+							});
+					}
+				}(),
+				_1: {ctor: '[]'}
+			}
+		});
+};
 var _user$project$View$viewChain2 = function (model) {
 	return A2(
 		_elm_lang$html$Html$div,
@@ -18892,8 +19254,8 @@ var _user$project$View$formatCentiles = function (number) {
 		_elm_lang$core$Basics$toFloat(number) / 100);
 };
 var _user$project$View$viewSuboperation = function (suboperation) {
-	var _p11 = suboperation;
-	switch (_p11.ctor) {
+	var _p12 = suboperation;
+	switch (_p12.ctor) {
 		case 'Endorsement':
 			return A2(
 				_elm_lang$html$Html$span,
@@ -18913,7 +19275,7 @@ var _user$project$View$viewSuboperation = function (suboperation) {
 							{
 								ctor: '::',
 								_0: _elm_lang$html$Html$text(
-									_user$project$View$shortHash(_p11._0)),
+									_user$project$View$shortHash(_p12._0)),
 								_1: {ctor: '[]'}
 							}),
 						_1: {
@@ -18922,13 +19284,13 @@ var _user$project$View$viewSuboperation = function (suboperation) {
 								A2(
 									_elm_lang$core$Basics_ops['++'],
 									', slot ',
-									_elm_lang$core$Basics$toString(_p11._1))),
+									_elm_lang$core$Basics$toString(_p12._1))),
 							_1: {ctor: '[]'}
 						}
 					}
 				});
 		case 'Transaction':
-			var _p12 = _p11._0;
+			var _p13 = _p12._0;
 			return A2(
 				_elm_lang$html$Html$span,
 				{ctor: '[]'},
@@ -18938,7 +19300,7 @@ var _user$project$View$viewSuboperation = function (suboperation) {
 					_1: {
 						ctor: '::',
 						_0: _elm_lang$html$Html$text(
-							_user$project$View$formatCentiles(_p11._1)),
+							_user$project$View$formatCentiles(_p12._1)),
 						_1: {
 							ctor: '::',
 							_0: _elm_lang$html$Html$text(' ꜩ to '),
@@ -18948,7 +19310,7 @@ var _user$project$View$viewSuboperation = function (suboperation) {
 									_elm_lang$html$Html$span,
 									{
 										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$title(_p12),
+										_0: _elm_lang$html$Html_Attributes$title(_p13),
 										_1: {
 											ctor: '::',
 											_0: _elm_lang$html$Html_Attributes$class('hash'),
@@ -18958,7 +19320,7 @@ var _user$project$View$viewSuboperation = function (suboperation) {
 									{
 										ctor: '::',
 										_0: _elm_lang$html$Html$text(
-											_user$project$View$shortHash(_p12)),
+											_user$project$View$shortHash(_p13)),
 										_1: {ctor: '[]'}
 									}),
 								_1: {ctor: '[]'}
@@ -18967,7 +19329,7 @@ var _user$project$View$viewSuboperation = function (suboperation) {
 					}
 				});
 		case 'Delegation':
-			var _p13 = _p11._0;
+			var _p14 = _p12._0;
 			return A2(
 				_elm_lang$html$Html$span,
 				{ctor: '[]'},
@@ -18990,13 +19352,13 @@ var _user$project$View$viewSuboperation = function (suboperation) {
 									{
 										ctor: '::',
 										_0: _user$project$Route$href(
-											_user$project$Route$Contract(_p13)),
+											_user$project$Route$Contract(_p14)),
 										_1: {ctor: '[]'}
 									},
 									{
 										ctor: '::',
 										_0: _elm_lang$html$Html$text(
-											_user$project$View$shortHash(_p13)),
+											_user$project$View$shortHash(_p14)),
 										_1: {ctor: '[]'}
 									}),
 								_1: {ctor: '[]'}
@@ -19240,10 +19602,10 @@ var _user$project$View$viewContractTable = F2(
 				_elm_lang$core$Maybe$withDefault,
 				_krisajenkins$remotedata$RemoteData$NotAsked,
 				A2(_elm_lang$core$Dict$get, contractId, contracts));
-			var _p14 = contractData;
-			switch (_p14.ctor) {
+			var _p15 = contractData;
+			switch (_p15.ctor) {
 				case 'Success':
-					var _p16 = _p14._0;
+					var _p17 = _p15._0;
 					return A2(
 						_elm_lang$html$Html$tr,
 						{ctor: '[]'},
@@ -19286,7 +19648,7 @@ var _user$project$View$viewContractTable = F2(
 									{
 										ctor: '::',
 										_0: _elm_lang$html$Html$text(
-											_user$project$View$formatCentiles(_p16.balance)),
+											_user$project$View$formatCentiles(_p17.balance)),
 										_1: {ctor: '[]'}
 									}),
 								_1: {
@@ -19305,13 +19667,13 @@ var _user$project$View$viewContractTable = F2(
 												{
 													ctor: '::',
 													_0: _user$project$Route$href(
-														_user$project$Route$Contract(_p16.manager)),
+														_user$project$Route$Contract(_p17.manager)),
 													_1: {ctor: '[]'}
 												},
 												{
 													ctor: '::',
 													_0: _elm_lang$html$Html$text(
-														_user$project$View$shortHash(_p16.manager)),
+														_user$project$View$shortHash(_p17.manager)),
 													_1: {ctor: '[]'}
 												}),
 											_1: {ctor: '[]'}
@@ -19328,7 +19690,7 @@ var _user$project$View$viewContractTable = F2(
 											{
 												ctor: '::',
 												_0: _elm_lang$html$Html$text(
-													_elm_lang$core$Basics$toString(_p16.counter)),
+													_elm_lang$core$Basics$toString(_p17.counter)),
 												_1: {ctor: '[]'}
 											}),
 										_1: {
@@ -19348,12 +19710,12 @@ var _user$project$View$viewContractTable = F2(
 															'',
 															A2(
 																_elm_lang$core$Maybe$map,
-																function (_p15) {
+																function (_p16) {
 																	return _elm_lang$core$Basics$toString(
 																		_elm_lang$core$String$length(
-																			_elm_lang$core$Basics$toString(_p15)));
+																			_elm_lang$core$Basics$toString(_p16)));
 																},
-																_p16.script))),
+																_p17.script))),
 													_1: {ctor: '[]'}
 												}),
 											_1: {ctor: '[]'}
@@ -19453,7 +19815,7 @@ var _user$project$View$viewContractTable = F2(
 									{
 										ctor: '::',
 										_0: _elm_lang$html$Html$text(
-											_elm_lang$core$Basics$toString(_p14._0)),
+											_elm_lang$core$Basics$toString(_p15._0)),
 										_1: {ctor: '[]'}
 									}),
 								_1: {ctor: '[]'}
@@ -19561,10 +19923,10 @@ var _user$project$View$viewContracts = function (model) {
 			_1: {
 				ctor: '::',
 				_0: function () {
-					var _p17 = model.chain.contractIDs;
-					switch (_p17.ctor) {
+					var _p18 = model.chain.contractIDs;
+					switch (_p18.ctor) {
 						case 'Success':
-							return A2(_user$project$View$viewContractTable, _p17._0, model.chain.contracts);
+							return A2(_user$project$View$viewContractTable, _p18._0, model.chain.contracts);
 						case 'Loading':
 							return _elm_lang$html$Html$text('loading ...');
 						default:
@@ -19587,15 +19949,15 @@ var _user$project$View$formatInt = function (number) {
 };
 var _user$project$View$viewShowBlockOperations = F2(
 	function (blockOperations, hashMaybe) {
-		var _p18 = hashMaybe;
-		if (_p18.ctor === 'Just') {
+		var _p19 = hashMaybe;
+		if (_p19.ctor === 'Just') {
 			return A2(
 				_elm_lang$core$Maybe$withDefault,
 				_elm_lang$html$Html$text(''),
 				A2(
 					_elm_lang$core$Maybe$map,
 					_user$project$View$viewOperations,
-					A2(_elm_lang$core$Dict$get, _p18._0, blockOperations)));
+					A2(_elm_lang$core$Dict$get, _p19._0, blockOperations)));
 		} else {
 			return _elm_lang$html$Html$text('');
 		}
@@ -19604,9 +19966,9 @@ var _user$project$View$formatDate = function (date) {
 	return A3(_rluiten$elm_date_extra$Date_Extra_Format$formatUtc, _rluiten$elm_date_extra$Date_Extra_Config_Config_en_us$config, '%Y-%m-%dT%H:%M:%SZ', date);
 };
 var _user$project$View$viewConnection = function (connectionM) {
-	var _p19 = connectionM;
-	if (_p19.ctor === 'Just') {
-		var _p20 = _p19._0;
+	var _p20 = connectionM;
+	if (_p20.ctor === 'Just') {
+		var _p21 = _p20._0;
 		return A2(
 			_elm_lang$html$Html$div,
 			{
@@ -19616,7 +19978,7 @@ var _user$project$View$viewConnection = function (connectionM) {
 			},
 			{
 				ctor: '::',
-				_0: _user$project$View$viewAddress(_p20.addr),
+				_0: _user$project$View$viewAddress(_p21.addr),
 				_1: {
 					ctor: '::',
 					_0: _elm_lang$html$Html$text(' '),
@@ -19632,7 +19994,7 @@ var _user$project$View$viewConnection = function (connectionM) {
 							{
 								ctor: '::',
 								_0: _elm_lang$html$Html$text(
-									_user$project$View$formatDate(_p20.time)),
+									_user$project$View$formatDate(_p21.time)),
 								_1: {ctor: '[]'}
 							}),
 						_1: {ctor: '[]'}
@@ -19827,9 +20189,9 @@ var _user$project$View$viewPeers = function (peersData) {
 			_1: {
 				ctor: '::',
 				_0: function () {
-					var _p21 = peersData;
-					if (_p21.ctor === 'Success') {
-						return _user$project$View$viewPeersList(_p21._0);
+					var _p22 = peersData;
+					if (_p22.ctor === 'Success') {
+						return _user$project$View$viewPeersList(_p22._0);
 					} else {
 						return _elm_lang$html$Html$text(
 							_elm_lang$core$Basics$toString(peersData));
@@ -19899,12 +20261,12 @@ var _user$project$View$viewProperty = F2(
 	});
 var _user$project$View$viewPropertyMaybe = F2(
 	function (label, valueMaybe) {
-		var _p22 = valueMaybe;
-		if (_p22.ctor === 'Just') {
+		var _p23 = valueMaybe;
+		if (_p23.ctor === 'Just') {
 			return A2(
 				_user$project$View$viewProperty,
 				label,
-				_elm_lang$html$Html$text(_p22._0));
+				_elm_lang$html$Html$text(_p23._0));
 		} else {
 			return _elm_lang$html$Html$text('');
 		}
@@ -19994,9 +20356,9 @@ var _user$project$View$viewOperation = F2(
 				_1: {
 					ctor: '::',
 					_0: function () {
-						var _p23 = operationMaybe;
-						if (_p23.ctor === 'Just') {
-							return viewOperationFields(_p23._0);
+						var _p24 = operationMaybe;
+						if (_p24.ctor === 'Just') {
+							return viewOperationFields(_p24._0);
 						} else {
 							return _elm_lang$html$Html$text('(loading operation data...)');
 						}
@@ -20105,10 +20467,10 @@ var _user$project$View$viewContract = F2(
 				_1: {
 					ctor: '::',
 					_0: function () {
-						var _p24 = contractData;
-						switch (_p24.ctor) {
+						var _p25 = contractData;
+						switch (_p25.ctor) {
 							case 'Success':
-								var _p25 = _p24._0;
+								var _p26 = _p25._0;
 								return A2(
 									_elm_lang$html$Html$div,
 									{ctor: '[]'},
@@ -20126,7 +20488,7 @@ var _user$project$View$viewContract = F2(
 												},
 												{
 													ctor: '::',
-													_0: _elm_lang$html$Html$text(_p25.manager),
+													_0: _elm_lang$html$Html$text(_p26.manager),
 													_1: {ctor: '[]'}
 												})),
 										_1: {
@@ -20135,30 +20497,30 @@ var _user$project$View$viewContract = F2(
 												_user$project$View$viewProperty,
 												'balance (ꜩ)',
 												_elm_lang$html$Html$text(
-													_user$project$View$formatCentiles(_p25.balance))),
+													_user$project$View$formatCentiles(_p26.balance))),
 											_1: {
 												ctor: '::',
 												_0: A2(
 													_user$project$View$viewProperty,
 													'spendable',
 													_elm_lang$html$Html$text(
-														_elm_lang$core$Basics$toString(_p25.spendable))),
+														_elm_lang$core$Basics$toString(_p26.spendable))),
 												_1: {
 													ctor: '::',
 													_0: A2(
 														_user$project$View$viewProperty,
 														'counter',
 														_elm_lang$html$Html$text(
-															_elm_lang$core$Basics$toString(_p25.counter))),
+															_elm_lang$core$Basics$toString(_p26.counter))),
 													_1: {
 														ctor: '::',
 														_0: A2(
 															_user$project$View$viewProperty,
 															'delegate',
-															viewDelegate(_p25.delegate)),
+															viewDelegate(_p26.delegate)),
 														_1: {
 															ctor: '::',
-															_0: viewProg(_p25.script),
+															_0: viewProg(_p26.script),
 															_1: {ctor: '[]'}
 														}
 													}
@@ -20169,7 +20531,7 @@ var _user$project$View$viewContract = F2(
 							case 'Loading':
 								return _elm_lang$html$Html$text('loading ...');
 							case 'Failure':
-								return _user$project$View$viewFailure(_p24._0);
+								return _user$project$View$viewFailure(_p25._0);
 							default:
 								return _elm_lang$html$Html$text('not asked');
 						}
@@ -20223,15 +20585,15 @@ var _user$project$View$viewBlock = F2(
 					_elm_lang$html$Html$text(value));
 			});
 		var viewOperations = function (block) {
-			var _p26 = block.operations;
-			if (_p26.ctor === 'Just') {
+			var _p27 = block.operations;
+			if (_p27.ctor === 'Just') {
 				return A2(
 					viewPropertyList,
 					'operations',
 					A2(
 						_elm_lang$core$List$map,
 						_user$project$View$shortHash,
-						_elm_lang$core$List$concat(_p26._0)));
+						_elm_lang$core$List$concat(_p27._0)));
 			} else {
 				return A2(viewPropertyString, 'operations', '[unknown]');
 			}
@@ -20342,9 +20704,9 @@ var _user$project$View$blockOperationCount = F2(
 			'',
 			A2(
 				_elm_lang$core$Maybe$map,
-				function (_p27) {
+				function (_p28) {
 					return _elm_lang$core$Basics$toString(
-						_elm_lang$core$List$length(_p27));
+						_elm_lang$core$List$length(_p28));
 				},
 				blockOperationsMaybe));
 	});
@@ -20657,9 +21019,9 @@ var _user$project$View$viewSchemas = function (schemas) {
 };
 var _user$project$View$viewHome = function (model) {
 	var headMaybe = _elm_lang$core$List$head(model.chain.heads);
-	var _p28 = headMaybe;
-	if (_p28.ctor === 'Just') {
-		var _p29 = _p28._0;
+	var _p29 = headMaybe;
+	if (_p29.ctor === 'Just') {
+		var _p30 = _p29._0;
 		return A2(
 			_elm_lang$html$Html$div,
 			{ctor: '[]'},
@@ -20679,8 +21041,8 @@ var _user$project$View$viewHome = function (model) {
 						_user$project$View$viewBranch,
 						24,
 						model,
-						_elm_lang$core$Maybe$Just(_p29),
-						A2(_user$project$Data_Chain$getBranchList, model.chain, _p29)),
+						_elm_lang$core$Maybe$Just(_p30),
+						A2(_user$project$Data_Chain$getBranchList, model.chain, _p30)),
 					_1: {ctor: '[]'}
 				}
 			});
@@ -20696,9 +21058,9 @@ var _user$project$View$BlockFound = function (a) {
 };
 var _user$project$View$findBlockStatus = F2(
 	function (blocks, blockhash) {
-		var _p30 = A2(_elm_lang$core$Dict$get, blockhash, blocks);
-		if (_p30.ctor === 'Just') {
-			return _user$project$View$BlockFound(_p30._0);
+		var _p31 = A2(_elm_lang$core$Dict$get, blockhash, blocks);
+		if (_p31.ctor === 'Just') {
+			return _user$project$View$BlockFound(_p31._0);
 		} else {
 			return _user$project$View$BlockNotFound(blockhash);
 		}
@@ -20826,15 +21188,15 @@ var _user$project$View$viewHeads = function (model) {
 		});
 	var viewHead = F2(
 		function (i, blockStatus) {
-			var _p31 = blockStatus;
-			if (_p31.ctor === 'BlockFound') {
-				return A2(viewBlockSummary, i, _p31._0);
+			var _p32 = blockStatus;
+			if (_p32.ctor === 'BlockFound') {
+				return A2(viewBlockSummary, i, _p32._0);
 			} else {
 				return _elm_lang$html$Html$text(
 					A2(
 						_elm_lang$core$Basics_ops['++'],
 						'block ',
-						A2(_elm_lang$core$Basics_ops['++'], _p31._0, ' not found')));
+						A2(_elm_lang$core$Basics_ops['++'], _p32._0, ' not found')));
 			}
 		});
 	var header = A2(
@@ -20993,8 +21355,8 @@ var _user$project$View$viewHeads = function (model) {
 };
 var _user$project$View$view = function (model) {
 	var content = function () {
-		var _p32 = model.pageState;
-		switch (_p32._0.ctor) {
+		var _p33 = model.pageState;
+		switch (_p33._0.ctor) {
 			case 'Home':
 				return _user$project$View$viewHome(model);
 			case 'Blank':
@@ -21002,7 +21364,7 @@ var _user$project$View$view = function (model) {
 			case 'Operations':
 				return _user$project$View$viewAllOperations(model);
 			case 'Operation':
-				return A2(_user$project$View$viewOperation, model, _p32._0._0);
+				return A2(_user$project$View$viewOperation, model, _p33._0._0);
 			case 'Schema':
 				return _user$project$View$viewSchemas(model.schemaData);
 			case 'Debug':
@@ -21010,24 +21372,26 @@ var _user$project$View$view = function (model) {
 			case 'Heads':
 				return _user$project$View$viewHeads(model);
 			case 'Block':
-				var _p33 = A2(_elm_lang$core$Dict$get, _p32._0._0, model.chain.blocks);
-				if (_p33.ctor === 'Just') {
-					return A2(_user$project$View$viewBlock, model, _p33._0);
+				var _p34 = A2(_elm_lang$core$Dict$get, _p33._0._0, model.chain.blocks);
+				if (_p34.ctor === 'Just') {
+					return A2(_user$project$View$viewBlock, model, _p34._0);
 				} else {
 					return _elm_lang$html$Html$text('loading block ...');
 				}
 			case 'ChainAt':
-				return A2(_user$project$View$viewChainAt, model, _p32._0._0);
+				return A2(_user$project$View$viewChainAt, model, _p33._0._0);
 			case 'Chain2':
 				return _user$project$View$viewChain2(model);
 			case 'Contracts':
 				return _user$project$View$viewContracts(model);
+			case 'Accounts':
+				return _user$project$View$viewAccounts(model);
 			case 'Keys':
 				return _user$project$View$viewKeys(model.chain.keys);
 			case 'Peers':
 				return _user$project$View$viewPeers(model.chain.peers);
 			case 'Contract':
-				return A2(_user$project$View$viewContract, _p32._0._0, model.chain.contracts);
+				return A2(_user$project$View$viewContract, _p33._0._0, model.chain.contracts);
 			case 'Errors':
 				return A2(_user$project$View$viewError, model.nodeUrl, model.errors);
 			case 'NotFound':

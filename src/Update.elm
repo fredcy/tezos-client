@@ -214,6 +214,9 @@ toPage route =
         Route.Contracts ->
             Page.Contracts
 
+        Route.Accounts ->
+            Page.Accounts
+
         Route.Keys ->
             Page.Keys
 
@@ -274,6 +277,11 @@ setRoute routeMaybe model =
                 , chain = Chain.loadingContractIDs model.chain
               }
             , getContractIDs model
+            )
+
+        Just Route.Accounts ->
+            ( { model | pageState = Loaded Page.Accounts }
+            , getAccounts model
             )
 
         Just Route.Keys ->
@@ -369,6 +377,12 @@ getContractDetails nodeUrl contractIDs =
             Request.Block.getContract nodeUrl contractId |> Http.send (LoadContract contractId)
     in
         List.map get contractIDs |> Cmd.batch
+
+
+getAccounts : Model -> Cmd Msg
+getAccounts model =
+    Request.Block.requestAccounts model.nodeUrl
+        |> Http.send (Result.map Request.AccountSummaries >> RpcResponse)
 
 
 getKeys : Model -> Cmd Msg

@@ -23,6 +23,7 @@ type Route
     | Debug
     | About
     | Chain2
+    | Accounts
 
 
 route : Parser (Route -> a) a
@@ -44,6 +45,7 @@ route =
         , Url.map Errors (s "errors")
         , Url.map About (s "about")
         , Url.map Chain2 (s "chain2")
+        , Url.map Accounts (s "accounts")
         ]
 
 
@@ -96,6 +98,9 @@ routeToString route =
 
                 Chain2 ->
                     [ "chain2" ]
+
+                Accounts ->
+                    [ "accounts" ]
     in
         "#/" ++ (String.join "/" pieces)
 

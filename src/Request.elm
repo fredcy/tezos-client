@@ -23,6 +23,7 @@ type ResponseData
     | BlockOperations Chain.BlockID Chain.BlockOperations
     | Heads Chain.BlocksData
     | Head Chain.Block
+    | AccountSummaries (List Chain.AccountSummary)
 
 
 handleResponse : Response -> Model base -> ( Model base, Cmd Response, Maybe Http.Error )
@@ -81,6 +82,11 @@ handleResponseData responseData model =
                     Debug.log "head" block
             in
                 ( model, Cmd.none )
+
+        AccountSummaries summaries ->
+            ( { model | chain = Chain.setAccountSummaries model.chain summaries }
+            , Cmd.none
+            )
 
 
 getBlockOperationDetails : Model b -> Chain.BlockID -> Cmd Response
