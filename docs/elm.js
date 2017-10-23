@@ -18968,262 +18968,6 @@ var _user$project$View$viewKeys = function (keysData) {
 			}
 		});
 };
-var _user$project$View$viewAccountTable = function (accounts) {
-	var row = function (a) {
-		return A2(
-			_elm_lang$html$Html$tr,
-			{ctor: '[]'},
-			{
-				ctor: '::',
-				_0: A2(
-					_elm_lang$html$Html$td,
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html_Attributes$class('hash'),
-						_1: {ctor: '[]'}
-					},
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html$text(a.hash),
-						_1: {ctor: '[]'}
-					}),
-				_1: {
-					ctor: '::',
-					_0: A2(
-						_elm_lang$html$Html$td,
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$class('number'),
-							_1: {ctor: '[]'}
-						},
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html$text(
-								_elm_lang$core$Basics$toString(a.sourceCount)),
-							_1: {ctor: '[]'}
-						}),
-					_1: {
-						ctor: '::',
-						_0: A2(
-							_elm_lang$html$Html$td,
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$class('number'),
-								_1: {ctor: '[]'}
-							},
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html$text(
-									_elm_lang$core$Basics$toString(a.sourceSum)),
-								_1: {ctor: '[]'}
-							}),
-						_1: {
-							ctor: '::',
-							_0: A2(
-								_elm_lang$html$Html$td,
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$class('number'),
-									_1: {ctor: '[]'}
-								},
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html$text(
-										_elm_lang$core$Basics$toString(a.destCount)),
-									_1: {ctor: '[]'}
-								}),
-							_1: {
-								ctor: '::',
-								_0: A2(
-									_elm_lang$html$Html$td,
-									{
-										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$class('number'),
-										_1: {ctor: '[]'}
-									},
-									{
-										ctor: '::',
-										_0: _elm_lang$html$Html$text(
-											_elm_lang$core$Basics$toString(a.destSum)),
-										_1: {ctor: '[]'}
-									}),
-								_1: {ctor: '[]'}
-							}
-						}
-					}
-				}
-			});
-	};
-	var thead = A2(
-		_elm_lang$html$Html$thead,
-		{ctor: '[]'},
-		{
-			ctor: '::',
-			_0: A2(
-				_elm_lang$html$Html$tr,
-				{ctor: '[]'},
-				{
-					ctor: '::',
-					_0: A2(
-						_elm_lang$html$Html$th,
-						{ctor: '[]'},
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html$text(''),
-							_1: {ctor: '[]'}
-						}),
-					_1: {
-						ctor: '::',
-						_0: A2(
-							_elm_lang$html$Html$th,
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$colspan(2),
-								_1: {ctor: '[]'}
-							},
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html$text('source'),
-								_1: {ctor: '[]'}
-							}),
-						_1: {
-							ctor: '::',
-							_0: A2(
-								_elm_lang$html$Html$th,
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$colspan(2),
-									_1: {ctor: '[]'}
-								},
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html$text('destination'),
-									_1: {ctor: '[]'}
-								}),
-							_1: {ctor: '[]'}
-						}
-					}
-				}),
-			_1: {
-				ctor: '::',
-				_0: A2(
-					_elm_lang$html$Html$tr,
-					{ctor: '[]'},
-					{
-						ctor: '::',
-						_0: A2(
-							_elm_lang$html$Html$th,
-							{ctor: '[]'},
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html$text('account hash'),
-								_1: {ctor: '[]'}
-							}),
-						_1: {
-							ctor: '::',
-							_0: A2(
-								_elm_lang$html$Html$th,
-								{ctor: '[]'},
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html$text('count'),
-									_1: {ctor: '[]'}
-								}),
-							_1: {
-								ctor: '::',
-								_0: A2(
-									_elm_lang$html$Html$th,
-									{ctor: '[]'},
-									{
-										ctor: '::',
-										_0: _elm_lang$html$Html$text('sum'),
-										_1: {ctor: '[]'}
-									}),
-								_1: {
-									ctor: '::',
-									_0: A2(
-										_elm_lang$html$Html$th,
-										{ctor: '[]'},
-										{
-											ctor: '::',
-											_0: _elm_lang$html$Html$text('count'),
-											_1: {ctor: '[]'}
-										}),
-									_1: {
-										ctor: '::',
-										_0: A2(
-											_elm_lang$html$Html$th,
-											{ctor: '[]'},
-											{
-												ctor: '::',
-												_0: _elm_lang$html$Html$text('sum'),
-												_1: {ctor: '[]'}
-											}),
-										_1: {ctor: '[]'}
-									}
-								}
-							}
-						}
-					}),
-				_1: {ctor: '[]'}
-			}
-		});
-	return A2(
-		_elm_lang$html$Html$table,
-		{
-			ctor: '::',
-			_0: _elm_lang$html$Html_Attributes$class('accounts'),
-			_1: {ctor: '[]'}
-		},
-		{
-			ctor: '::',
-			_0: thead,
-			_1: {
-				ctor: '::',
-				_0: A2(
-					_elm_lang$html$Html$tbody,
-					{ctor: '[]'},
-					A2(_elm_lang$core$List$map, row, accounts)),
-				_1: {ctor: '[]'}
-			}
-		});
-};
-var _user$project$View$viewAccounts = function (model) {
-	return A2(
-		_elm_lang$html$Html$div,
-		{ctor: '[]'},
-		{
-			ctor: '::',
-			_0: A2(
-				_elm_lang$html$Html$h3,
-				{ctor: '[]'},
-				{
-					ctor: '::',
-					_0: _elm_lang$html$Html$text('Accounts'),
-					_1: {ctor: '[]'}
-				}),
-			_1: {
-				ctor: '::',
-				_0: function () {
-					var _p11 = model.chain.accounts;
-					if (_p11.ctor === 'Success') {
-						return _user$project$View$viewAccountTable(_p11._0);
-					} else {
-						return A2(
-							_elm_lang$html$Html$div,
-							{ctor: '[]'},
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html$text(
-									_elm_lang$core$Basics$toString(model.chain.accounts)),
-								_1: {ctor: '[]'}
-							});
-					}
-				}(),
-				_1: {ctor: '[]'}
-			}
-		});
-};
 var _user$project$View$viewChain2 = function (model) {
 	return A2(
 		_elm_lang$html$Html$div,
@@ -19254,8 +18998,8 @@ var _user$project$View$formatCentiles = function (number) {
 		_elm_lang$core$Basics$toFloat(number) / 100);
 };
 var _user$project$View$viewSuboperation = function (suboperation) {
-	var _p12 = suboperation;
-	switch (_p12.ctor) {
+	var _p11 = suboperation;
+	switch (_p11.ctor) {
 		case 'Endorsement':
 			return A2(
 				_elm_lang$html$Html$span,
@@ -19275,7 +19019,7 @@ var _user$project$View$viewSuboperation = function (suboperation) {
 							{
 								ctor: '::',
 								_0: _elm_lang$html$Html$text(
-									_user$project$View$shortHash(_p12._0)),
+									_user$project$View$shortHash(_p11._0)),
 								_1: {ctor: '[]'}
 							}),
 						_1: {
@@ -19284,13 +19028,13 @@ var _user$project$View$viewSuboperation = function (suboperation) {
 								A2(
 									_elm_lang$core$Basics_ops['++'],
 									', slot ',
-									_elm_lang$core$Basics$toString(_p12._1))),
+									_elm_lang$core$Basics$toString(_p11._1))),
 							_1: {ctor: '[]'}
 						}
 					}
 				});
 		case 'Transaction':
-			var _p13 = _p12._0;
+			var _p12 = _p11._0;
 			return A2(
 				_elm_lang$html$Html$span,
 				{ctor: '[]'},
@@ -19300,7 +19044,7 @@ var _user$project$View$viewSuboperation = function (suboperation) {
 					_1: {
 						ctor: '::',
 						_0: _elm_lang$html$Html$text(
-							_user$project$View$formatCentiles(_p12._1)),
+							_user$project$View$formatCentiles(_p11._1)),
 						_1: {
 							ctor: '::',
 							_0: _elm_lang$html$Html$text(' ꜩ to '),
@@ -19310,7 +19054,7 @@ var _user$project$View$viewSuboperation = function (suboperation) {
 									_elm_lang$html$Html$span,
 									{
 										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$title(_p13),
+										_0: _elm_lang$html$Html_Attributes$title(_p12),
 										_1: {
 											ctor: '::',
 											_0: _elm_lang$html$Html_Attributes$class('hash'),
@@ -19320,7 +19064,7 @@ var _user$project$View$viewSuboperation = function (suboperation) {
 									{
 										ctor: '::',
 										_0: _elm_lang$html$Html$text(
-											_user$project$View$shortHash(_p13)),
+											_user$project$View$shortHash(_p12)),
 										_1: {ctor: '[]'}
 									}),
 								_1: {ctor: '[]'}
@@ -19329,7 +19073,7 @@ var _user$project$View$viewSuboperation = function (suboperation) {
 					}
 				});
 		case 'Delegation':
-			var _p14 = _p12._0;
+			var _p13 = _p11._0;
 			return A2(
 				_elm_lang$html$Html$span,
 				{ctor: '[]'},
@@ -19352,13 +19096,13 @@ var _user$project$View$viewSuboperation = function (suboperation) {
 									{
 										ctor: '::',
 										_0: _user$project$Route$href(
-											_user$project$Route$Contract(_p14)),
+											_user$project$Route$Contract(_p13)),
 										_1: {ctor: '[]'}
 									},
 									{
 										ctor: '::',
 										_0: _elm_lang$html$Html$text(
-											_user$project$View$shortHash(_p14)),
+											_user$project$View$shortHash(_p13)),
 										_1: {ctor: '[]'}
 									}),
 								_1: {ctor: '[]'}
@@ -19592,6 +19336,262 @@ var _user$project$View$viewAllOperations = function (model) {
 								_elm_lang$core$Dict$toList(model.chain.parsedOperations)))),
 					_1: {ctor: '[]'}
 				}
+			}
+		});
+};
+var _user$project$View$viewAccountTable = function (accounts) {
+	var row = function (a) {
+		return A2(
+			_elm_lang$html$Html$tr,
+			{ctor: '[]'},
+			{
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$td,
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html_Attributes$class('hash'),
+						_1: {ctor: '[]'}
+					},
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html$text(a.hash),
+						_1: {ctor: '[]'}
+					}),
+				_1: {
+					ctor: '::',
+					_0: A2(
+						_elm_lang$html$Html$td,
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$class('number'),
+							_1: {ctor: '[]'}
+						},
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html$text(
+								_elm_lang$core$Basics$toString(a.sourceCount)),
+							_1: {ctor: '[]'}
+						}),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$td,
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html_Attributes$class('number'),
+								_1: {ctor: '[]'}
+							},
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html$text(
+									_user$project$View$formatCentiles(a.sourceSum)),
+								_1: {ctor: '[]'}
+							}),
+						_1: {
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$td,
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html_Attributes$class('number'),
+									_1: {ctor: '[]'}
+								},
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html$text(
+										_elm_lang$core$Basics$toString(a.destCount)),
+									_1: {ctor: '[]'}
+								}),
+							_1: {
+								ctor: '::',
+								_0: A2(
+									_elm_lang$html$Html$td,
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html_Attributes$class('number'),
+										_1: {ctor: '[]'}
+									},
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html$text(
+											_user$project$View$formatCentiles(a.destSum)),
+										_1: {ctor: '[]'}
+									}),
+								_1: {ctor: '[]'}
+							}
+						}
+					}
+				}
+			});
+	};
+	var thead = A2(
+		_elm_lang$html$Html$thead,
+		{ctor: '[]'},
+		{
+			ctor: '::',
+			_0: A2(
+				_elm_lang$html$Html$tr,
+				{ctor: '[]'},
+				{
+					ctor: '::',
+					_0: A2(
+						_elm_lang$html$Html$th,
+						{ctor: '[]'},
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html$text(''),
+							_1: {ctor: '[]'}
+						}),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$th,
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html_Attributes$colspan(2),
+								_1: {ctor: '[]'}
+							},
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html$text('source'),
+								_1: {ctor: '[]'}
+							}),
+						_1: {
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$th,
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html_Attributes$colspan(2),
+									_1: {ctor: '[]'}
+								},
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html$text('destination'),
+									_1: {ctor: '[]'}
+								}),
+							_1: {ctor: '[]'}
+						}
+					}
+				}),
+			_1: {
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$tr,
+					{ctor: '[]'},
+					{
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$th,
+							{ctor: '[]'},
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html$text('account hash'),
+								_1: {ctor: '[]'}
+							}),
+						_1: {
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$th,
+								{ctor: '[]'},
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html$text('count'),
+									_1: {ctor: '[]'}
+								}),
+							_1: {
+								ctor: '::',
+								_0: A2(
+									_elm_lang$html$Html$th,
+									{ctor: '[]'},
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html$text('sum (ꜩ)'),
+										_1: {ctor: '[]'}
+									}),
+								_1: {
+									ctor: '::',
+									_0: A2(
+										_elm_lang$html$Html$th,
+										{ctor: '[]'},
+										{
+											ctor: '::',
+											_0: _elm_lang$html$Html$text('count'),
+											_1: {ctor: '[]'}
+										}),
+									_1: {
+										ctor: '::',
+										_0: A2(
+											_elm_lang$html$Html$th,
+											{ctor: '[]'},
+											{
+												ctor: '::',
+												_0: _elm_lang$html$Html$text('sum (ꜩ)'),
+												_1: {ctor: '[]'}
+											}),
+										_1: {ctor: '[]'}
+									}
+								}
+							}
+						}
+					}),
+				_1: {ctor: '[]'}
+			}
+		});
+	return A2(
+		_elm_lang$html$Html$table,
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html_Attributes$class('accounts'),
+			_1: {ctor: '[]'}
+		},
+		{
+			ctor: '::',
+			_0: thead,
+			_1: {
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$tbody,
+					{ctor: '[]'},
+					A2(_elm_lang$core$List$map, row, accounts)),
+				_1: {ctor: '[]'}
+			}
+		});
+};
+var _user$project$View$viewAccounts = function (model) {
+	return A2(
+		_elm_lang$html$Html$div,
+		{ctor: '[]'},
+		{
+			ctor: '::',
+			_0: A2(
+				_elm_lang$html$Html$h3,
+				{ctor: '[]'},
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html$text('Accounts'),
+					_1: {ctor: '[]'}
+				}),
+			_1: {
+				ctor: '::',
+				_0: function () {
+					var _p14 = model.chain.accounts;
+					if (_p14.ctor === 'Success') {
+						return _user$project$View$viewAccountTable(_p14._0);
+					} else {
+						return A2(
+							_elm_lang$html$Html$div,
+							{ctor: '[]'},
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html$text(
+									_elm_lang$core$Basics$toString(model.chain.accounts)),
+								_1: {ctor: '[]'}
+							});
+					}
+				}(),
+				_1: {ctor: '[]'}
 			}
 		});
 };

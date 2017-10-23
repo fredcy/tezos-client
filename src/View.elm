@@ -551,9 +551,9 @@ viewAccountTable accounts =
                 , H.tr []
                     [ H.th [] [ H.text "account hash" ]
                     , H.th [] [ H.text "count" ]
-                    , H.th [] [ H.text "sum" ]
+                    , H.th [] [ H.text "sum (ꜩ)" ]
                     , H.th [] [ H.text "count" ]
-                    , H.th [] [ H.text "sum" ]
+                    , H.th [] [ H.text "sum (ꜩ)" ]
                     ]
                 ]
 
@@ -561,9 +561,9 @@ viewAccountTable accounts =
             H.tr []
                 [ H.td [ HA.class "hash" ] [ H.text a.hash ]
                 , H.td [ HA.class "number" ] [ H.text (toString a.sourceCount) ]
-                , H.td [ HA.class "number" ] [ H.text (toString a.sourceSum) ]
+                , H.td [ HA.class "number" ] [ H.text (formatCentiles a.sourceSum) ]
                 , H.td [ HA.class "number" ] [ H.text (toString a.destCount) ]
-                , H.td [ HA.class "number" ] [ H.text (toString a.destSum) ]
+                , H.td [ HA.class "number" ] [ H.text (formatCentiles a.destSum) ]
                 ]
     in
         H.table [ HA.class "accounts" ]
