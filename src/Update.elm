@@ -9,6 +9,7 @@ import Http
 import List.Extra as List
 import Set
 import Task
+import Table
 import Time exposing (Time)
 import Model exposing (..)
 import Data.Schema as Schema exposing (SchemaData, SchemaName, decodeSchema, collapseTrees)
@@ -36,6 +37,7 @@ type Msg
     | Monitor Decode.Value
     | Now Time
     | RpcResponse Request.Response
+    | SetTableState Table.State
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -181,6 +183,9 @@ updatePage page msg model =
                     updateMonitor data model
             in
                 ( newModel, Cmd.batch [ cmd, Task.perform Now Time.now ] )
+
+        ( SetTableState tableState, _ ) ->
+            ( { model | tableState = tableState }, Cmd.none )
 
 
 {-| Determine Page for given Route. (TODO: The distinction between Route and

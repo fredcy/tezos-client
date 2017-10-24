@@ -3,6 +3,7 @@ module Model exposing (..)
 import Date exposing (Date)
 import Dict exposing (Dict)
 import Http
+import Table
 import Data.Schema as Schema
 import Data.Chain as Chain exposing (BlockID, OperationID)
 import Page exposing (Page)
@@ -27,6 +28,7 @@ type alias Model =
     , now : Date
     , chain : Chain.Model
     , pageState : PageState
+    , tableState : Table.State
     }
 
 

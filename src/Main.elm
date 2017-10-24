@@ -7,6 +7,7 @@ import Json.Decode as Decode
 import Dict
 import Navigation
 import Route exposing (Route)
+import Table
 import Time
 import Data.Chain
 import Model exposing (..)
@@ -43,6 +44,7 @@ init flags location =
             , chain = Data.Chain.init
             , now = Date.fromTime flags.now
             , pageState = Loaded Page.Blank
+            , tableState = Table.initialSort "account hash"
             }
 
         -- set initial route based on location bar
@@ -51,8 +53,10 @@ init flags location =
     in
         ( routedModel
         , Cmd.batch
-            [ Request.Block.getHeads routedModel.nodeUrl |> Http.send (Result.map Request.Heads >> RpcResponse)
-            , Request.Block.getHead routedModel.nodeUrl |> Http.send (Result.map Request.Head >> RpcResponse)
+            [ Request.Block.getHeads routedModel.nodeUrl
+                |> Http.send (Result.map Request.Heads >> RpcResponse)
+            , Request.Block.getHead routedModel.nodeUrl
+                |> Http.send (Result.map Request.Head >> RpcResponse)
             , routeCmd
             ]
         )

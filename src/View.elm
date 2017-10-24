@@ -15,6 +15,7 @@ import List.Extra as List
 import ParseInt
 import Regex
 import RemoteData exposing (RemoteData)
+import Table
 import Data.Chain as Chain exposing (BlockID, Block, Contract, ContractID, OperationID, ParsedOperation, Base58CheckEncodedSHA256, SubOperation(..), getBranchList)
 import Data.Schema as Schema
 import Data.Michelson as Michelson
@@ -23,6 +24,8 @@ import Page
 import Route
 import Update exposing (Msg(..))
 import View.Page
+import View.Accounts
+import View.Field as VF
 
 
 view : Model -> Html Msg
@@ -534,7 +537,8 @@ viewAccounts model =
         [ H.h3 [] [ H.text "Accounts" ]
         , case model.chain.accounts of
             RemoteData.Success accounts ->
-                viewAccountTable accounts
+                --viewAccountTable accounts
+                View.Accounts.view model.tableState accounts
 
             _ ->
                 H.div [] [ H.text (toString model.chain.accounts) ]
