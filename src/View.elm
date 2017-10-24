@@ -433,7 +433,7 @@ viewSuboperation suboperation =
                 [ H.text "Transaction of "
                 , H.text (formatCentiles amount)
                 , H.text " ꜩ to "
-                , H.span [ HA.title address, HA.class "hash" ] [ H.text (shortHash address) ]
+                , H.a [ Route.href (Route.Account address), HA.title address, HA.class "hash" ] [ H.text (shortHash address) ]
                 ]
 
         Delegation delegatee ->
@@ -536,6 +536,9 @@ viewAccounts model =
             RemoteData.Success accounts ->
                 viewAccountTable accounts
 
+            RemoteData.NotAsked ->
+                H.div [] [ H.text "..." ]
+
             _ ->
                 H.div [] [ H.text (toString model.chain.accounts) ]
         ]
@@ -548,8 +551,8 @@ viewAccountTable accounts =
             H.thead []
                 [ H.tr []
                     [ H.th [] [ H.text "" ]
-                    , H.th [ HA.colspan 2 ] [ H.text "source" ]
-                    , H.th [ HA.colspan 2 ] [ H.text "destination" ]
+                    , H.th [ HA.colspan 2 ] [ H.text "source (debit)" ]
+                    , H.th [ HA.colspan 2 ] [ H.text "destination (credit)" ]
                     ]
                 , H.tr []
                     [ H.th [] [ H.text "account hash" ]
@@ -573,9 +576,12 @@ viewAccountTable accounts =
                 , H.td [ HA.class "number" ] [ H.text (formatCentiles a.destSum) ]
                 ]
     in
-        H.table [ HA.class "accounts" ]
-            [ thead
-            , H.tbody [] (List.map row accounts)
+        H.div []
+            [ H.p [] [ H.text "This summarizes all the accounts that have participated in transactions." ]
+            , H.table [ HA.class "accounts" ]
+                [ thead
+                , H.tbody [] (List.map row accounts)
+                ]
             ]
 
 
@@ -588,7 +594,7 @@ viewAccount model accountHash =
                 viewTransactions hash transactions
 
             _ ->
-                H.div [] [ H.text (toString model.chain.account) ]
+                H.div [] [ H.text "..." ]
         ]
 
 
@@ -614,15 +620,21 @@ viewTransactions accountHash transactions =
 
         row t =
             H.tr [ HA.class (class t) ]
-                [ H.td [] [ H.text (formatDate t.timestamp) ]
-                , H.td [ HA.class "hash" ] [ H.text (shortHash t.source) ]
-                , H.td [ HA.class "hash" ] [ H.text (shortHash t.destination) ]
+                [ H.td [] [ H.a [ Route.href (Route.Block t.block) ] [ H.text (formatDate t.timestamp) ] ]
+                , H.td [ HA.class "hash" ]
+                    [ H.a [ Route.href (Route.Account t.source) ] [ H.text (shortHash t.source) ]
+                    ]
+                , H.td [ HA.class "hash" ]
+                    [ H.a [ Route.href (Route.Account t.destination) ] [ H.text (shortHash t.destination) ] ]
                 , H.td [ HA.class "number amount" ] [ H.text (formatCentiles t.amount) ]
                 ]
     in
-        H.table [ HA.class "transactions" ]
-            [ thead
-            , H.tbody [] (List.map row transactions)
+        H.div []
+            [ H.h4 [] [ H.text "Transactions" ]
+            , H.table [ HA.class "transactions" ]
+                [ thead
+                , H.tbody [] (List.map row transactions)
+                ]
             ]
 
 

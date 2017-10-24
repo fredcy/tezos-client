@@ -19165,14 +19165,19 @@ var _user$project$View$viewSuboperation = function (suboperation) {
 							_1: {
 								ctor: '::',
 								_0: A2(
-									_elm_lang$html$Html$span,
+									_elm_lang$html$Html$a,
 									{
 										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$title(_p12),
+										_0: _user$project$Route$href(
+											_user$project$Route$Account(_p12)),
 										_1: {
 											ctor: '::',
-											_0: _elm_lang$html$Html_Attributes$class('hash'),
-											_1: {ctor: '[]'}
+											_0: _elm_lang$html$Html_Attributes$title(_p12),
+											_1: {
+												ctor: '::',
+												_0: _elm_lang$html$Html_Attributes$class('hash'),
+												_1: {ctor: '[]'}
+											}
 										}
 									},
 									{
@@ -19580,7 +19585,7 @@ var _user$project$View$viewAccountTable = function (accounts) {
 							},
 							{
 								ctor: '::',
-								_0: _elm_lang$html$Html$text('source'),
+								_0: _elm_lang$html$Html$text('source (debit)'),
 								_1: {ctor: '[]'}
 							}),
 						_1: {
@@ -19594,7 +19599,7 @@ var _user$project$View$viewAccountTable = function (accounts) {
 								},
 								{
 									ctor: '::',
-									_0: _elm_lang$html$Html$text('destination'),
+									_0: _elm_lang$html$Html$text('destination (credit)'),
 									_1: {ctor: '[]'}
 								}),
 							_1: {ctor: '[]'}
@@ -19666,21 +19671,39 @@ var _user$project$View$viewAccountTable = function (accounts) {
 			}
 		});
 	return A2(
-		_elm_lang$html$Html$table,
+		_elm_lang$html$Html$div,
+		{ctor: '[]'},
 		{
 			ctor: '::',
-			_0: _elm_lang$html$Html_Attributes$class('accounts'),
-			_1: {ctor: '[]'}
-		},
-		{
-			ctor: '::',
-			_0: thead,
+			_0: A2(
+				_elm_lang$html$Html$p,
+				{ctor: '[]'},
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html$text('This summarizes all the accounts that have participated in transactions.'),
+					_1: {ctor: '[]'}
+				}),
 			_1: {
 				ctor: '::',
 				_0: A2(
-					_elm_lang$html$Html$tbody,
-					{ctor: '[]'},
-					A2(_elm_lang$core$List$map, row, accounts)),
+					_elm_lang$html$Html$table,
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html_Attributes$class('accounts'),
+						_1: {ctor: '[]'}
+					},
+					{
+						ctor: '::',
+						_0: thead,
+						_1: {
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$tbody,
+								{ctor: '[]'},
+								A2(_elm_lang$core$List$map, row, accounts)),
+							_1: {ctor: '[]'}
+						}
+					}),
 				_1: {ctor: '[]'}
 			}
 		});
@@ -19703,18 +19726,28 @@ var _user$project$View$viewAccounts = function (model) {
 				ctor: '::',
 				_0: function () {
 					var _p14 = model.chain.accounts;
-					if (_p14.ctor === 'Success') {
-						return _user$project$View$viewAccountTable(_p14._0);
-					} else {
-						return A2(
-							_elm_lang$html$Html$div,
-							{ctor: '[]'},
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html$text(
-									_elm_lang$core$Basics$toString(model.chain.accounts)),
-								_1: {ctor: '[]'}
-							});
+					switch (_p14.ctor) {
+						case 'Success':
+							return _user$project$View$viewAccountTable(_p14._0);
+						case 'NotAsked':
+							return A2(
+								_elm_lang$html$Html$div,
+								{ctor: '[]'},
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html$text('...'),
+									_1: {ctor: '[]'}
+								});
+						default:
+							return A2(
+								_elm_lang$html$Html$div,
+								{ctor: '[]'},
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html$text(
+										_elm_lang$core$Basics$toString(model.chain.accounts)),
+									_1: {ctor: '[]'}
+								});
 					}
 				}(),
 				_1: {ctor: '[]'}
@@ -20160,8 +20193,20 @@ var _user$project$View$viewTransactions = F2(
 						{ctor: '[]'},
 						{
 							ctor: '::',
-							_0: _elm_lang$html$Html$text(
-								_user$project$View$formatDate(t.timestamp)),
+							_0: A2(
+								_elm_lang$html$Html$a,
+								{
+									ctor: '::',
+									_0: _user$project$Route$href(
+										_user$project$Route$Block(t.block)),
+									_1: {ctor: '[]'}
+								},
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html$text(
+										_user$project$View$formatDate(t.timestamp)),
+									_1: {ctor: '[]'}
+								}),
 							_1: {ctor: '[]'}
 						}),
 					_1: {
@@ -20175,8 +20220,20 @@ var _user$project$View$viewTransactions = F2(
 							},
 							{
 								ctor: '::',
-								_0: _elm_lang$html$Html$text(
-									_user$project$View$shortHash(t.source)),
+								_0: A2(
+									_elm_lang$html$Html$a,
+									{
+										ctor: '::',
+										_0: _user$project$Route$href(
+											_user$project$Route$Account(t.source)),
+										_1: {ctor: '[]'}
+									},
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html$text(
+											_user$project$View$shortHash(t.source)),
+										_1: {ctor: '[]'}
+									}),
 								_1: {ctor: '[]'}
 							}),
 						_1: {
@@ -20190,8 +20247,20 @@ var _user$project$View$viewTransactions = F2(
 								},
 								{
 									ctor: '::',
-									_0: _elm_lang$html$Html$text(
-										_user$project$View$shortHash(t.destination)),
+									_0: A2(
+										_elm_lang$html$Html$a,
+										{
+											ctor: '::',
+											_0: _user$project$Route$href(
+												_user$project$Route$Account(t.destination)),
+											_1: {ctor: '[]'}
+										},
+										{
+											ctor: '::',
+											_0: _elm_lang$html$Html$text(
+												_user$project$View$shortHash(t.destination)),
+											_1: {ctor: '[]'}
+										}),
 									_1: {ctor: '[]'}
 								}),
 							_1: {
@@ -20216,21 +20285,39 @@ var _user$project$View$viewTransactions = F2(
 				});
 		};
 		return A2(
-			_elm_lang$html$Html$table,
+			_elm_lang$html$Html$div,
+			{ctor: '[]'},
 			{
 				ctor: '::',
-				_0: _elm_lang$html$Html_Attributes$class('transactions'),
-				_1: {ctor: '[]'}
-			},
-			{
-				ctor: '::',
-				_0: thead,
+				_0: A2(
+					_elm_lang$html$Html$h4,
+					{ctor: '[]'},
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html$text('Transactions'),
+						_1: {ctor: '[]'}
+					}),
 				_1: {
 					ctor: '::',
 					_0: A2(
-						_elm_lang$html$Html$tbody,
-						{ctor: '[]'},
-						A2(_elm_lang$core$List$map, row, transactions)),
+						_elm_lang$html$Html$table,
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$class('transactions'),
+							_1: {ctor: '[]'}
+						},
+						{
+							ctor: '::',
+							_0: thead,
+							_1: {
+								ctor: '::',
+								_0: A2(
+									_elm_lang$html$Html$tbody,
+									{ctor: '[]'},
+									A2(_elm_lang$core$List$map, row, transactions)),
+								_1: {ctor: '[]'}
+							}
+						}),
 					_1: {ctor: '[]'}
 				}
 			});
@@ -20263,8 +20350,7 @@ var _user$project$View$viewAccount = F2(
 								{ctor: '[]'},
 								{
 									ctor: '::',
-									_0: _elm_lang$html$Html$text(
-										_elm_lang$core$Basics$toString(model.chain.account)),
+									_0: _elm_lang$html$Html$text('...'),
 									_1: {ctor: '[]'}
 								});
 						}
