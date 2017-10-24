@@ -45,6 +45,7 @@ init flags location =
             , now = Date.fromTime flags.now
             , pageState = Loaded Page.Blank
             , tableState = Table.initialSort "account hash"
+            , query = ""
             }
 
         -- set initial route based on location bar

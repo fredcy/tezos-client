@@ -538,7 +538,7 @@ viewAccounts model =
         , case model.chain.accounts of
             RemoteData.Success accounts ->
                 --viewAccountTable accounts
-                View.Accounts.view model.tableState accounts
+                View.Accounts.view model.tableState model.query accounts
 
             _ ->
                 H.div [] [ H.text (toString model.chain.accounts) ]

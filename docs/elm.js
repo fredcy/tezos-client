@@ -17427,9 +17427,9 @@ var _user$project$Model$getPage = function (_p0) {
 	var _p1 = _p0;
 	return _p1._0;
 };
-var _user$project$Model$Model = F7(
-	function (a, b, c, d, e, f, g) {
-		return {schemaData: a, errors: b, nodeUrl: c, now: d, chain: e, pageState: f, tableState: g};
+var _user$project$Model$Model = F8(
+	function (a, b, c, d, e, f, g, h) {
+		return {schemaData: a, errors: b, nodeUrl: c, now: d, chain: e, pageState: f, tableState: g, query: h};
 	});
 var _user$project$Model$Loaded = function (a) {
 	return {ctor: 'Loaded', _0: a};
@@ -17862,6 +17862,9 @@ var _user$project$Update$addErrorMaybe = F2(
 			return model;
 		}
 	});
+var _user$project$Update$SetQuery = function (a) {
+	return {ctor: 'SetQuery', _0: a};
+};
 var _user$project$Update$SetTableState = function (a) {
 	return {ctor: 'SetTableState', _0: a};
 };
@@ -18512,12 +18515,20 @@ var _user$project$Update$updatePage = F3(
 							}
 						})
 				};
-			default:
+			case 'SetTableState':
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{tableState: _p16._0._0}),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+			default:
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{query: _p16._0._0}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 		}
@@ -18755,6 +18766,30 @@ var _user$project$View_Accounts$formatSum = function (i) {
 		return _user$project$View_Field$formatCentiles(i);
 	}
 };
+var _user$project$View_Accounts$intColumn = F2(
+	function (name, toInt) {
+		return _evancz$elm_sortable_table$Table$customColumn(
+			{
+				name: name,
+				viewData: function (data) {
+					return _user$project$View_Accounts$formatCount(
+						toInt(data));
+				},
+				sorter: _evancz$elm_sortable_table$Table$increasingOrDecreasingBy(toInt)
+			});
+	});
+var _user$project$View_Accounts$tezColumn = F2(
+	function (name, toTez) {
+		return _evancz$elm_sortable_table$Table$customColumn(
+			{
+				name: name,
+				viewData: function (data) {
+					return _user$project$View_Accounts$formatSum(
+						toTez(data));
+				},
+				sorter: _evancz$elm_sortable_table$Table$increasingOrDecreasingBy(toTez)
+			});
+	});
 var _user$project$View_Accounts$config = _evancz$elm_sortable_table$Table$config(
 	{
 		toId: function (_) {
@@ -18772,46 +18807,34 @@ var _user$project$View_Accounts$config = _evancz$elm_sortable_table$Table$config
 			_1: {
 				ctor: '::',
 				_0: A2(
-					_evancz$elm_sortable_table$Table$stringColumn,
+					_user$project$View_Accounts$intColumn,
 					'sCount',
-					function (_p1) {
-						return _user$project$View_Accounts$formatCount(
-							function (_) {
-								return _.sourceCount;
-							}(_p1));
+					function (_) {
+						return _.sourceCount;
 					}),
 				_1: {
 					ctor: '::',
 					_0: A2(
-						_evancz$elm_sortable_table$Table$stringColumn,
+						_user$project$View_Accounts$tezColumn,
 						'sSum',
-						function (_p2) {
-							return _user$project$View_Accounts$formatSum(
-								function (_) {
-									return _.sourceSum;
-								}(_p2));
+						function (_) {
+							return _.sourceSum;
 						}),
 					_1: {
 						ctor: '::',
 						_0: A2(
-							_evancz$elm_sortable_table$Table$stringColumn,
+							_user$project$View_Accounts$intColumn,
 							'dCount',
-							function (_p3) {
-								return _user$project$View_Accounts$formatCount(
-									function (_) {
-										return _.destCount;
-									}(_p3));
+							function (_) {
+								return _.destCount;
 							}),
 						_1: {
 							ctor: '::',
 							_0: A2(
-								_evancz$elm_sortable_table$Table$stringColumn,
+								_user$project$View_Accounts$tezColumn,
 								'dSum',
-								function (_p4) {
-									return _user$project$View_Accounts$formatSum(
-										function (_) {
-											return _.destSum;
-										}(_p4));
+								function (_) {
+									return _.destSum;
 								}),
 							_1: {ctor: '[]'}
 						}
@@ -18820,8 +18843,20 @@ var _user$project$View_Accounts$config = _evancz$elm_sortable_table$Table$config
 			}
 		}
 	});
-var _user$project$View_Accounts$view = F2(
-	function (tableState, accounts) {
+var _user$project$View_Accounts$view = F3(
+	function (tableState, query, accounts) {
+		var accountsToShow = A2(
+			_elm_lang$core$List$filter,
+			function (_p1) {
+				return A2(
+					_elm_lang$core$String$contains,
+					_elm_lang$core$String$toLower(query),
+					_elm_lang$core$String$toLower(
+						function (_) {
+							return _.hash;
+						}(_p1)));
+			},
+			accounts);
 		return A2(
 			_elm_lang$html$Html$div,
 			{
@@ -18831,8 +18866,27 @@ var _user$project$View_Accounts$view = F2(
 			},
 			{
 				ctor: '::',
-				_0: A3(_evancz$elm_sortable_table$Table$view, _user$project$View_Accounts$config, tableState, accounts),
-				_1: {ctor: '[]'}
+				_0: A2(
+					_elm_lang$html$Html$input,
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html_Attributes$placeholder('search by hash'),
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$class('query'),
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$html$Html_Events$onInput(_user$project$Update$SetQuery),
+								_1: {ctor: '[]'}
+							}
+						}
+					},
+					{ctor: '[]'}),
+				_1: {
+					ctor: '::',
+					_0: A3(_evancz$elm_sortable_table$Table$view, _user$project$View_Accounts$config, tableState, accountsToShow),
+					_1: {ctor: '[]'}
+				}
 			});
 	});
 
@@ -19689,7 +19743,7 @@ var _user$project$View$viewAccounts = function (model) {
 				_0: function () {
 					var _p11 = model.chain.accounts;
 					if (_p11.ctor === 'Success') {
-						return A2(_user$project$View_Accounts$view, model.tableState, _p11._0);
+						return A3(_user$project$View_Accounts$view, model.tableState, model.query, _p11._0);
 					} else {
 						return A2(
 							_elm_lang$html$Html$div,
@@ -22315,7 +22369,8 @@ var _user$project$Main$init = F2(
 			chain: _user$project$Data_Chain$init,
 			now: _elm_lang$core$Date$fromTime(flags.now),
 			pageState: _user$project$Model$Loaded(_user$project$Page$Blank),
-			tableState: _evancz$elm_sortable_table$Table$initialSort('account hash')
+			tableState: _evancz$elm_sortable_table$Table$initialSort('account hash'),
+			query: ''
 		};
 		var _p0 = A2(
 			_user$project$Update$setRoute,

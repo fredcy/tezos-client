@@ -38,6 +38,7 @@ type Msg
     | Now Time
     | RpcResponse Request.Response
     | SetTableState Table.State
+    | SetQuery String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -186,6 +187,9 @@ updatePage page msg model =
 
         ( SetTableState tableState, _ ) ->
             ( { model | tableState = tableState }, Cmd.none )
+
+        ( SetQuery queryString, _ ) ->
+            ( { model | query = queryString }, Cmd.none )
 
 
 {-| Determine Page for given Route. (TODO: The distinction between Route and

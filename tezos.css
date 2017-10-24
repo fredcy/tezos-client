@@ -331,10 +331,18 @@ div.accounts-table-container table td {
     padding: .3em .5em;
 }
 
+div.accounts-table-container table tbody tr td:nth-child(1) {
+    font-family: Andale Mono, Courier New, monospace;
+}
+
 div.accounts-table-container table tbody tr td:nth-child(2)
 , div.accounts-table-container table tbody tr td:nth-child(3)
 , div.accounts-table-container table tbody tr td:nth-child(4)
 , div.accounts-table-container table tbody tr td:nth-child(5)
 {
     text-align: right;
+}
+
+div.accounts-table-container input.query {
+    margin: 0 0 1em 1em;
 }
