@@ -18755,6 +18755,32 @@ var _user$project$View_Field$formatCentiles = function (number) {
 		_elm_lang$core$Basics$toFloat(number) / 100);
 };
 
+var _user$project$View_Accounts$viewHash = function (hash) {
+	return A2(
+		_evancz$elm_sortable_table$Table$HtmlDetails,
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html_Attributes$class('hash'),
+			_1: {ctor: '[]'}
+		},
+		{
+			ctor: '::',
+			_0: A2(
+				_elm_lang$html$Html$a,
+				{
+					ctor: '::',
+					_0: _user$project$Route$href(
+						_user$project$Route$Account(hash)),
+					_1: {ctor: '[]'}
+				},
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html$text(hash),
+					_1: {ctor: '[]'}
+				}),
+			_1: {ctor: '[]'}
+		});
+};
 var _user$project$View_Accounts$formatCount = function (c) {
 	return _elm_lang$core$Native_Utils.eq(c, 0) ? '.' : _elm_lang$core$Basics$toString(c);
 };
@@ -18766,6 +18792,18 @@ var _user$project$View_Accounts$formatSum = function (i) {
 		return _user$project$View_Field$formatCentiles(i);
 	}
 };
+var _user$project$View_Accounts$hashColumn = F2(
+	function (name, toHash) {
+		return _evancz$elm_sortable_table$Table$veryCustomColumn(
+			{
+				name: name,
+				viewData: function (data) {
+					return _user$project$View_Accounts$viewHash(
+						toHash(data));
+				},
+				sorter: _evancz$elm_sortable_table$Table$increasingOrDecreasingBy(toHash)
+			});
+	});
 var _user$project$View_Accounts$intColumn = F2(
 	function (name, toInt) {
 		return _evancz$elm_sortable_table$Table$customColumn(
@@ -18790,6 +18828,107 @@ var _user$project$View_Accounts$tezColumn = F2(
 				sorter: _evancz$elm_sortable_table$Table$increasingOrDecreasingBy(toTez)
 			});
 	});
+var _user$project$View_Accounts$makeThead = function (list) {
+	var marker = function (status) {
+		var _p1 = status;
+		if ((_p1.ctor === 'Reversible') && (_p1._0.ctor === 'Just')) {
+			if (_p1._0._0 === false) {
+				return 'v';
+			} else {
+				return '^';
+			}
+		} else {
+			return ' ';
+		}
+	};
+	var makeTh = function (_p2) {
+		var _p3 = _p2;
+		return A2(
+			_elm_lang$html$Html$th,
+			{
+				ctor: '::',
+				_0: _p3._2,
+				_1: {ctor: '[]'}
+			},
+			{
+				ctor: '::',
+				_0: _elm_lang$html$Html$text(
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						_p3._0,
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							' ',
+							marker(_p3._1)))),
+				_1: {ctor: '[]'}
+			});
+	};
+	return A2(
+		_evancz$elm_sortable_table$Table$HtmlDetails,
+		{ctor: '[]'},
+		{
+			ctor: '::',
+			_0: A2(
+				_elm_lang$html$Html$tr,
+				{ctor: '[]'},
+				{
+					ctor: '::',
+					_0: A2(
+						_elm_lang$html$Html$th,
+						{ctor: '[]'},
+						{ctor: '[]'}),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$th,
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html_Attributes$colspan(2),
+								_1: {ctor: '[]'}
+							},
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html$text('Source'),
+								_1: {ctor: '[]'}
+							}),
+						_1: {
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$th,
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html_Attributes$colspan(2),
+									_1: {ctor: '[]'}
+								},
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html$text('Destination'),
+									_1: {ctor: '[]'}
+								}),
+							_1: {ctor: '[]'}
+						}
+					}
+				}),
+			_1: {
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$tr,
+					{ctor: '[]'},
+					A2(_elm_lang$core$List$map, makeTh, list)),
+				_1: {ctor: '[]'}
+			}
+		});
+};
+var _user$project$View_Accounts$customizations = {
+	tableAttrs: {ctor: '[]'},
+	caption: _elm_lang$core$Maybe$Nothing,
+	thead: _user$project$View_Accounts$makeThead,
+	tfoot: _elm_lang$core$Maybe$Nothing,
+	tbodyAttrs: {ctor: '[]'},
+	rowAttrs: function (data) {
+		return {ctor: '[]'};
+	}
+};
 var _user$project$View_Accounts$config = _evancz$elm_sortable_table$Table$config(
 	{
 		toId: function (_) {
@@ -18799,7 +18938,7 @@ var _user$project$View_Accounts$config = _evancz$elm_sortable_table$Table$config
 		columns: {
 			ctor: '::',
 			_0: A2(
-				_evancz$elm_sortable_table$Table$stringColumn,
+				_user$project$View_Accounts$hashColumn,
 				'Hash',
 				function (_) {
 					return _.hash;
@@ -18845,16 +18984,28 @@ var _user$project$View_Accounts$config = _evancz$elm_sortable_table$Table$config
 	});
 var _user$project$View_Accounts$view = F3(
 	function (tableState, query, accounts) {
-		var accountsToShow = A2(
+		var accountsToShow = _elm_lang$core$Native_Utils.eq(
+			_elm_lang$core$String$toLower(query),
+			query) ? A2(
 			_elm_lang$core$List$filter,
-			function (_p1) {
+			function (_p4) {
 				return A2(
 					_elm_lang$core$String$contains,
-					_elm_lang$core$String$toLower(query),
+					query,
 					_elm_lang$core$String$toLower(
 						function (_) {
 							return _.hash;
-						}(_p1)));
+						}(_p4)));
+			},
+			accounts) : A2(
+			_elm_lang$core$List$filter,
+			function (_p5) {
+				return A2(
+					_elm_lang$core$String$contains,
+					query,
+					function (_) {
+						return _.hash;
+					}(_p5));
 			},
 			accounts);
 		return A2(
@@ -22455,7 +22606,7 @@ var _user$project$Main$init = F2(
 			chain: _user$project$Data_Chain$init,
 			now: _elm_lang$core$Date$fromTime(flags.now),
 			pageState: _user$project$Model$Loaded(_user$project$Page$Blank),
-			tableState: _evancz$elm_sortable_table$Table$initialSort('account hash'),
+			tableState: _evancz$elm_sortable_table$Table$initialSort('Hash'),
 			query: ''
 		};
 		var _p0 = A2(

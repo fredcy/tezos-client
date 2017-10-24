@@ -7,6 +7,7 @@ import Table
 import Data.Chain exposing (AccountSummary)
 import Update exposing (Msg, Msg(SetTableState, SetQuery))
 import View.Field as VF
+import Route
 
 
 config : Table.Config AccountSummary Msg
@@ -15,20 +16,62 @@ config =
         { toId = .hash
         , toMsg = SetTableState
         , columns =
-            [ Table.stringColumn "Hash" .hash
+            [ hashColumn "Hash" .hash
             , intColumn "sCount" .sourceCount
             , tezColumn "sSum" .sourceSum
             , intColumn "dCount" .destCount
             , tezColumn "dSum" .destSum
             ]
+
+        --, customizations = customizations
         }
+
+
+customizations =
+    { tableAttrs = []
+    , caption = Nothing
+    , thead = makeThead
+    , tfoot = Nothing
+    , tbodyAttrs = []
+    , rowAttrs = \data -> []
+    }
+
+
+makeThead : List ( String, Table.Status, H.Attribute Msg ) -> Table.HtmlDetails Msg
+makeThead list =
+    let
+        makeTh ( name, status, attr ) =
+            H.th [ attr ] [ H.text (name ++ " " ++ marker status) ]
+
+        marker status =
+            case status of
+                Table.Reversible (Just False) ->
+                    "v"
+
+                Table.Reversible (Just True) ->
+                    "^"
+
+                _ ->
+                    " "
+    in
+        Table.HtmlDetails []
+            [ H.tr []
+                [ H.th [] []
+                , H.th [ HA.colspan 2 ] [ H.text "Source" ]
+                , H.th [ HA.colspan 2 ] [ H.text "Destination" ]
+                ]
+            , H.tr [] (List.map makeTh list)
+            ]
 
 
 view : Table.State -> String -> List AccountSummary -> Html Msg
 view tableState query accounts =
     let
         accountsToShow =
-            List.filter (String.contains (String.toLower query) << String.toLower << .hash) accounts
+            if String.toLower query == query then
+                List.filter (String.contains query << String.toLower << .hash) accounts
+            else
+                List.filter (String.contains query << .hash) accounts
     in
         H.div [ HA.class "accounts-table-container" ]
             [ H.input [ HA.placeholder "search by hash", HA.class "query", HE.onInput SetQuery ] []
@@ -52,6 +95,14 @@ intColumn name toInt =
         }
 
 
+hashColumn name toHash =
+    Table.veryCustomColumn
+        { name = name
+        , viewData = \data -> viewHash (toHash data)
+        , sorter = Table.increasingOrDecreasingBy toHash
+        }
+
+
 formatSum : Int -> String
 formatSum i =
     case i of
@@ -68,3 +119,11 @@ formatCount c =
         "."
     else
         toString c
+
+
+viewHash hash =
+    Table.HtmlDetails [ HA.class "hash" ]
+        [ H.a
+            [ Route.href (Route.Account hash) ]
+            [ H.text hash ]
+        ]

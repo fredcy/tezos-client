@@ -331,10 +331,6 @@ div.accounts-table-container table td {
     padding: .3em .5em;
 }
 
-div.accounts-table-container table tbody tr td:nth-child(1) {
-    font-family: Andale Mono, Courier New, monospace;
-}
-
 div.accounts-table-container table tbody tr td:nth-child(2)
 , div.accounts-table-container table tbody tr td:nth-child(3)
 , div.accounts-table-container table tbody tr td:nth-child(4)

@@ -44,7 +44,7 @@ init flags location =
             , chain = Data.Chain.init
             , now = Date.fromTime flags.now
             , pageState = Loaded Page.Blank
-            , tableState = Table.initialSort "account hash"
+            , tableState = Table.initialSort "Hash"
             , query = ""
             }
 
