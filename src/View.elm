@@ -1099,12 +1099,13 @@ viewAbout model =
             , H.text ", the testnet for Tezos."
             ]
         , H.p []
-            [ H.text "The data comes via the Tezos RPC over HTTPS from a single node on the network ("
-            , H.text model.nodeUrl
-            , H.text ") and therefore depends on the status of that node. Being a test network, sometimes that node may be out of service or out of sync with the current alphanet chain. "
+            [ H.text "The data comes via the Tezos RPC from a single node on the network "
+            , H.text " and therefore depends on the status of that node. Being a test network, sometimes that node may be out of service or out of sync with the current alphanet chain. "
             ]
         , H.p []
-            [ H.text """This Tezos Explorer client was developed by Fred Yankowski (@fredcy) and is under """
+            [ H.text "This Tezos Explorer client was developed by Fred Yankowski ("
+            , H.a [ HA.href "https://github.com/fredcy" ] [ H.text "@fredcy" ]
+            , H.text ") and is under "
             , H.a [ HA.href "https://github.com/fredcy/tezos-client" ] [ H.text "active development. " ]
             , H.text "Suggestions for additions or changes to this client are welcome. "
             ]
