@@ -2,8 +2,6 @@ module View exposing (view)
 
 import Date exposing (Date)
 import Date.Distance
-import Date.Extra.Format
-import Date.Extra.Config.Config_en_us
 import FormatNumber
 import FormatNumber.Locales
 import Html as H exposing (Html)
@@ -25,7 +23,8 @@ import Route
 import Update exposing (Msg(..))
 import View.Page
 import View.Accounts
-import View.Field as VF
+import View.AccountTransactions
+import View.Field as VF exposing (formatDate, shortHash)
 
 
 view : Model -> Html Msg
@@ -355,11 +354,6 @@ viewParsedOperations model blockId =
         viewOperationsTable operations
 
 
-formatDate : Date -> String
-formatDate date =
-    Date.Extra.Format.formatUtc Date.Extra.Config.Config_en_us.config "%Y-%m-%dT%H:%M:%SZ" date
-
-
 viewShowBlockOperations : Dict BlockID (List ParsedOperation) -> Maybe BlockID -> Html Msg
 viewShowBlockOperations blockOperations hashMaybe =
     case hashMaybe of
@@ -510,11 +504,6 @@ viewAllOperations model =
         ]
 
 
-shortHash : Base58CheckEncodedSHA256 -> String
-shortHash hash =
-    String.left 14 hash
-
-
 viewChainAt : Model -> BlockID -> Html Msg
 viewChainAt model hash =
     H.div []
@@ -595,51 +584,14 @@ viewAccount model accountHash =
         [ H.h3 [] [ H.text ("Account " ++ accountHash) ]
         , case model.chain.account of
             Just { hash, transactions } ->
-                viewTransactions hash transactions
+                H.div []
+                    [ H.h4 [] [ H.text "Transactions" ]
+                    , View.AccountTransactions.view accountHash model.transactionTableState transactions
+                    ]
 
             _ ->
                 H.div [] [ H.text "..." ]
         ]
-
-
-viewTransactions : Chain.AccountID -> List Chain.TransactionSummary -> Html Msg
-viewTransactions accountHash transactions =
-    let
-        class : Chain.TransactionSummary -> String
-        class t =
-            if t.source == accountHash then
-                "source"
-            else if t.destination == accountHash then
-                "destination"
-            else
-                ""
-
-        thead =
-            H.tr []
-                [ H.th [] [ H.text "time" ]
-                , H.th [] [ H.text "source" ]
-                , H.th [] [ H.text "destination" ]
-                , H.th [] [ H.text "amount (ꜩ)" ]
-                ]
-
-        row t =
-            H.tr [ HA.class (class t) ]
-                [ H.td [] [ H.a [ Route.href (Route.Block t.block) ] [ H.text (formatDate t.timestamp) ] ]
-                , H.td [ HA.class "hash" ]
-                    [ H.a [ Route.href (Route.Account t.source) ] [ H.text (shortHash t.source) ]
-                    ]
-                , H.td [ HA.class "hash" ]
-                    [ H.a [ Route.href (Route.Account t.destination) ] [ H.text (shortHash t.destination) ] ]
-                , H.td [ HA.class "number amount" ] [ H.text (formatCentiles t.amount) ]
-                ]
-    in
-        H.div []
-            [ H.h4 [] [ H.text "Transactions" ]
-            , H.table [ HA.class "transactions" ]
-                [ thead
-                , H.tbody [] (List.map row transactions)
-                ]
-            ]
 
 
 viewContracts : Model -> Html Msg

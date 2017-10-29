@@ -46,6 +46,7 @@ init flags location =
             , pageState = Loaded Page.Blank
             , tableState = Table.initialSort "Hash"
             , query = ""
+            , transactionTableState = Table.initialSort "time"
             }
 
         -- set initial route based on location bar

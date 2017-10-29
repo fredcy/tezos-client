@@ -38,6 +38,7 @@ type Msg
     | Now Time
     | RpcResponse Request.Response
     | SetTableState Table.State
+    | SetTransactionTableState Table.State
     | SetQuery String
 
 
@@ -187,6 +188,9 @@ updatePage page msg model =
 
         ( SetTableState tableState, _ ) ->
             ( { model | tableState = tableState }, Cmd.none )
+
+        ( SetTransactionTableState tableState, _ ) ->
+            ( { model | transactionTableState = tableState }, Cmd.none )
 
         ( SetQuery queryString, _ ) ->
             ( { model | query = queryString }, Cmd.none )

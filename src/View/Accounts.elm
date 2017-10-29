@@ -4,9 +4,9 @@ import Html as H exposing (Html)
 import Html.Attributes as HA
 import Html.Events as HE
 import Table
-import Data.Chain exposing (AccountSummary)
+import Data.Chain as Chain exposing (AccountSummary)
 import Update exposing (Msg, Msg(SetTableState, SetQuery))
-import View.Field as VF
+import View.Field as VF exposing (formatDate, shortHash, formatCentiles)
 import Route
 
 
@@ -76,6 +76,46 @@ view tableState query accounts =
         H.div [ HA.class "accounts-table-container" ]
             [ H.input [ HA.placeholder "search by hash", HA.class "query", HE.onInput SetQuery ] []
             , Table.view config tableState accountsToShow
+            ]
+
+
+viewTransactions : Chain.AccountID -> List Chain.TransactionSummary -> Html Msg
+viewTransactions accountHash transactions =
+    let
+        class : Chain.TransactionSummary -> String
+        class t =
+            if t.source == accountHash then
+                "source"
+            else if t.destination == accountHash then
+                "destination"
+            else
+                ""
+
+        thead =
+            H.tr []
+                [ H.th [] [ H.text "time" ]
+                , H.th [] [ H.text "source" ]
+                , H.th [] [ H.text "destination" ]
+                , H.th [] [ H.text "amount (ꜩ)" ]
+                ]
+
+        row t =
+            H.tr [ HA.class (class t) ]
+                [ H.td [] [ H.a [ Route.href (Route.Block t.block) ] [ H.text (formatDate t.timestamp) ] ]
+                , H.td [ HA.class "hash" ]
+                    [ H.a [ Route.href (Route.Account t.source) ] [ H.text (shortHash t.source) ]
+                    ]
+                , H.td [ HA.class "hash" ]
+                    [ H.a [ Route.href (Route.Account t.destination) ] [ H.text (shortHash t.destination) ] ]
+                , H.td [ HA.class "number amount" ] [ H.text (formatCentiles t.amount) ]
+                ]
+    in
+        H.div []
+            [ H.h4 [] [ H.text "Transactions" ]
+            , H.table [ HA.class "transactions" ]
+                [ thead
+                , H.tbody [] (List.map row transactions)
+                ]
             ]
 
 

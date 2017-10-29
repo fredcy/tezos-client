@@ -342,3 +342,15 @@ div.accounts-table-container table tbody tr td:nth-child(2)
 div.accounts-table-container input.query {
     margin: 0 0 1em 1em;
 }
+
+div.transactions-container table td {
+    padding: .3em 1em;
+}
+
+div.transactions-container table td.destination {
+    color: green;
+}
+
+div.transactions-container table td.source {
+    color: red;
+}
