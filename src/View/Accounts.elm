@@ -17,10 +17,10 @@ config =
         , toMsg = SetTableState
         , columns =
             [ hashColumn "Hash" .hash
-            , intColumn "sCount" .sourceCount
-            , tezColumn "sSum" .sourceSum
-            , intColumn "dCount" .destCount
-            , tezColumn "dSum" .destSum
+            , tezColumn "total sent (ꜩ)" .sourceSum
+            , intColumn "# sent" .sourceCount
+            , tezColumn "total rcvd (ꜩ)" .destSum
+            , intColumn "# rcvd" .destCount
             ]
 
         --, customizations = customizations

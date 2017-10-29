@@ -327,8 +327,12 @@ table.transactions tr.destination td.amount {
     color :green;
 }
 
+div.accounts-table-container table th {
+    padding: 1em;
+}
+
 div.accounts-table-container table td {
-    padding: .3em .5em;
+    padding: .3em 1em;
 }
 
 div.accounts-table-container table tbody tr td:nth-child(2)

@@ -17,8 +17,8 @@ config accountHash =
         { toId = .timestamp >> toString
         , toMsg = SetTransactionTableState
         , columns =
-            [ timeColumn "time" .timestamp .block
-            , hashColumn "source2" .source
+            [ timeColumn "timestamp" .timestamp .block
+            , hashColumn "source" .source
             , hashColumn "destination" .destination
             , amountColumn "amount" accountHash .amount .destination
             ]

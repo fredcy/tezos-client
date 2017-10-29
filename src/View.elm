@@ -590,7 +590,21 @@ viewAccount model accountHash =
                     ]
 
             _ ->
-                H.div [] [ H.text "..." ]
+                H.div [] [ H.text "loading account data ..." ]
+        , viewAccountHelp
+        ]
+
+
+viewAccountHelp : Html Msg
+viewAccountHelp =
+    H.div []
+        [ H.hr [] []
+        , H.ul []
+            [ H.li [] [ H.text "This displays all transaction operations that have the account as source or destination." ]
+            , H.li [] [ H.text "Click the column headers to sort by that column." ]
+            , H.li [] [ H.text "The timestamp column values link to the block that comprises the transaction." ]
+            , H.li [] [ H.text "The source and destination column values link to a detail page about the account." ]
+            ]
         ]
 
 
