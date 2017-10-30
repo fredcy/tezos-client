@@ -244,6 +244,44 @@ viewBranch howMany model blockhashMaybe branch =
             ]
 
 
+viewChainSummary : Date -> List Chain.BlockSummary -> Html Msg
+viewChainSummary now blockSummaries =
+    let
+        thead =
+            H.thead []
+                [ H.tr []
+                    [ H.th [] [ H.text "level" ]
+                    , H.th [] [ H.text "hash" ]
+                    , H.th [] [ H.text "timestamp" ]
+                    , H.th [ HA.class "timestamp" ] [ H.text "age" ]
+                    , H.th [] [ H.text "operations" ]
+                    ]
+                ]
+    in
+        H.table [ HA.class "blockchain" ]
+            [ thead
+            , H.tbody [] (List.map (viewBlockSummary now) blockSummaries)
+            ]
+
+
+viewBlockSummary : Date -> Chain.BlockSummary -> Html Msg
+viewBlockSummary now bs =
+    H.tr [ HA.class "block" ]
+        [ H.td [] [ H.text (toString bs.level) ]
+        , H.td
+            [ HA.class "hash"
+            , HA.title bs.hash
+            ]
+            [ H.a [ Route.href (Route.Block bs.hash) ] [ H.text (shortHash bs.hash) ] ]
+        , H.td [ HA.class "timestamp" ]
+            [ H.text (formatDate bs.timestamp) ]
+        , H.td [ HA.class "age" ]
+            [ H.text (Date.Distance.inWords now bs.timestamp) ]
+        , H.td [ HA.class "operation-count" ]
+            [ H.text (toString bs.opCount) ]
+        ]
+
+
 blockOperationCount : Model -> Block -> String
 blockOperationCount model block =
     let
@@ -517,6 +555,7 @@ viewChain2 : Model -> Html Msg
 viewChain2 model =
     H.div []
         [ H.h3 [] [ H.text "Chain2" ]
+        , viewChainSummary model.now model.chain.blockSummaries
         ]
 
 

@@ -193,6 +193,14 @@ type alias AccountInfo =
     }
 
 
+type alias BlockSummary =
+    { hash : BlockID
+    , level : Int
+    , timestamp : Timestamp
+    , opCount : Int
+    }
+
+
 type alias Model =
     { heads : List BlockID
     , blocks : Dict BlockID Block
@@ -205,6 +213,7 @@ type alias Model =
     , contracts : Dict ContractID (RemoteData Http.Error Contract)
     , accounts : RemoteData Http.Error (List AccountSummary)
     , account : Maybe AccountInfo
+    , blockSummaries : List BlockSummary
     }
 
 
@@ -221,6 +230,7 @@ init =
     , contracts = Dict.empty
     , accounts = RemoteData.NotAsked
     , account = Nothing
+    , blockSummaries = []
     }
 
 
@@ -497,6 +507,11 @@ loadContractError model contractId error =
     { model | contracts = Dict.insert contractId (RemoteData.Failure error) model.contracts }
 
 
+loadBlockSummaries : Model -> List BlockSummary -> Model
+loadBlockSummaries model blockSummaries =
+    { model | blockSummaries = blockSummaries }
+
+
 
 -- Decoders
 
@@ -759,3 +774,12 @@ decodeTransaction =
         |> Decode.required "Amount" Decode.int
         |> Decode.required "Block" Decode.string
         |> Decode.required "Timestamp" decodeTimestamp
+
+
+decodeBlockSummary : Decode.Decoder BlockSummary
+decodeBlockSummary =
+    Decode.succeed BlockSummary
+        |> Decode.required "Hash" Decode.string
+        |> Decode.required "Level" Decode.int
+        |> Decode.required "Timestamp" decodeTimestamp
+        |> Decode.required "OpCount" Decode.int

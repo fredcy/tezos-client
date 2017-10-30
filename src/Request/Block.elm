@@ -96,3 +96,7 @@ requestAccounts nodeUrl =
 requestTransactions : URL -> Chain.AccountID -> Http.Request (List Chain.TransactionSummary)
 requestTransactions nodeUrl accountHash =
     Http.get (nodeUrl ++ "/api/account/" ++ accountHash) (Decode.list Chain.decodeTransaction)
+
+requestChainSummary : URL -> Http.Request (List Chain.BlockSummary)
+requestChainSummary nodeUrl =
+    Http.get (nodeUrl ++ "/api/chainSummary") (Decode.list Chain.decodeBlockSummary)
