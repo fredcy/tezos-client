@@ -197,6 +197,8 @@ type alias BlockSummary =
     { hash : BlockID
     , level : Int
     , timestamp : Timestamp
+    , priority : Int
+    , baker : ContractID
     , opCount : Int
     }
 
@@ -782,4 +784,6 @@ decodeBlockSummary =
         |> Decode.required "Hash" Decode.string
         |> Decode.required "Level" Decode.int
         |> Decode.required "Timestamp" decodeTimestamp
+        |> Decode.required "Priority" Decode.int
+        |> Decode.required "Baker" Decode.string
         |> Decode.required "OpCount" Decode.int

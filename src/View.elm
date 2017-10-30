@@ -254,7 +254,9 @@ viewChainSummary now blockSummaries =
                     , H.th [] [ H.text "hash" ]
                     , H.th [] [ H.text "timestamp" ]
                     , H.th [ HA.class "timestamp" ] [ H.text "age" ]
-                    , H.th [] [ H.text "operations" ]
+                    , H.th [] [ H.text "opers" ]
+                    , H.th [] [ H.text "priority" ]
+                    , H.th [] [ H.text "baker" ]
                     ]
                 ]
     in
@@ -279,6 +281,10 @@ viewBlockSummary now bs =
             [ H.text (Date.Distance.inWords now bs.timestamp) ]
         , H.td [ HA.class "operation-count" ]
             [ H.text (toString bs.opCount) ]
+        , H.td [ HA.class "priority number" ]
+            [ H.text (toString bs.priority) ]
+        , H.td [ HA.class "baker", HA.title bs.baker ]
+            [ H.text (shortHash bs.baker) ]
         ]
 
 

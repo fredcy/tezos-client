@@ -207,6 +207,7 @@ A {
 
 td.hash, div.hash, span.hash,
 td.predecessor, div.predecessor,
+td.baker,
 .property td.branch, .property div.branch,
 .property > .net_id,
 .property > .source
@@ -357,4 +358,8 @@ div.transactions-container table td.destination {
 
 div.transactions-container table td.source {
     color: red;
+}
+
+table.blockchain th {
+    padding: .3em 1em;
 }
