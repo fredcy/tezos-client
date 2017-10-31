@@ -64,7 +64,7 @@ addErrorMaybe errorMaybe model =
 
 updatePage : Page -> Msg -> Model -> ( Model, Cmd Msg )
 updatePage page msg model =
-    case ( msg, page ) of
+    case ( Debug.log "update msg" msg, page ) of
         ( RpcResponse response, _ ) ->
             let
                 ( newModel, cmd, errorMaybe ) =
@@ -188,8 +188,7 @@ updatePage page msg model =
                 , Cmd.batch
                     [ cmd
                     , Task.perform Now Time.now
-                    , Request.Block.requestChainSummary model.nodeUrl
-                        |> Http.send (Result.map Request.ChainSummary >> RpcResponse)
+                    , getChainSummary model.nodeUrl
                     ]
                 )
 
@@ -290,8 +289,7 @@ setRoute routeMaybe model =
 
         Just Route.Chain2 ->
             ( { model | pageState = Loaded Page.Chain2 }
-            , Cmd.none
-              --Request.getChain2 model |> Cmd.map LoadChain2
+            , getChainSummary model.nodeUrl
             )
 
         Just Route.Contracts ->
@@ -449,3 +447,9 @@ updateMonitor data model =
                 |> Cmd.batch
     in
         ( newModel, cmd )
+
+
+getChainSummary : String -> Cmd Msg
+getChainSummary nodeUrl =
+    Request.Block.requestChainSummary nodeUrl
+        |> Http.send (Result.map Request.ChainSummary >> RpcResponse)

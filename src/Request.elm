@@ -96,13 +96,9 @@ handleResponseData responseData model =
             )
 
         ChainSummary blockSummaries ->
-            let
-                _ =
-                    Debug.log "blockSummaries" blockSummaries
-            in
-                ( { model | chain = Chain.loadBlockSummaries model.chain blockSummaries }
-                , Cmd.none
-                )
+            ( { model | chain = Chain.loadBlockSummaries model.chain blockSummaries }
+            , Cmd.none
+            )
 
 
 getBlockOperationDetails : Model b -> Chain.BlockID -> Cmd Response
