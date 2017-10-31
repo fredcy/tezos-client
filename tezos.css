@@ -285,6 +285,11 @@ table.operations td ul {
     float: right;
 }
 
+.page-header .tagline {
+    float: left;
+    margin: 1.25em 0 0 2em;
+}
+
 .page-header .nav-links {
     clear: both;
 }

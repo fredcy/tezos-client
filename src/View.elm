@@ -39,7 +39,7 @@ view model =
         content =
             case model.pageState of
                 Loaded Page.Home ->
-                    viewHome model
+                    viewChain2 model
 
                 Loaded Page.Blank ->
                     H.text ""
@@ -71,7 +71,7 @@ view model =
                     viewChainAt model hash
 
                 Loaded Page.Chain2 ->
-                    viewChain2 model
+                    viewHome model
 
                 Loaded Page.Contracts ->
                     viewContracts model
@@ -113,14 +113,17 @@ viewHome model =
             Just head ->
                 H.div []
                     [ H.h2 [] [ H.text "Newest blocks" ]
-
-                    -- TODO: fix this mess
-                    , getBranchList model.chain head
-                        |> viewBranch 24 model (Just head)
+                    , oldViewHome model head
                     ]
 
             Nothing ->
                 H.text "no head found yet ..."
+
+
+oldViewHome : Model -> BlockID -> Html Msg
+oldViewHome model head =
+    getBranchList model.chain head
+        |> viewBranch 24 model (Just head)
 
 
 viewSchemas : Dict Schema.SchemaName Schema.SchemaData -> Html Msg
@@ -254,7 +257,7 @@ viewChainSummary now blockSummaries =
                     , H.th [] [ H.text "hash" ]
                     , H.th [] [ H.text "timestamp" ]
                     , H.th [ HA.class "timestamp" ] [ H.text "age" ]
-                    , H.th [] [ H.text "opers" ]
+                    , H.th [] [ H.text "ops" ]
                     , H.th [] [ H.text "priority" ]
                     , H.th [] [ H.text "baker" ]
                     ]
@@ -560,7 +563,7 @@ viewChainAt model hash =
 viewChain2 : Model -> Html Msg
 viewChain2 model =
     H.div []
-        [ H.h3 [] [ H.text "Chain2" ]
+        [ H.h3 [] [ H.text "Newest Blocks" ]
         , viewChainSummary model.now model.chain.blockSummaries
         ]
 
@@ -1114,10 +1117,12 @@ viewAbout model =
             , H.text " and therefore depends on the status of that node. Being a test network, sometimes that node may be out of service or out of sync with the current alphanet chain. "
             ]
         , H.p []
-            [ H.text "This Tezos Explorer client was developed by Fred Yankowski ("
+            [ H.text "Tezos Explorer is developed by Fred Yankowski ("
             , H.a [ HA.href "https://github.com/fredcy" ] [ H.text "@fredcy" ]
             , H.text ") and is under "
             , H.a [ HA.href "https://github.com/fredcy/tezos-client" ] [ H.text "active development. " ]
-            , H.text "Suggestions for additions or changes to this client are welcome. "
+            , H.text "Suggestions for additions or changes to this service are welcome. "
             ]
+        , H.p []
+            [ H.text "Tezos Explorer has been online and available to the world continuously since December 2016. It is the first Tezos blockchain explorer by far." ]
         ]

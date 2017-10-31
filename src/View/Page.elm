@@ -31,6 +31,7 @@ viewHeader : Context -> Html msg
 viewHeader context =
     H.div [ HA.class "page-header" ]
         [ H.h1 [] [ H.text "Tezos Explorer" ]
+        , viewTagline
         , viewNow context.now
         , viewErrorCount context.errorCount
         , navLinks context.pageState
@@ -40,6 +41,11 @@ viewHeader context =
 formatDate : String -> Date -> String
 formatDate =
     Date.Extra.Format.format Date.Extra.Config.Config_en_us.config
+
+
+viewTagline : Html msg
+viewTagline =
+    H.div [ HA.class "tagline" ] [ H.text "the first blockchain explorer for Tezos" ]
 
 
 viewNow : Date -> Html msg
