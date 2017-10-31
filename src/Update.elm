@@ -184,7 +184,14 @@ updatePage page msg model =
                 ( newModel, cmd ) =
                     updateMonitor data model
             in
-                ( newModel, Cmd.batch [ cmd, Task.perform Now Time.now ] )
+                ( newModel
+                , Cmd.batch
+                    [ cmd
+                    , Task.perform Now Time.now
+                    , Request.Block.requestChainSummary model.nodeUrl
+                        |> Http.send (Result.map Request.ChainSummary >> RpcResponse)
+                    ]
+                )
 
         ( SetTableState tableState, _ ) ->
             ( { model | tableState = tableState }, Cmd.none )
