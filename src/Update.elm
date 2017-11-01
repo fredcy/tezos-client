@@ -115,9 +115,14 @@ updatePage page msg model =
         ( LoadContractIDs contractsResult, _ ) ->
             case contractsResult of
                 Ok contractIDs ->
-                    ( { model | chain = Chain.loadContractIDs model.chain contractIDs }
-                    , getContractDetails model.nodeUrl contractIDs
-                    )
+                    let
+                        newChain =
+                            Chain.loadContractIDs model.chain contractIDs
+                    in
+                        ( { model | chain = newChain }
+                        , List.filter (Chain.contractHasData model.chain >> not) contractIDs
+                            |> getContractDetails model.nodeUrl
+                        )
 
                 Err error ->
                     ( { model

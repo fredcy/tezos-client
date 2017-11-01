@@ -462,6 +462,11 @@ loadingContractIDs model =
     { model | contractIDs = RemoteData.Loading }
 
 
+contractHasData : Model -> ContractID -> Bool
+contractHasData model contractId =
+    Dict.member contractId model.contracts
+
+
 loadingKeys : Model -> Model
 loadingKeys model =
     { model | keys = RemoteData.Loading }
