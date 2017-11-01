@@ -7,11 +7,10 @@ import Html.Events as HE
 import Http
 import RemoteData exposing (RemoteData)
 import Table
-import Tuple exposing (first, second)
-import Data.Chain as Chain exposing (AccountSummary, ContractID, Contract)
+import Data.Chain as Chain exposing (ContractID, Contract)
 import Data.Michelson as Michelson
-import Update exposing (Msg, Msg(SetTableState, SetQuery, SetContractTableState))
-import View.Field as VF exposing (formatDate, shortHash, formatCentiles)
+import Update exposing (Msg, Msg(SetContractTableState))
+import View.Field as VF exposing (shortHash, formatCentiles)
 import Route
 
 
@@ -19,22 +18,65 @@ type alias ContractInfo =
     ( ContractID, RemoteData Http.Error Contract )
 
 
-config : Table.Config ContractInfo Msg
+type alias ContractView =
+    { hash : ContractID
+    , balance : Maybe Int
+    , manager : ContractID
+    , counter : Maybe Int
+    , size : Maybe Int
+    }
+
+
+{-| View the sortable table of Contract summaries. We convert the model data
+into ContractView format as as first pass to speed up sorting. Otherwise the
+various RemoteData functions are called repeatedly in an implicit List.sortBy
+-}
+view : List ContractID -> Dict ContractID (RemoteData Http.Error Contract) -> Table.State -> Html Msg
+view contractIDs contractDataDict tableState =
+    let
+        makeView : ContractID -> ContractView
+        makeView contractId =
+            Dict.get contractId contractDataDict
+                |> Maybe.map
+                    (\d ->
+                        { hash = contractId
+                        , balance = RemoteData.map .balance d |> RemoteData.toMaybe
+                        , manager = RemoteData.map .manager d |> RemoteData.withDefault ""
+                        , counter = RemoteData.map .counter d |> RemoteData.toMaybe
+                        , size = RemoteData.map (.script >> scriptSize) d |> RemoteData.withDefault Nothing
+                        }
+                    )
+                |> Maybe.withDefault
+                    { hash = contractId
+                    , balance = Nothing
+                    , manager = ""
+                    , counter = Nothing
+                    , size = Nothing
+                    }
+
+        contractViews =
+            List.map makeView contractIDs
+    in
+        H.div [ HA.class "contracts" ]
+            [ Table.view config tableState contractViews ]
+
+
+config : Table.Config ContractView Msg
 config =
     Table.config
-        { toId = first
+        { toId = .hash
         , toMsg = SetContractTableState
         , columns =
-            [ contractHashColumn "contract" first
-            , tezColumn "balance (ꜩ)" (second >> RemoteData.map .balance >> RemoteData.toMaybe)
-            , contractHashColumn "manager" (second >> RemoteData.map .manager >> RemoteData.withDefault "")
-            , intColumn "counter" (second >> RemoteData.map .counter >> RemoteData.toMaybe)
-            , intColumn "script size" (second >> RemoteData.map (.script >> scriptSize) >> RemoteData.withDefault Nothing)
+            [ contractHashColumn "contract" .hash
+            , tezColumn "balance (ꜩ)" .balance
+            , contractHashColumn "manager" .manager
+            , intColumn "counter" .counter
+            , intColumn "script size" .size
             ]
         }
 
 
-contractHashColumn : String -> (ContractInfo -> String) -> Table.Column ContractInfo msg
+contractHashColumn : String -> (ContractView -> String) -> Table.Column ContractView msg
 contractHashColumn name toHash =
     let
         hashDetails hash =
@@ -48,7 +90,7 @@ contractHashColumn name toHash =
             }
 
 
-tezColumn : String -> (ContractInfo -> Maybe Int) -> Table.Column ContractInfo msg
+tezColumn : String -> (ContractView -> Maybe Int) -> Table.Column ContractView msg
 tezColumn name toTezMaybe =
     Table.customColumn
         { name = name
@@ -77,81 +119,3 @@ nonZero i =
         Nothing
     else
         Just i
-
-
-view : List ContractID -> Dict ContractID (RemoteData Http.Error Contract) -> Table.State -> Html Msg
-view contractIDs contractDataDict tableState =
-    let
-        contractData : List ( ContractID, RemoteData Http.Error Contract )
-        contractData =
-            contractIDs
-                |> List.map (\id -> ( id, Dict.get id contractDataDict |> Maybe.withDefault RemoteData.Loading ))
-    in
-        H.div [ HA.class "contracts" ]
-            [ Table.view config tableState contractData ]
-
-
-
-{-
-   viewContractTable : List ContractID -> Dict ContractID (RemoteData Http.Error Contract) -> Html Msg
-   viewContractTable contractIDs contracts =
-       let
-           thead =
-               H.tr []
-                   [ H.th [] [ H.text "contractID" ]
-                   , H.th [] [ H.text "balance (ꜩ)" ]
-                   , H.th [] [ H.text "manager" ]
-                   , H.th [] [ H.text "counter" ]
-                   , H.th [] [ H.text "script size" ]
-                   ]
-
-           trow contractId =
-               let
-                   contractData =
-                       Dict.get contractId contracts
-                           |> Maybe.withDefault RemoteData.NotAsked
-               in
-                   case contractData of
-                       RemoteData.Success contract ->
-                           H.tr []
-                               [ H.td [ HA.class "hash" ]
-                                   [ H.a [ Route.href (Route.Contract contractId) ]
-                                       [ H.text (shortHash contractId) ]
-                                   ]
-                               , H.td [ HA.class "balance" ] [ H.text (formatCentiles contract.balance) ]
-                               , H.td [ HA.class "hash" ]
-                                   [ H.a [ Route.href (Route.Contract contract.manager) ]
-                                       [ H.text (shortHash contract.manager) ]
-                                   ]
-                               , H.td [ HA.class "number" ] [ H.text (toString contract.counter) ]
-                               , H.td [ HA.class "number" ]
-                                   [ contract.script
-                                       |> Maybe.map (toString >> String.length >> toString)
-                                       |> Maybe.withDefault ""
-                                       |> H.text
-                                   ]
-                               ]
-
-                       RemoteData.NotAsked ->
-                           H.tr []
-                               [ H.td [ HA.class "hash link" ] [ H.text (shortHash contractId) ]
-                               , H.td [] [ H.text "..." ]
-                               ]
-
-                       RemoteData.Loading ->
-                           H.tr []
-                               [ H.td [ HA.class "hash link" ] [ H.text (shortHash contractId) ]
-                               , H.td [] [ H.text "......" ]
-                               ]
-
-                       RemoteData.Failure error ->
-                           H.tr []
-                               [ H.td [ HA.class "hash link" ] [ H.text (shortHash contractId) ]
-                               , H.td [] [ H.text (toString error) ]
-                               ]
-
-           tbody =
-               H.tbody [] (List.map trow (List.sort contractIDs))
-       in
-           H.table [ HA.class "contracts" ] [ thead, tbody ]
--}
