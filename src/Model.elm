@@ -29,10 +29,11 @@ type alias Model =
     , chain : Chain.Model
     , pageState : PageState
 
-    -- TODO move the fields below into some state for Accounts page.
+    -- TODO move the fields below into some state for the specific pages?
     , tableState : Table.State
     , query : String
     , transactionTableState : Table.State
+    , contractTableState : Table.State
     }
 
 

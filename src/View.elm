@@ -24,6 +24,7 @@ import Update exposing (Msg(..))
 import View.Page
 import View.Accounts
 import View.AccountTransactions
+import View.Contracts
 import View.Field as VF exposing (formatDate, shortHash)
 
 
@@ -662,7 +663,8 @@ viewContracts model =
         [ H.h3 [] [ H.text "Contracts" ]
         , case model.chain.contractIDs of
             RemoteData.Success contractIDs ->
-                viewContractTable contractIDs model.chain.contracts
+                --View.Contracts.viewContractTable contractIDs model.chain.contracts
+                View.Contracts.view contractIDs model.chain.contracts model.contractTableState
 
             RemoteData.Loading ->
                 H.text "loading ..."
@@ -670,69 +672,6 @@ viewContracts model =
             _ ->
                 H.text (toString model.chain.contractIDs)
         ]
-
-
-viewContractTable : List ContractID -> Dict ContractID (RemoteData Http.Error Contract) -> Html Msg
-viewContractTable contractIDs contracts =
-    let
-        thead =
-            H.tr []
-                [ H.th [] [ H.text "contractID" ]
-                , H.th [] [ H.text "balance (ꜩ)" ]
-                , H.th [] [ H.text "manager" ]
-                , H.th [] [ H.text "counter" ]
-                , H.th [] [ H.text "script size" ]
-                ]
-
-        trow contractId =
-            let
-                contractData =
-                    Dict.get contractId contracts
-                        |> Maybe.withDefault RemoteData.NotAsked
-            in
-                case contractData of
-                    RemoteData.Success contract ->
-                        H.tr []
-                            [ H.td [ HA.class "hash" ]
-                                [ H.a [ Route.href (Route.Contract contractId) ]
-                                    [ H.text (shortHash contractId) ]
-                                ]
-                            , H.td [ HA.class "balance" ] [ H.text (formatCentiles contract.balance) ]
-                            , H.td [ HA.class "hash" ]
-                                [ H.a [ Route.href (Route.Contract contract.manager) ]
-                                    [ H.text (shortHash contract.manager) ]
-                                ]
-                            , H.td [ HA.class "number" ] [ H.text (toString contract.counter) ]
-                            , H.td [ HA.class "number" ]
-                                [ contract.script
-                                    |> Maybe.map (toString >> String.length >> toString)
-                                    |> Maybe.withDefault ""
-                                    |> H.text
-                                ]
-                            ]
-
-                    RemoteData.NotAsked ->
-                        H.tr []
-                            [ H.td [ HA.class "hash link" ] [ H.text (shortHash contractId) ]
-                            , H.td [] [ H.text "..." ]
-                            ]
-
-                    RemoteData.Loading ->
-                        H.tr []
-                            [ H.td [ HA.class "hash link" ] [ H.text (shortHash contractId) ]
-                            , H.td [] [ H.text "......" ]
-                            ]
-
-                    RemoteData.Failure error ->
-                        H.tr []
-                            [ H.td [ HA.class "hash link" ] [ H.text (shortHash contractId) ]
-                            , H.td [] [ H.text (toString error) ]
-                            ]
-
-        tbody =
-            H.tbody [] (List.map trow (List.sort contractIDs))
-    in
-        H.table [ HA.class "contracts" ] [ thead, tbody ]
 
 
 viewKeys : RemoteData Http.Error (List Chain.Key) -> Html Msg

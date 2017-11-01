@@ -39,6 +39,7 @@ type Msg
     | RpcResponse Request.Response
     | SetTableState Table.State
     | SetTransactionTableState Table.State
+    | SetContractTableState Table.State
     | SetQuery String
 
 
@@ -64,7 +65,7 @@ addErrorMaybe errorMaybe model =
 
 updatePage : Page -> Msg -> Model -> ( Model, Cmd Msg )
 updatePage page msg model =
-    case ( Debug.log "update msg" msg, page ) of
+    case ( msg, page ) of
         ( RpcResponse response, _ ) ->
             let
                 ( newModel, cmd, errorMaybe ) =
@@ -197,6 +198,9 @@ updatePage page msg model =
 
         ( SetTransactionTableState tableState, _ ) ->
             ( { model | transactionTableState = tableState }, Cmd.none )
+
+        ( SetContractTableState tableState, _ ) ->
+            ( { model | contractTableState = tableState }, Cmd.none )
 
         ( SetQuery queryString, _ ) ->
             ( { model | query = queryString }, Cmd.none )

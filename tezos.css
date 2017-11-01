@@ -369,3 +369,16 @@ div.transactions-container table td.source {
 table.blockchain th {
     padding: .3em 1em;
 }
+
+div.contracts table td
+, div.contracts table th
+{
+    padding: .3em 1em;
+}
+
+div.contracts table tbody tr td:nth-child(2)
+, div.contracts table tbody tr td:nth-child(4)
+, div.contracts table tbody tr td:nth-child(5)
+{
+    text-align: right;
+}

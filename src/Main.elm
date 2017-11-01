@@ -47,6 +47,7 @@ init flags location =
             , tableState = Table.initialSort "Hash"
             , query = ""
             , transactionTableState = Table.initialSort "time"
+            , contractTableState = Table.initialSort "contract"
             }
 
         -- set initial route based on location bar
