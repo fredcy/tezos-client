@@ -11,6 +11,7 @@ import Set
 import Task
 import Table
 import Time exposing (Time)
+import Api
 import Model exposing (..)
 import Data.Schema as Schema exposing (SchemaData, SchemaName, decodeSchema, collapseTrees)
 import Data.Chain as Chain exposing (Block, BlockID, Operation, OperationID, decodeBlocks)
@@ -31,6 +32,7 @@ type Msg
     | LoadKeys (Result Http.Error (List Chain.Key))
     | LoadPeers (Result Http.Error (List Chain.Peer))
     | LoadContract Chain.ContractID (Result Http.Error Chain.Contract)
+    | LoadBlockOperations Chain.BlockID (Result Http.Error (List Api.OperationGroup))
     | Tick Time
     | SetRoute (Maybe Route)
     | ClearErrors
@@ -111,6 +113,13 @@ updatePage page msg model =
 
                 Err error ->
                     ( { model | errors = HttpError error :: model.errors }, Cmd.none )
+
+        ( LoadBlockOperations blockHash operationGroups, _ ) ->
+            let
+                _ =
+                    Debug.log "LoadBlockOperations" msg
+            in
+                ( model, Cmd.none )
 
         ( LoadContractIDs contractsResult, _ ) ->
             case contractsResult of
@@ -288,6 +297,8 @@ setRoute routeMaybe model =
             , Cmd.batch
                 [ getBlock model hash
                 , Request.getBlockOperationDetails model hash |> Cmd.map RpcResponse
+                , Api.requestBlockOperations model.nodeUrl hash
+                    |> Http.send (LoadBlockOperations hash)
                 ]
             )
 
