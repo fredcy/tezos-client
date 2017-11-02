@@ -61,15 +61,18 @@ handleResponseData responseData model =
                 newModel =
                     { model | chain = Chain.loadBlocks model.chain blocksData }
 
-                blocksToGet =
-                    Chain.blocksNeedingOperations newModel.chain
+                {-
+                   blocksToGet =
+                       Chain.blocksNeedingOperations newModel.chain
 
-                getBlockOperations blockHash =
-                    Request.Operation.getBlockOperations model.nodeUrl blockHash
-                        |> Http.send (Result.map (BlockOperations blockHash))
+                   getBlockOperations blockHash =
+                       Request.Operation.getBlockOperations model.nodeUrl blockHash
+                           |> Http.send (Result.map (BlockOperations blockHash))
+                -}
             in
                 ( newModel
-                , Cmd.batch (List.map getBlockOperations blocksToGet)
+                  --                , Cmd.batch (List.map getBlockOperations blocksToGet)
+                , Cmd.none
                 )
 
         BlockOperations blockid operationsData ->

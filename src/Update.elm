@@ -67,7 +67,7 @@ addErrorMaybe errorMaybe model =
 
 updatePage : Page -> Msg -> Model -> ( Model, Cmd Msg )
 updatePage page msg model =
-    case ( msg, page ) of
+    case ( Debug.log "msg" msg, page ) of
         ( RpcResponse response, _ ) ->
             let
                 ( newModel, cmd, errorMaybe ) =
@@ -304,7 +304,8 @@ setRoute routeMaybe model =
             ( { model | pageState = Loaded (Page.Block hash) }
             , Cmd.batch
                 [ getBlock model hash
-                , Request.getBlockOperationDetails model hash |> Cmd.map RpcResponse
+
+                --, Request.getBlockOperationDetails model hash |> Cmd.map RpcResponse
                 , Api.requestBlockOperations model.nodeUrl hash
                     |> Http.send (LoadBlockOperations hash)
                 ]
@@ -392,7 +393,10 @@ loadBlocks model blocksData =
         newModel =
             { model | chain = newChain }
     in
-        ( newModel, getAllBlocksOperations newModel )
+        ( newModel
+          --, getAllBlocksOperations newModel
+        , Cmd.none
+        )
 
 
 getBlock : Model -> BlockID -> Cmd Msg
@@ -410,6 +414,9 @@ getBlock model hash =
 getAllBlocksOperations : Model -> Cmd Msg
 getAllBlocksOperations model =
     let
+        _ =
+            Debug.crash "getAllBlocksOperations"
+
         blocksToGet =
             Chain.blocksNeedingOperations model.chain
 
@@ -463,18 +470,8 @@ updateMonitor data model =
 
                 Err error ->
                     { model | errors = OtherError error :: model.errors }
-
-        blockHashes =
-            blocksResult
-                |> Result.map (List.concat >> (List.map .hash))
-                |> Result.withDefault []
-
-        cmd =
-            blockHashes
-                |> List.map (Request.getBlockOperationDetails model >> Cmd.map RpcResponse)
-                |> Cmd.batch
     in
-        ( newModel, cmd )
+        ( newModel, Cmd.none )
 
 
 getChainSummary : String -> Cmd Msg

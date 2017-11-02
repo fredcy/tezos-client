@@ -205,7 +205,7 @@ A {
 }
 
 
-td.hash, div.hash, span.hash,
+td.hash, div.hash, span.hash, a.hash,
 td.predecessor, div.predecessor,
 td.baker,
 .property td.branch, .property div.branch,
@@ -384,7 +384,7 @@ div.contracts table tbody tr td:nth-child(2)
 }
 
 tr.operation-group td {
-    padding: .3em 1em;
+    padding: .25em 1em;
 }
 
 span.nonce {

@@ -14,6 +14,9 @@ import Request.Lib
 getBlockOperations : URL -> BlockID -> Http.Request Chain.BlockOperations
 getBlockOperations nodeUrl blockHash =
     let
+        _ =
+            Debug.crash "getBlockOperations"
+
         url =
             nodeUrl ++ "/blocks/" ++ blockHash ++ "/proto/operations"
     in

@@ -25,6 +25,17 @@ type Operation
         { amount : Int
         , destination : String
         }
+    | Origination
+        { manager : String
+        , balance : Int
+        , spendable : Bool
+        , delegatable : Bool
+        }
+    | Delegation { delegate : String }
+    | Faucet
+        { id : String
+        , nonce : String
+        }
     | Unknown Decode.Value
 
 
@@ -60,6 +71,15 @@ decodeOperation =
                     "transaction" ->
                         Decode.field "Operation" decodeTransaction
 
+                    "faucet" ->
+                        Decode.field "Operation" decodeFaucet
+
+                    "origination" ->
+                        Decode.field "Operation" decodeOrigination
+
+                    "delegation" ->
+                        Decode.field "Operation" decodeDelegation
+
                     _ ->
                         Decode.value |> Decode.map Unknown
             )
@@ -79,6 +99,31 @@ decodeTransaction =
         (\amount dest -> Transaction { amount = amount, destination = dest })
         (Decode.field "Amount" Decode.int)
         (Decode.field "Destination" Decode.string)
+
+
+decodeOrigination : Decoder Operation
+decodeOrigination =
+    Decode.map4
+        (\m b s d -> Origination { manager = m, balance = b, spendable = s, delegatable = d })
+        (Decode.field "Manager" Decode.string)
+        (Decode.field "Balance" Decode.int)
+        (Decode.field "Spendable" Decode.bool)
+        (Decode.field "Delegatable" Decode.bool)
+
+
+decodeDelegation : Decoder Operation
+decodeDelegation =
+    Decode.map
+        (\d -> Delegation { delegate = d })
+        (Decode.field "Delegate" Decode.string)
+
+
+decodeFaucet : Decoder Operation
+decodeFaucet =
+    Decode.map2
+        (\id nonce -> Faucet { id = id, nonce = nonce })
+        (Decode.field "Id" Decode.string)
+        (Decode.field "Nonce" Decode.string)
 
 
 decodeSeedNonceRevelation : Decoder Operation
