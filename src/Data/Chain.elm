@@ -9,6 +9,7 @@ import List.Extra
 import ParseInt
 import RemoteData exposing (RemoteData)
 import Set
+import Api
 import Data.Michelson as Michelson
 
 
@@ -216,6 +217,7 @@ type alias Model =
     , accounts : RemoteData Http.Error (List AccountSummary)
     , account : Maybe AccountInfo
     , blockSummaries : List BlockSummary
+    , blockOperationGroups : Dict BlockID (List Api.OperationGroup)
     }
 
 
@@ -233,6 +235,7 @@ init =
     , accounts = RemoteData.NotAsked
     , account = Nothing
     , blockSummaries = []
+    , blockOperationGroups = Dict.empty
     }
 
 

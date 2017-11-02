@@ -22,6 +22,7 @@ import Page
 import Route
 import Update exposing (Msg(..))
 import View.Page
+import View.Block
 import View.Accounts
 import View.AccountTransactions
 import View.Contracts
@@ -382,6 +383,7 @@ viewBlock model block =
                 ]
             , H.h4 [] [ H.text "Operations" ]
             , viewParsedOperations model block.hash
+            , View.Block.viewOperationGroups model block.hash
             ]
 
 

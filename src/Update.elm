@@ -114,12 +114,20 @@ updatePage page msg model =
                 Err error ->
                     ( { model | errors = HttpError error :: model.errors }, Cmd.none )
 
-        ( LoadBlockOperations blockHash operationGroups, _ ) ->
-            let
-                _ =
-                    Debug.log "LoadBlockOperations" msg
-            in
-                ( model, Cmd.none )
+        ( LoadBlockOperations blockHash operationGroupsResult, _ ) ->
+            case operationGroupsResult of
+                Ok operationGroups ->
+                    let
+                        chain =
+                            model.chain
+
+                        newChain =
+                            { chain | blockOperationGroups = Dict.insert blockHash operationGroups chain.blockOperationGroups }
+                    in
+                        ( { model | chain = newChain }, Cmd.none )
+
+                Err error ->
+                    ( { model | errors = HttpError error :: model.errors }, Cmd.none )
 
         ( LoadContractIDs contractsResult, _ ) ->
             case contractsResult of

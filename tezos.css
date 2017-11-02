@@ -382,3 +382,11 @@ div.contracts table tbody tr td:nth-child(2)
 {
     text-align: right;
 }
+
+tr.operation-group td {
+    padding: .3em 1em;
+}
+
+span.nonce {
+    font-size: 80%;
+}
