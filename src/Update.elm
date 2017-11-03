@@ -7,6 +7,7 @@ import Json.Encode as Encode
 import Json.Decode.Pipeline as Decode
 import Http
 import List.Extra as List
+import Process
 import Set
 import Task
 import Table
@@ -211,7 +212,11 @@ updatePage page msg model =
                 , Cmd.batch
                     [ cmd
                     , Task.perform Now Time.now
-                    , getChainSummary model.nodeUrl
+
+                    -- Wait a bit before asking for updated chain because of
+                    -- the race condition between RPC server and API server.
+                    , Request.Block.requestChainSummary model.nodeUrl
+                        |> delayedSend (2 * Time.second) (Result.map Request.ChainSummary >> RpcResponse)
                     ]
                 )
 
@@ -318,7 +323,8 @@ setRoute routeMaybe model =
 
         Just Route.Chain2 ->
             ( { model | pageState = Loaded Page.Chain2 }
-            , getChainSummary model.nodeUrl
+            , Request.Block.requestChainSummary model.nodeUrl
+                |> Http.send (Result.map Request.ChainSummary >> RpcResponse)
             )
 
         Just Route.Contracts ->
@@ -474,7 +480,11 @@ updateMonitor data model =
         ( newModel, Cmd.none )
 
 
-getChainSummary : String -> Cmd Msg
-getChainSummary nodeUrl =
-    Request.Block.requestChainSummary nodeUrl
-        |> Http.send (Result.map Request.ChainSummary >> RpcResponse)
+{-| delayedSend is like Http.send except that it also introduces a delay before
+sending the request
+-}
+delayedSend : Time -> (Result Http.Error a -> msg) -> Http.Request a -> Cmd msg
+delayedSend delay tagger request =
+    Process.sleep delay
+        |> Task.andThen (\() -> Http.toTask request)
+        |> Task.attempt tagger
