@@ -38,6 +38,7 @@ type Msg
     | SetRoute (Maybe Route)
     | ClearErrors
     | Monitor Decode.Value
+    | Monitor2 String
     | Now Time
     | RpcResponse Request.Response
     | SetTableState Table.State
@@ -219,6 +220,12 @@ updatePage page msg model =
                         |> delayedSend (2 * Time.second) (Result.map Request.ChainSummary >> RpcResponse)
                     ]
                 )
+
+        ( Monitor2 message, _ ) ->
+            let
+                _ = Debug.log "montor2" msg
+            in
+                ( model, Cmd.none )
 
         ( SetTableState tableState, _ ) ->
             ( { model | tableState = tableState }, Cmd.none )

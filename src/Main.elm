@@ -9,6 +9,7 @@ import Navigation
 import Route exposing (Route)
 import Table
 import Time
+import WebSocket
 import Data.Chain
 import Model exposing (..)
 import Page
@@ -72,6 +73,7 @@ subscriptions model =
         [ Time.every (10 * Time.minute) Tick
         , Time.every (30 * Time.second) Now
         , monitor Monitor
+        , WebSocket.listen "ws://mail.yankowski.com:4080/monitor" Monitor2
         ]
 
 
