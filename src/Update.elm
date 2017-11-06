@@ -222,10 +222,13 @@ updatePage page msg model =
                 )
 
         ( Monitor2 message, _ ) ->
-            let
-                _ = Debug.log "montor2" msg
-            in
-                ( model, Cmd.none )
+            ( model
+            , Cmd.batch
+                [ Task.perform Now Time.now
+                , Request.Block.requestChainSummary model.nodeUrl
+                    |> Http.send (Result.map Request.ChainSummary >> RpcResponse)
+                ]
+            )
 
         ( SetTableState tableState, _ ) ->
             ( { model | tableState = tableState }, Cmd.none )

@@ -107,5 +107,6 @@
     // Keep state on stream received so far, up through latest complete chunk.
     var lengthParsed = 0;
 
-    sendRequest();
+    // TODO -- temporarily stuffed off?
+    //sendRequest();
 })();
