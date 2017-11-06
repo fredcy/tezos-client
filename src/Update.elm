@@ -299,6 +299,9 @@ toPage route =
             Page.About
 
 
+{-| Given a route, set the page state and make any requests needed to get data
+for the page.
+-}
 setRoute : Maybe Route -> Model -> ( Model, Cmd Msg )
 setRoute routeMaybe model =
     case routeMaybe of
@@ -319,6 +322,11 @@ setRoute routeMaybe model =
                 , Api.requestBlockOperations model.nodeUrl hash
                     |> Http.send (LoadBlockOperations hash)
                 ]
+            )
+
+        Just Route.Heads ->
+            ( { model | pageState = Loaded Page.Heads }
+            , Request.Block.getHeads model.nodeUrl |> Http.send (Result.map Request.Heads >> RpcResponse)
             )
 
         Just (Route.ChainAt hash) ->
