@@ -21,6 +21,7 @@ import View.Page
 import View.Block
 import View.Accounts
 import View.AccountTransactions
+import View.Chain
 import View.Contracts
 import View.Field exposing (formatCentiles, formatDate, shortHash)
 
@@ -37,7 +38,7 @@ view model =
         content =
             case model.pageState of
                 Loaded Page.Home ->
-                    viewChain2 model
+                    viewHome model
 
                 Loaded Page.Blank ->
                     H.text ""
@@ -103,19 +104,10 @@ view model =
 
 viewHome : Model -> Html Msg
 viewHome model =
-    let
-        headMaybe =
-            List.head model.chain.heads
-    in
-        case headMaybe of
-            Just head ->
-                H.div []
-                    [ H.h2 [] [ H.text "Newest blocks" ]
-                    , oldViewHome model head
-                    ]
-
-            Nothing ->
-                H.text "no head found yet ..."
+    H.div []
+        [ H.h2 [] [ H.text "Newest blocks" ]
+        , View.Chain.view model.now model.chain
+        ]
 
 
 oldViewHome : Model -> BlockID -> Html Msg
@@ -235,50 +227,6 @@ viewBranch howMany model blockhashMaybe branch =
                     ]
                 ]
             ]
-
-
-viewChainSummary : Date -> List Chain.BlockSummary -> Html Msg
-viewChainSummary now blockSummaries =
-    let
-        thead =
-            H.thead []
-                [ H.tr []
-                    [ H.th [] [ H.text "level" ]
-                    , H.th [] [ H.text "hash" ]
-                    , H.th [] [ H.text "timestamp" ]
-                    , H.th [ HA.class "timestamp" ] [ H.text "age" ]
-                    , H.th [] [ H.text "ops" ]
-                    , H.th [] [ H.text "priority" ]
-                    , H.th [] [ H.text "baker" ]
-                    ]
-                ]
-    in
-        H.table [ HA.class "blockchain" ]
-            [ thead
-            , H.tbody [] (List.map (viewBlockSummary now) blockSummaries)
-            ]
-
-
-viewBlockSummary : Date -> Chain.BlockSummary -> Html Msg
-viewBlockSummary now bs =
-    H.tr [ HA.class "block" ]
-        [ H.td [] [ H.text (toString bs.level) ]
-        , H.td
-            [ HA.class "hash"
-            , HA.title bs.hash
-            ]
-            [ H.a [ Route.href (Route.Block bs.hash) ] [ H.text (shortHash bs.hash) ] ]
-        , H.td [ HA.class "timestamp" ]
-            [ H.text (formatDate bs.timestamp) ]
-        , H.td [ HA.class "age" ]
-            [ H.text (Date.Distance.inWords now bs.timestamp) ]
-        , H.td [ HA.class "operation-count" ]
-            [ H.text (toString bs.opCount) ]
-        , H.td [ HA.class "priority number" ]
-            [ H.text (toString bs.priority) ]
-        , H.td [ HA.class "baker", HA.title bs.baker ]
-            [ H.text (shortHash bs.baker) ]
-        ]
 
 
 blockOperationCount : Model -> Block -> String
@@ -483,14 +431,6 @@ viewChainAt model hash =
         [ H.h3 [] [ H.text ("Chain at " ++ shortHash hash) ]
         , getBranchList model.chain hash
             |> viewBranch 24 model (Just hash)
-        ]
-
-
-viewChain2 : Model -> Html Msg
-viewChain2 model =
-    H.div []
-        [ H.h3 [] [ H.text "Newest Blocks" ]
-        , viewChainSummary model.now model.chain.blockSummaries
         ]
 
 

@@ -37,7 +37,20 @@ view tableState query accounts =
         H.div [ HA.class "accounts-table-container" ]
             [ H.input [ HA.placeholder "search by hash", HA.class "query", HE.onInput SetQuery ] []
             , Table.view config tableState accountsToShow
+            , footer
             ]
+
+
+footer : Html msg
+footer =
+    H.div [ HA.class "footer" ]
+        [ H.hr [] []
+        , H.p []
+            [ H.text """This displays all accounts that have participated in at
+            least one transaction operation as source or destination. It does
+            not include implicit transactions that occur within a contract."""
+            ]
+        ]
 
 
 tezColumn : String -> (AccountSummary -> Int) -> Table.Column AccountSummary msg
