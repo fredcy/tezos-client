@@ -1,19 +1,17 @@
-port module Main exposing (main)
+module Main exposing (main)
 
-import Html
 import Http
 import Date
-import Json.Decode as Decode
 import Dict
 import Navigation
-import Route exposing (Route)
+import Route
 import Table
 import Time
 import WebSocket
 import Data.Chain
-import Model exposing (..)
+import Model exposing (Model, PageState(Loaded))
 import Page
-import Update exposing (update, Msg(..))
+import Update exposing (update, Msg(Monitor2, Now, RpcResponse, SetRoute, Tick))
 import View exposing (view)
 import Request
 import Request.Block
@@ -57,10 +55,7 @@ init flags location =
     in
         ( routedModel
         , Cmd.batch
-            [ {- Request.Block.getHeads routedModel.nodeUrl
-                 |> Http.send (Result.map Request.Heads >> RpcResponse)
-              -}
-              Request.Block.requestChainSummary routedModel.nodeUrl
+            [ Request.Block.requestChainSummary routedModel.nodeUrl
                 |> Http.send (Result.map Request.ChainSummary >> RpcResponse)
             , routeCmd
             ]
@@ -72,9 +67,5 @@ subscriptions model =
     Sub.batch
         [ Time.every (10 * Time.minute) Tick
         , Time.every (30 * Time.second) Now
-        , monitor Monitor
         , WebSocket.listen "ws://mail.yankowski.com:4080/monitor" Monitor2
         ]
-
-
-port monitor : (Decode.Value -> msg) -> Sub msg

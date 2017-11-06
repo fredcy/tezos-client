@@ -1,4 +1,4 @@
-module Request.Schema exposing (..)
+module Request.Schema exposing (getSchema)
 
 import Http
 import Json.Encode as Encode

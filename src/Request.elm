@@ -1,10 +1,8 @@
-module Request exposing (..)
+module Request exposing (Response, ResponseData(..), getBranch, handleResponse)
 
 import Http
-import Json.Decode as Decode
 import Data.Chain as Chain
 import Request.Block
-import Request.Operation
 
 
 type alias Model base =
@@ -60,20 +58,8 @@ handleResponseData responseData model =
             let
                 newModel =
                     { model | chain = Chain.loadBlocks model.chain blocksData }
-
-                {-
-                   blocksToGet =
-                       Chain.blocksNeedingOperations newModel.chain
-
-                   getBlockOperations blockHash =
-                       Request.Operation.getBlockOperations model.nodeUrl blockHash
-                           |> Http.send (Result.map (BlockOperations blockHash))
-                -}
             in
-                ( newModel
-                  --                , Cmd.batch (List.map getBlockOperations blocksToGet)
-                , Cmd.none
-                )
+                ( newModel, Cmd.none )
 
         BlockOperations blockid operationsData ->
             ( { model | chain = Chain.addBlockOperations model.chain blockid operationsData }
@@ -102,15 +88,6 @@ handleResponseData responseData model =
             ( { model | chain = Chain.loadBlockSummaries model.chain blockSummaries }
             , Cmd.none
             )
-
-
-getBlockOperationDetails : Model b -> Chain.BlockID -> Cmd Response
-getBlockOperationDetails model blockHash =
-    if Chain.blockNeedsOperations model.chain blockHash then
-        Request.Operation.getBlockOperations model.nodeUrl blockHash
-            |> Http.send (Result.map (BlockOperations blockHash))
-    else
-        Cmd.none
 
 
 {-| Request chain starting at given block (hash) if necessary. If we already

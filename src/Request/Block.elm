@@ -1,4 +1,4 @@
-module Request.Block exposing (..)
+module Request.Block exposing (getContract, getContractIDs, getChainStartingAt, getHeads, getKeys, getPeers, requestAccounts, requestChainSummary, requestTransactions)
 
 import Json.Encode as Encode
 import Json.Decode as Decode
@@ -84,18 +84,16 @@ getContract nodeUrl contractId =
             , withCredentials = False
             }
 
-getHead : URL -> Http.Request Chain.Block
-getHead nodeUrl =
-    Http.get (nodeUrl ++ "/api/head") Chain.decodeBlock2
-
 
 requestAccounts : URL -> Http.Request (List Chain.AccountSummary)
 requestAccounts nodeUrl =
     Http.get (nodeUrl ++ "/api/accounts") (Decode.list Chain.decodeAccountSummary)
 
+
 requestTransactions : URL -> Chain.AccountID -> Http.Request (List Chain.TransactionSummary)
 requestTransactions nodeUrl accountHash =
     Http.get (nodeUrl ++ "/api/account/" ++ accountHash) (Decode.list Chain.decodeTransaction)
+
 
 requestChainSummary : URL -> Http.Request (List Chain.BlockSummary)
 requestChainSummary nodeUrl =

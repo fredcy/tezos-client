@@ -1,26 +1,23 @@
 module Update exposing (update, Msg(..), setRoute, toPage)
 
 import Date
-import Dict exposing (Dict)
+import Dict
 import Json.Decode as Decode
-import Json.Encode as Encode
 import Json.Decode.Pipeline as Decode
 import Http
 import List.Extra as List
 import Process
-import Set
 import Task
 import Table
 import Time exposing (Time)
 import Api
-import Model exposing (..)
-import Data.Schema as Schema exposing (SchemaData, SchemaName, decodeSchema, collapseTrees)
-import Data.Chain as Chain exposing (Block, BlockID, Operation, OperationID, decodeBlocks)
+import Model exposing (Error(HttpError, OtherError), Model, PageState(Loaded), getPage)
+import Data.Schema as Schema exposing (SchemaData, SchemaName, collapseTrees)
+import Data.Chain as Chain exposing (BlockID, OperationID, decodeBlocks)
 import Data.Request exposing (URL)
 import Page exposing (Page)
 import Request
 import Request.Block
-import Request.Operation
 import Request.Schema exposing (getSchema)
 import Route exposing (Route)
 
@@ -87,11 +84,11 @@ updatePage page msg model =
                 Err error ->
                     ( { model | errors = HttpError error :: model.errors }, Cmd.none )
 
-        ( SchemaMsg name msg, _ ) ->
+        ( SchemaMsg name smsg, _ ) ->
             let
                 newSchemaMaybe : Maybe SchemaData
                 newSchemaMaybe =
-                    Dict.get name model.schemaData |> Maybe.map (Schema.update msg)
+                    Dict.get name model.schemaData |> Maybe.map (Schema.update smsg)
             in
                 case newSchemaMaybe of
                     Just newSchema ->
@@ -221,7 +218,7 @@ updatePage page msg model =
                     ]
                 )
 
-        ( Monitor2 message, _ ) ->
+        ( Monitor2 _, _ ) ->
             ( model
             , Cmd.batch
                 [ Task.perform Now Time.now
@@ -319,8 +316,6 @@ setRoute routeMaybe model =
             ( { model | pageState = Loaded (Page.Block hash) }
             , Cmd.batch
                 [ getBlock model hash
-
-                --, Request.getBlockOperationDetails model hash |> Cmd.map RpcResponse
                 , Api.requestBlockOperations model.nodeUrl hash
                     |> Http.send (LoadBlockOperations hash)
                 ]
@@ -400,21 +395,6 @@ setRoute routeMaybe model =
             ( { model | pageState = Loaded (toPage route) }, Cmd.none )
 
 
-loadBlocks : Model -> Chain.BlocksData -> ( Model, Cmd Msg )
-loadBlocks model blocksData =
-    let
-        newChain =
-            Chain.loadBlocks model.chain blocksData
-
-        newModel =
-            { model | chain = newChain }
-    in
-        ( newModel
-          --, getAllBlocksOperations newModel
-        , Cmd.none
-        )
-
-
 getBlock : Model -> BlockID -> Cmd Msg
 getBlock model hash =
     case Dict.get hash model.chain.blocks of
@@ -425,22 +405,6 @@ getBlock model hash =
 
         _ ->
             Cmd.none
-
-
-getAllBlocksOperations : Model -> Cmd Msg
-getAllBlocksOperations model =
-    let
-        _ =
-            Debug.crash "getAllBlocksOperations"
-
-        blocksToGet =
-            Chain.blocksNeedingOperations model.chain
-
-        getBlockOperations blockHash =
-            Request.Operation.getBlockOperations model.nodeUrl blockHash
-                |> Http.send (Result.map (Request.BlockOperations blockHash) >> RpcResponse)
-    in
-        Cmd.batch (List.map getBlockOperations blocksToGet)
 
 
 getContractIDs : Model -> Cmd Msg

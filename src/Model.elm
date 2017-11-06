@@ -1,11 +1,10 @@
-module Model exposing (..)
+module Model exposing (Error(HttpError, OtherError), PageState(Loaded), Model, getPage)
 
 import Date exposing (Date)
-import Dict exposing (Dict)
 import Http
 import Table
 import Data.Schema as Schema
-import Data.Chain as Chain exposing (BlockID, OperationID)
+import Data.Chain as Chain
 import Page exposing (Page)
 
 

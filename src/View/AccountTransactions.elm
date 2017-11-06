@@ -1,13 +1,12 @@
-module View.AccountTransactions exposing (..)
+module View.AccountTransactions exposing (view)
 
-import Date exposing (Date)
+import Date
 import Html as H exposing (Html)
 import Html.Attributes as HA
-import Html.Events as HE
 import Table
 import Data.Chain as Chain exposing (TransactionSummary)
-import Update exposing (Msg, Msg(SetTransactionTableState, SetQuery))
-import View.Field as VF exposing (formatDate, shortHash, formatCentiles)
+import Update exposing (Msg(SetTransactionTableState))
+import View.Field as VF exposing (formatDate, shortHash)
 import Route
 
 
@@ -89,14 +88,6 @@ formatSum i =
 
         _ ->
             VF.formatCentiles i
-
-
-formatCount : Int -> String
-formatCount c =
-    if c == 0 then
-        "."
-    else
-        toString c
 
 
 viewHash : Chain.AccountID -> Table.HtmlDetails msg

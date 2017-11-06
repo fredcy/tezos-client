@@ -1,4 +1,4 @@
-module Data.Request exposing (..)
+module Data.Request exposing (URL, emptyJsonBody)
 
 import Http
 import Json.Encode as Encode

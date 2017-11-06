@@ -1,4 +1,4 @@
-module View.Field exposing (..)
+module View.Field exposing (formatCentiles, formatDate, shortHash)
 
 import Date exposing (Date)
 import Date.Extra.Format
@@ -6,6 +6,7 @@ import Date.Extra.Config.Config_en_us
 import FormatNumber
 import FormatNumber.Locales
 import Data.Chain as Chain
+
 
 formatCentiles : Int -> String
 formatCentiles number =
@@ -20,6 +21,7 @@ formatCentiles number =
 formatDate : Date -> String
 formatDate date =
     Date.Extra.Format.formatUtc Date.Extra.Config.Config_en_us.config "%Y-%m-%dT%H:%M:%SZ" date
+
 
 shortHash : Chain.Base58CheckEncodedSHA256 -> String
 shortHash hash =

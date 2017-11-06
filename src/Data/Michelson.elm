@@ -1,4 +1,4 @@
-module Data.Michelson exposing (..)
+module Data.Michelson exposing (AST(..), Program, Script, decodeScript)
 
 import Json.Decode as Decode
 import Json.Decode.Pipeline as Decode

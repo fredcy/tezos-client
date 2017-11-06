@@ -1,4 +1,4 @@
-module Data.Chain exposing (..)
+module Data.Chain exposing (AccountID, AccountSummary, Address, Base58CheckEncodedSHA256, Block, BlockID, BlockOperations, BlockSummary, BlocksData, Connection, Contract, ContractID, Fitness, Key, Model, Operation, OperationID, ParsedOperation, Peer, SourceID, SubOperation(..), TransactionSummary, addBlockOperations, blockNeedsOperations, blocksNeedingOperations, contractHasData, decodeAccountSummary, decodeBlock2, decodeBlockSummary, decodeBlocks, decodeContractIDs, decodeContractResponse, decodeKeys, decodePeers, decodeTransaction, getBranchList, init, loadBlockSummaries, loadBlocks, loadContract, loadContractError, loadContractIDs, loadContractIDsError, loadHeads, loadKeys, loadKeysError, loadParsedOperation, loadPeers, loadPeersError, loadingContract, loadingContractIDs, loadingKeys, loadingPeers, setAccountInfo, setAccountSummaries, updateMonitor)
 
 import Date exposing (Date)
 import Dict exposing (Dict)
@@ -402,11 +402,6 @@ addChainBlocks chain blocks =
     List.foldl addBlock blocks chain
 
 
-head : Model -> Maybe BlockID
-head model =
-    List.head model.heads
-
-
 {-| Get list of saved blocks starting with the block with given hash and
 following predecessor links. This only finds blocks already in the dict.
 -}
@@ -430,15 +425,6 @@ getBranchList model blockhash =
                         blockList
     in
         helper blockhash [] |> List.reverse
-
-
-loadOperation : Model -> Operation -> Model
-loadOperation model operation =
-    let
-        newOperations =
-            Dict.insert operation.hash operation model.operations
-    in
-        { model | operations = newOperations }
 
 
 loadParsedOperation : Model -> OperationID -> ParsedOperation -> Model
@@ -592,11 +578,6 @@ decodeTimestamp =
                     Err error ->
                         Decode.fail error
             )
-
-
-decodeLevel : Decode.Decoder Int
-decodeLevel =
-    Decode.at [ "ok", "level" ] Decode.int
 
 
 decodeContractIDs : Decode.Decoder (List ContractID)

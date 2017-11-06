@@ -1,21 +1,16 @@
-module View.Contracts exposing (..)
+module View.Contracts exposing (view)
 
 import Dict exposing (Dict)
 import Html as H exposing (Html)
 import Html.Attributes as HA
-import Html.Events as HE
 import Http
 import RemoteData exposing (RemoteData)
 import Table
-import Data.Chain as Chain exposing (ContractID, Contract)
+import Data.Chain exposing (ContractID, Contract)
 import Data.Michelson as Michelson
-import Update exposing (Msg, Msg(SetContractTableState))
-import View.Field as VF exposing (shortHash, formatCentiles)
+import Update exposing (Msg(SetContractTableState))
+import View.Field exposing (shortHash, formatCentiles)
 import Route
-
-
-type alias ContractInfo =
-    ( ContractID, RemoteData Http.Error Contract )
 
 
 type alias ContractView =

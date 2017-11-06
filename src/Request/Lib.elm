@@ -1,4 +1,4 @@
-module Request.Lib exposing (..)
+module Request.Lib exposing (decodeDebug)
 
 import Json.Decode as Decode
 

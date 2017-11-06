@@ -1,14 +1,14 @@
-module View.Block exposing (..)
+module View.Block exposing (viewOperationGroups)
 
 import Dict
 import Html as H exposing (Html)
 import Html.Attributes as HA
 import Api
-import Data.Chain as Chain exposing (BlockID)
+import Data.Chain exposing (BlockID)
 import Model exposing (Model)
 import Route
-import Update exposing (Msg(..))
-import View.Field as VF exposing (shortHash, formatCentiles)
+import Update exposing (Msg)
+import View.Field exposing (shortHash, formatCentiles)
 
 
 viewOperationGroups : Model -> BlockID -> Html Msg
@@ -62,15 +62,15 @@ viewOperation operation =
     case operation of
         Api.Endorsement { block, slot } ->
             H.span []
-                [ H.text ("Endorsement of ")
+                [ H.text "Endorsement of "
                 , H.a [ Route.href (Route.Block block), HA.title block, HA.class "hash" ]
                     [ H.text (shortHash block) ]
-                , H.text (", slot " ++ (toString slot))
+                , H.text (", slot " ++ toString slot)
                 ]
 
         Api.SeedNonceRevelation { level, nonce } ->
             H.span []
-                [ H.text ("SeedNonceRevelation at level " ++ (toString level) ++ " with nonce ")
+                [ H.text ("SeedNonceRevelation at level " ++ toString level ++ " with nonce ")
                 , H.span [ HA.class "hash nonce" ] [ H.text nonce ]
                 ]
 
@@ -94,7 +94,7 @@ viewOperation operation =
                 , H.span [ HA.class "hash nonce" ] [ H.text nonce ]
                 ]
 
-        Api.Delegation { delegate } ->
+        Api.Delegation delegate ->
             H.span []
                 [ H.text "Delegation to "
                 , H.a [ Route.href (Route.Account delegate), HA.title delegate, HA.class "hash" ]

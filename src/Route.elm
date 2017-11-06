@@ -2,9 +2,9 @@ module Route exposing (Route(..), fromLocation, href, modifyUrl, newUrl)
 
 import Html as H
 import Html.Attributes as HA
-import UrlParser as Url exposing (parseHash, s, (</>), string, oneOf, Parser)
+import UrlParser as Url exposing (parseHash, s, (</>), Parser)
 import Navigation exposing (Location)
-import Data.Chain as Chain exposing (BlockID, OperationID, ContractID, AccountID)
+import Data.Chain exposing (BlockID, OperationID, ContractID, AccountID)
 
 
 type Route
@@ -106,9 +106,8 @@ routeToString route =
 
                 Account accountId ->
                     [ "account", accountId ]
-
     in
-        "#/" ++ (String.join "/" pieces)
+        "#/" ++ String.join "/" pieces
 
 
 href : Route -> H.Attribute msg

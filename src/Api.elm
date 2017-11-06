@@ -1,4 +1,4 @@
-module Api exposing (..)
+module Api exposing (OperationGroup, Operation(..), requestBlockOperations)
 
 import Http
 import Json.Decode as Decode exposing (Decoder)
@@ -31,16 +31,12 @@ type Operation
         , spendable : Bool
         , delegatable : Bool
         }
-    | Delegation { delegate : String }
+    | Delegation String
     | Faucet
         { id : String
         , nonce : String
         }
     | Unknown Decode.Value
-
-
-example =
-    Endorsement { block = "foo", slot = 42 }
 
 
 requestBlockOperations : String -> String -> Http.Request (List OperationGroup)
@@ -113,8 +109,7 @@ decodeOrigination =
 
 decodeDelegation : Decoder Operation
 decodeDelegation =
-    Decode.map
-        (\d -> Delegation { delegate = d })
+    Decode.map Delegation
         (Decode.field "Delegate" Decode.string)
 
 

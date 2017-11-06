@@ -68,16 +68,6 @@ makeObject fields =
         SchemaObject (Dict.fromList fieldsWithVisible)
 
 
-viewSchemaDataRaw : Maybe SchemaData -> Html Msg
-viewSchemaDataRaw schemaDataMaybe =
-    case schemaDataMaybe of
-        Just schemaData ->
-            H.pre [ HA.style [ ( "white-space", "pre-wrap" ) ] ] [ H.text (toString schemaData) ]
-
-        Nothing ->
-            H.text "[no schema data]"
-
-
 viewSchemaDataTop : String -> SchemaData -> Html Msg
 viewSchemaDataTop schemaQuery data =
     H.div [ HA.class "schemadata" ]
@@ -138,6 +128,7 @@ viewSchemaObject context properties =
             (Dict.toList properties |> List.map viewField)
 
 
+listGlyph : Html msg
 listGlyph =
     let
         bulletString =
@@ -146,6 +137,7 @@ listGlyph =
         H.span [ HA.class "bullet" ] [ H.text bulletString ]
 
 
+viewSchemaList : Context -> List ( Visibility, SchemaData ) -> Html Msg
 viewSchemaList context items =
     let
         viewItem i ( visible, item ) =
@@ -176,9 +168,9 @@ update msg schemaData =
 
 
 {-| Change the visibility flag for a particular field in the schema. The
-    `context` is a path of field names and list indexes down from the root of
-    the input schema, the list head being the root (the reverse of how the path
-    info is collected).
+`context` is a path of field names and list indexes down from the root of
+the input schema, the list head being the root (the reverse of how the path
+info is collected).
 -}
 toggleVisible : Context -> SchemaData -> SchemaData
 toggleVisible context schemaData =
@@ -247,22 +239,24 @@ schemaError msg data =
         data
 
 
-mapSchemaData : (( Visibility, SchemaData ) -> ( Visibility, SchemaData )) -> SchemaData -> SchemaData
-mapSchemaData fn schemaData =
-    case schemaData of
-        SchemaObject itemDict ->
-            SchemaObject (Dict.map (\_ ( v, s ) -> fn ( v, (mapSchemaData fn s) )) itemDict)
 
-        SchemaList itemList ->
-            SchemaList (List.map (\( v, s ) -> fn ( v, (mapSchemaData fn s) )) itemList)
+{-
+   mapSchemaData : (( Visibility, SchemaData ) -> ( Visibility, SchemaData )) -> SchemaData -> SchemaData
+   mapSchemaData fn schemaData =
+       case schemaData of
+           SchemaObject itemDict ->
+               SchemaObject (Dict.map (\_ ( v, s ) -> fn ( v, mapSchemaData fn s )) itemDict)
 
-        _ ->
-            schemaData
+           SchemaList itemList ->
+               SchemaList (List.map (\( v, s ) -> fn ( v, mapSchemaData fn s )) itemList)
 
+           _ ->
+               schemaData
 
-collapseAll : SchemaData -> SchemaData
-collapseAll schemaData =
-    mapSchemaData (\( _, s ) -> ( False, s )) schemaData
+      collapseAll : SchemaData -> SchemaData
+      collapseAll schemaData =
+          mapSchemaData (\( _, s ) -> ( False, s )) schemaData
+-}
 
 
 objectMap : String -> ( Visibility, SchemaData ) -> ( Visibility, SchemaData )

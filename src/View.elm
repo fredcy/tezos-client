@@ -2,31 +2,27 @@ module View exposing (view)
 
 import Date exposing (Date)
 import Date.Distance
-import FormatNumber
-import FormatNumber.Locales
 import Html as H exposing (Html)
 import Html.Attributes as HA
 import Html.Events as HE
 import Http
 import Dict exposing (Dict)
 import List.Extra as List
-import ParseInt
 import Regex
 import RemoteData exposing (RemoteData)
-import Table
-import Data.Chain as Chain exposing (BlockID, Block, Contract, ContractID, OperationID, ParsedOperation, Base58CheckEncodedSHA256, SubOperation(..), getBranchList)
+import Data.Chain as Chain exposing (BlockID, Block, Contract, ContractID, OperationID, ParsedOperation, SubOperation(..), getBranchList)
 import Data.Schema as Schema
 import Data.Michelson as Michelson
-import Model exposing (..)
+import Model exposing (Error(HttpError), Model, PageState(Loaded))
 import Page
 import Route
-import Update exposing (Msg(..))
+import Update exposing (Msg(ClearErrors, SchemaMsg))
 import View.Page
 import View.Block
 import View.Accounts
 import View.AccountTransactions
 import View.Contracts
-import View.Field as VF exposing (formatDate, shortHash)
+import View.Field exposing (formatCentiles, formatDate, shortHash)
 
 
 view : Model -> Html Msg
@@ -140,14 +136,6 @@ viewSchemas schemas =
                 |> Maybe.withDefault (H.text "failed to get schema from dict")
     in
         H.div [] (List.map viewSchema names)
-
-
-viewHeader : String -> Html Msg
-viewHeader nodeUrl =
-    H.div []
-        [ H.h1 [] [ H.text "Tezos Explorer" ]
-        , H.div [] [ H.text ("Connecting to Tezos RPC server " ++ nodeUrl) ]
-        ]
 
 
 canonFitness : Chain.Fitness -> Chain.Fitness
@@ -305,7 +293,7 @@ blockOperationCount model block =
 
 
 viewBlock2 : Model -> Maybe BlockID -> Int -> Block -> Html Msg
-viewBlock2 model blockhashMaybe n block =
+viewBlock2 model _ _ block =
     H.tr [ HA.class "block" ]
         [ H.td [] [ H.text (toString block.level) ]
         , H.td
@@ -358,15 +346,6 @@ viewBlock model block =
         viewPropertyList : String -> List String -> Html Msg
         viewPropertyList label values =
             viewProperty label (List.intersperse ", " values |> String.concat |> H.text)
-
-        viewOperations : Block -> Html Msg
-        viewOperations block =
-            case block.operations of
-                Just operations ->
-                    viewPropertyList "operations" (List.concat operations |> List.map shortHash)
-
-                Nothing ->
-                    viewPropertyString "operations" "[unknown]"
     in
         H.div [ HA.class "block" ]
             [ H.h3 []
@@ -386,33 +365,6 @@ viewBlock model block =
             --, viewParsedOperations model block.hash
             , View.Block.viewOperationGroups model block.hash
             ]
-
-
-viewParsedOperations : Model -> BlockID -> Html Msg
-viewParsedOperations model blockId =
-    let
-        operationIDs : List OperationID
-        operationIDs =
-            Dict.get blockId model.chain.blockOperations
-                |> Maybe.withDefault []
-
-        operations : List ParsedOperation
-        operations =
-            operationIDs
-                |> List.map (\oid -> Dict.get oid model.chain.parsedOperations)
-                |> List.filterMap identity
-    in
-        viewOperationsTable operations
-
-
-viewShowBlockOperations : Dict BlockID (List ParsedOperation) -> Maybe BlockID -> Html Msg
-viewShowBlockOperations blockOperations hashMaybe =
-    case hashMaybe of
-        Just hash ->
-            Dict.get hash blockOperations |> Maybe.map viewOperations |> Maybe.withDefault (H.text "")
-
-        Nothing ->
-            H.text ""
 
 
 viewOperation : Model -> OperationID -> Html Msg
@@ -444,28 +396,6 @@ viewOperation model operationId =
             ]
 
 
-{-| Format Int value with a thousands separator.
--}
-formatInt : Int -> String
-formatInt number =
-    let
-        usLocale =
-            FormatNumber.Locales.usLocale
-    in
-        toFloat number
-            |> FormatNumber.format { usLocale | decimals = 0 }
-
-
-formatCentiles : Int -> String
-formatCentiles number =
-    let
-        usLocale =
-            FormatNumber.Locales.usLocale
-    in
-        (toFloat number / 100)
-            |> FormatNumber.format { usLocale | decimals = 2 }
-
-
 viewSuboperation : SubOperation -> Html Msg
 viewSuboperation suboperation =
     case suboperation of
@@ -473,7 +403,7 @@ viewSuboperation suboperation =
             H.span []
                 [ H.text "Endorsement of "
                 , H.span [ HA.class "hash" ] [ H.text (shortHash blockid) ]
-                , H.text (", slot " ++ (toString int))
+                , H.text (", slot " ++ toString int)
                 ]
 
         Transaction address amount ->
@@ -493,14 +423,6 @@ viewSuboperation suboperation =
 
         _ ->
             H.text (toString suboperation)
-
-
-viewOperations : List ParsedOperation -> Html Msg
-viewOperations operations =
-    H.div []
-        [ H.h3 [] [ H.text "Operations" ]
-        , viewOperationsTable operations
-        ]
 
 
 viewOperationsTable : List ParsedOperation -> Html Msg
@@ -558,7 +480,7 @@ viewAllOperations model =
 viewChainAt : Model -> BlockID -> Html Msg
 viewChainAt model hash =
     H.div []
-        [ H.h3 [] [ H.text ("Chain at " ++ (shortHash hash)) ]
+        [ H.h3 [] [ H.text ("Chain at " ++ shortHash hash) ]
         , getBranchList model.chain hash
             |> viewBranch 24 model (Just hash)
         ]
@@ -578,7 +500,6 @@ viewAccounts model =
         [ H.h3 [] [ H.text "Accounts" ]
         , case model.chain.accounts of
             RemoteData.Success accounts ->
-                --viewAccountTable accounts
                 View.Accounts.view model.tableState model.query accounts
 
             RemoteData.NotAsked ->
@@ -589,57 +510,23 @@ viewAccounts model =
         ]
 
 
-viewAccountTable : List Chain.AccountSummary -> Html Msg
-viewAccountTable accounts =
-    let
-        thead =
-            H.thead []
-                [ H.tr []
-                    [ H.th [] [ H.text "" ]
-                    , H.th [ HA.colspan 2 ] [ H.text "source (debit)" ]
-                    , H.th [ HA.colspan 2 ] [ H.text "destination (credit)" ]
-                    ]
-                , H.tr []
-                    [ H.th [] [ H.text "account hash" ]
-                    , H.th [] [ H.text "count" ]
-                    , H.th [] [ H.text "sum (ꜩ)" ]
-                    , H.th [] [ H.text "count" ]
-                    , H.th [] [ H.text "sum (ꜩ)" ]
-                    ]
-                ]
-
-        row a =
-            H.tr []
-                [ H.td [ HA.class "hash" ]
-                    [ H.a
-                        [ Route.href (Route.Account a.hash) ]
-                        [ H.text a.hash ]
-                    ]
-                , H.td [ HA.class "number" ] [ H.text (toString a.sourceCount) ]
-                , H.td [ HA.class "number" ] [ H.text (formatCentiles a.sourceSum) ]
-                , H.td [ HA.class "number" ] [ H.text (toString a.destCount) ]
-                , H.td [ HA.class "number" ] [ H.text (formatCentiles a.destSum) ]
-                ]
-    in
-        H.div []
-            [ H.p [] [ H.text "This summarizes all the accounts that have participated in transactions." ]
-            , H.table [ HA.class "accounts" ]
-                [ thead
-                , H.tbody [] (List.map row accounts)
-                ]
-            ]
-
-
 viewAccount : Model -> Chain.AccountID -> Html Msg
 viewAccount model accountHash =
     H.div []
         [ H.h3 [] [ H.text ("Account " ++ accountHash) ]
         , case model.chain.account of
             Just { hash, transactions } ->
-                H.div []
-                    [ H.h4 [] [ H.text "Transactions" ]
-                    , View.AccountTransactions.view accountHash model.transactionTableState transactions
-                    ]
+                let
+                    _ =
+                        if hash == accountHash then
+                            []
+                        else
+                            Debug.log "error: account hash mismatch" [ accountHash, hash ]
+                in
+                    H.div []
+                        [ H.h4 [] [ H.text "Transactions" ]
+                        , View.AccountTransactions.view accountHash model.transactionTableState transactions
+                        ]
 
             _ ->
                 H.div [] [ H.text "loading account data ..." ]
@@ -704,7 +591,7 @@ viewKeyList keys =
                     ]
                 ]
 
-        tableBody keys =
+        tableBody =
             H.tbody [] (List.map tableRow keys)
 
         tableRow key =
@@ -713,7 +600,7 @@ viewKeyList keys =
                 , H.td [] [ H.span [ HA.class "hash" ] [ H.text key.public_key ] ]
                 ]
     in
-        H.table [ HA.class "keys" ] [ tableHead, tableBody keys ]
+        H.table [ HA.class "keys" ] [ tableHead, tableBody ]
 
 
 viewPeers : RemoteData Http.Error (List Chain.Peer) -> Html Msg
@@ -814,14 +701,6 @@ viewContract contractId contracts =
                     )
                 ]
 
-        viewScript scriptMaybe =
-            scriptMaybe
-                |> Maybe.map
-                    (\script ->
-                        viewProperty "script" (H.text (toString script))
-                    )
-                |> Maybe.withDefault (H.text "")
-
         viewProg scriptMaybe =
             scriptMaybe
                 |> Maybe.map
@@ -843,8 +722,6 @@ viewContract contractId contracts =
                         , viewProperty "spendable" (H.text (toString contract.spendable))
                         , viewProperty "counter" (H.text (toString contract.counter))
                         , viewProperty "delegate" (viewDelegate contract.delegate)
-
-                        --, viewScript contract.script
                         , viewProg contract.script
 
                         --, viewProperty "raw data" (H.div [] [ H.text (toString contract.raw) ])
@@ -907,9 +784,15 @@ viewProgram program =
             H.span [ HA.class "EmptyT" ] [ H.text "{}" ]
 
 
+simplifyProgram1 : Michelson.Program -> Michelson.Program
 simplifyProgram1 program =
     combinePrimitives program
         |> hoistSingletonLists
+
+
+matchesCxR : Regex.Regex
+matchesCxR =
+    Regex.regex "^C([AD])+R$"
 
 
 combinePrimitives : Michelson.Program -> Michelson.Program
@@ -930,7 +813,7 @@ combinePrimitives program =
             -- Extract letter(s) from middle of CxR primitive name. E.g.:
             -- cxrLetters "CDAAR" == Just "DAA"
             -- cxrLetters "DUP" == Nothing
-            Regex.find (Regex.AtMost 1) (Regex.regex "^C([AD])+R$") prim
+            Regex.find (Regex.AtMost 1) matchesCxR prim
                 |> List.head
                 |> Maybe.map .submatches
                 -- should be exactly one submatch
@@ -1008,6 +891,7 @@ viewError nodeUrl errors =
         ]
 
 
+viewErrorInfo : String -> Error -> Html Msg
 viewErrorInfo nodeUrl error =
     case error of
         HttpError (Http.BadPayload message response) ->
@@ -1046,7 +930,7 @@ viewDebug model =
 
 
 viewAbout : Model -> Html Msg
-viewAbout model =
+viewAbout _ =
     H.div []
         [ H.h3 [] [ H.text "About" ]
         , H.p []
@@ -1056,7 +940,9 @@ viewAbout model =
             ]
         , H.p []
             [ H.text "The data comes via the Tezos RPC from a single node on the network "
-            , H.text " and therefore depends on the status of that node. Being a test network, sometimes that node may be out of service or out of sync with the current alphanet chain. "
+            , H.text """ and therefore depends on the status of that node. Being
+            a test network, sometimes that node may be out of service or out of
+            sync with the current alphanet chain. """
             ]
         , H.p []
             [ H.text "Tezos Explorer is developed by Fred Yankowski ("
@@ -1066,5 +952,7 @@ viewAbout model =
             , H.text "Suggestions for additions or changes to this service are welcome. "
             ]
         , H.p []
-            [ H.text "Tezos Explorer has been online and available to the world continuously since December 2016. It is the first Tezos blockchain explorer by far." ]
+            [ H.text """Tezos Explorer has been online and available to the world
+            continuously since December 2016. It is the first Tezos blockchain
+            explorer by far.""" ]
         ]
