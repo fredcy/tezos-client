@@ -1,5 +1,7 @@
 SRC = $(shell find src -name '*.elm')
 
+VERSION = $(shell git describe --always)
+
 build: elm.js
 
 elm.js: $(SRC)
@@ -11,7 +13,7 @@ NODE_URL = https://tezos.ostraca.org
 
 SITE = site
 
-dist: $(SITE) $(SITE)/elm.js $(SITE)/index.html $(SITE)/tezos.css $(SITE)/tezos.js
+dist: $(SITE) $(SITE)/elm.js $(SITE)/index.html $(SITE)/tezos.css $(SITE)/tezos.js versionfile
 
 $(SITE):
 	mkdir $(SITE)
@@ -27,6 +29,9 @@ $(SITE)/tezos.css: tezos.css
 
 $(SITE)/tezos.js: tezos.js
 	perl -pe 's#http://localhost:8732#$(NODE_URL)#' tezos.js >$@
+
+versionfile:
+	echo "$(VERSION)" > $(SITE)/version.html
 
 publish: dist
 	rsync -av $(SITE)/ fred@a.ostraca.org:explorer/www
