@@ -685,7 +685,7 @@ decodeAddress : Decode.Decoder Address
 decodeAddress =
     Decode.succeed Address
         |> Decode.required "addr" Decode.string
-        |> Decode.required "port" Decode.int
+        |> Decode.optional "port" Decode.int 0
 
 
 decodeContract : Decode.Decoder Contract

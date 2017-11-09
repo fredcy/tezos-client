@@ -32,7 +32,8 @@ viewOperationGroups model blockHash =
                                 , H.th [] [ H.text "operations" ]
                                 ]
                             ]
-                        , H.tbody [] (List.map viewOperationGroup operationGroups)
+                        , H.tbody []
+                            (List.map viewOperationGroup operationGroups)
                         ]
             ]
 

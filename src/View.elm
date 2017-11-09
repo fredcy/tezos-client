@@ -308,9 +308,6 @@ viewBlock model block =
                 , viewPropertyList "fitness" (List.map toString block.fitness)
                 , viewPropertyString "net_id" block.net_id
                 ]
-            , H.h4 [] [ H.text "Operations" ]
-
-            --, viewParsedOperations model block.hash
             , View.Block.viewOperationGroups model block.hash
             ]
 
