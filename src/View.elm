@@ -86,7 +86,7 @@ view model =
                     viewKeys model.chain.keys
 
                 Loaded Page.Peers ->
-                    View.Peers.view model.chain.peers
+                    View.Peers.view model.chain.peers model.peerTableState
 
                 Loaded (Page.Contract contractId) ->
                     viewContract contractId model.chain.contracts

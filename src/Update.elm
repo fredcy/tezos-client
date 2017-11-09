@@ -41,6 +41,7 @@ type Msg
     | SetTableState Table.State
     | SetTransactionTableState Table.State
     | SetContractTableState Table.State
+    | SetPeerTableState Table.State
     | SetQuery String
 
 
@@ -235,6 +236,9 @@ updatePage page msg model =
 
         ( SetContractTableState tableState, _ ) ->
             ( { model | contractTableState = tableState }, Cmd.none )
+
+        ( SetPeerTableState tableState, _ ) ->
+            ( { model | peerTableState = tableState }, Cmd.none )
 
         ( SetQuery queryString, _ ) ->
             ( { model | query = queryString }, Cmd.none )

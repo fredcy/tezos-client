@@ -47,6 +47,7 @@ init flags location =
             , query = ""
             , transactionTableState = Table.initialSort "time"
             , contractTableState = Table.initialSort "contract"
+            , peerTableState = Table.initialSort "node addr"
             }
 
         -- set initial route based on location bar

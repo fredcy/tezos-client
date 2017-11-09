@@ -159,7 +159,9 @@ table.keys td {
 }
 
 table.peers td,
-table.peers th {
+table.peers th,
+div.peers td,
+div.peers th {
     padding: .4em;
 }
 

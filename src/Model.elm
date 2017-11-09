@@ -33,6 +33,7 @@ type alias Model =
     , query : String
     , transactionTableState : Table.State
     , contractTableState : Table.State
+    , peerTableState : Table.State
     }
 
 
