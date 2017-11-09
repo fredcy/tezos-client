@@ -1,5 +1,6 @@
 module View.Peers exposing (view)
 
+import Date exposing (Date)
 import Html as H exposing (Html)
 import Html.Attributes as HA
 import Http
@@ -25,17 +26,24 @@ viewPeersList : List Chain.Peer -> Html msg
 viewPeersList peers =
     let
         row peer =
-            H.tr []
-                [ H.td [ HA.class "hash" ] [ H.text (shortHash peer.hash) ]
-                , H.td [] [ H.text peer.info.state ]
-                , H.td [] [ H.text (toString peer.info.trusted) ]
-                , H.td [] [ H.text (toString peer.info.score) ]
-                , H.td [ HA.class "number" ] [ H.text (toString peer.info.stat.total_sent) ]
-                , H.td [ HA.class "number" ] [ H.text (toString peer.info.stat.total_recv) ]
-                , H.td [] [ viewConnection peer.info.lastConnection ]
+            let
+                lastAddr : Maybe Chain.Connection -> Html msg
+                lastAddr connectionMaybe =
+                    connectionMaybe |> Maybe.map (.addr >> viewAddress) |> Maybe.withDefault (H.text "")
 
-                --, H.td [] [ H.text (toString peer.info.value) ]
-                ]
+                lastTime connectionMaybe =
+                    connectionMaybe |> Maybe.map (.time >> viewTime) |> Maybe.withDefault (H.text "")
+            in
+                H.tr []
+                    [ H.td [ HA.class "hash" ] [ H.text (shortHash peer.hash) ]
+                    , H.td [] [ H.text peer.info.state ]
+                    , H.td [ HA.class "number" ] [ H.text (toString peer.info.stat.total_sent) ]
+                    , H.td [ HA.class "number" ] [ H.text (toString peer.info.stat.total_recv) ]
+                    , H.td [] [ lastAddr peer.info.lastConnection ]
+                    , H.td [] [ lastTime peer.info.lastConnection ]
+
+                    --, H.td [] [ H.text (toString peer.info.value) ]
+                    ]
 
         colHeader label =
             H.th [] [ H.text label ]
@@ -43,27 +51,13 @@ viewPeersList peers =
         thead =
             H.thead []
                 (List.map colHeader
-                    [ "id", "state", "trusted", "score", "sent", "recv", "last connection" ]
+                    [ "id", "state", "sent", "recv", "latest addr", "latest connection" ]
                 )
 
         tbody =
             H.tbody [] (List.map row peers)
     in
         H.table [ HA.class "peers" ] [ thead, tbody ]
-
-
-viewConnection : Maybe Chain.Connection -> Html msg
-viewConnection connectionM =
-    case connectionM of
-        Just connection ->
-            H.div [ HA.class "connection" ]
-                [ viewAddress connection.addr
-                , H.text " "
-                , H.span [ HA.class "timestamp" ] [ H.text (formatDate connection.time) ]
-                ]
-
-        Nothing ->
-            H.text ""
 
 
 viewAddress : Chain.Address -> Html msg
@@ -73,6 +67,11 @@ viewAddress address =
         , H.text ":"
         , H.text (toString address.port_)
         ]
+
+
+viewTime : Date -> Html msg
+viewTime time =
+    H.span [ HA.class "timestamp" ] [ H.text (formatDate time) ]
 
 
 simplifyHost : String -> String
