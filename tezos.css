@@ -202,10 +202,9 @@ table.heads td.hash:hover,
     text-decoration: underline;
 }
 
-A {
+.hash A {
     text-decoration: none;
 }
-
 
 td.hash, div.hash, span.hash, a.hash,
 td.predecessor, div.predecessor,
@@ -215,6 +214,7 @@ td.baker,
 .property > .source
 ,property > .signature {
     font-family: Andale Mono, Courier New, monospace;
+    text-decoration: none;
 }
 
 

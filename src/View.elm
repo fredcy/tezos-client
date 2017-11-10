@@ -810,11 +810,21 @@ viewAbout _ =
             [ H.text "Tezos Explorer is developed by Fred Yankowski ("
             , H.a [ HA.href "https://github.com/fredcy" ] [ H.text "@fredcy" ]
             , H.text ") and is under "
-            , H.a [ HA.href "https://github.com/fredcy/tezos-client" ] [ H.text "active development. " ]
-            , H.text "Suggestions for additions or changes to this service are welcome. "
+            , H.a [ HA.href "https://github.com/fredcy/tezos-client" ] [ H.text "active development" ]
+            , H.text ". "
+            , H.a [ HA.href "https://github.com/fredcy/tezos-client/issues" ] [ H.text "Issue reports and enhancement suggestions" ]
+            , H.text " are welcome. "
             ]
         , H.p []
             [ H.text """Tezos Explorer has been online and available to the world
             continuously since December 2016. It is the first Tezos blockchain
             explorer by far.""" ]
+
+        {- , H.p []
+           [ H.text "Donations are welcome: "
+           , H.span [ HA.class "hash" ] [ H.text "1FydzLatubB6Sp7D4hEE7YddbryTvWNs3j" ]
+           , H.text " (BTC). (Tezos donation address soon to come!)"
+
+           ]
+        -}
         ]
