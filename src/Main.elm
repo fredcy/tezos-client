@@ -68,5 +68,5 @@ subscriptions model =
     Sub.batch
         [ Time.every (10 * Time.minute) Tick
         , Time.every (30 * Time.second) Now
-        , WebSocket.listen "ws://mail.yankowski.com:4080/monitor" Monitor2
+        , WebSocket.listen "ws://api.ostez.com/ws/monitor" Monitor2
         ]
