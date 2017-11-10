@@ -817,4 +817,11 @@ viewAbout _ =
             [ H.text """Tezos Explorer has been online and available to the world
             continuously since December 2016. It is the first Tezos blockchain
             explorer by far.""" ]
+        , H.p []
+            [ H.a [ HA.href "https://github.com/fredcy/tezos-client/issues" ] [ H.text "Issue reports and enhancement suggestions" ]
+            , H.text " are welcome. "
+            , H.text "Donations are welcome too: "
+            , H.span [ HA.class "hash" ] [ H.text "1FydzLatubB6Sp7D4hEE7YddbryTvWNs3j" ]
+            , H.text " (BTC). "
+            ]
         ]
