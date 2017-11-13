@@ -1,13 +1,15 @@
 module Page exposing (Page(..))
 
+import InfiniteScroll
 import Data.Chain exposing (BlockID, ContractID, OperationID, AccountID)
+import Msg exposing (Msg)
 
 
 type Page
     = Blank
     | NotFound
     | Heads
-    | Home
+    | Home (InfiniteScroll.Model Msg)
     | Block BlockID
     | Schema
     | Operations

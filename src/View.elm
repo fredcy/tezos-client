@@ -6,6 +6,7 @@ import Html as H exposing (Html)
 import Html.Attributes as HA
 import Html.Events as HE
 import Http
+import InfiniteScroll
 import Dict exposing (Dict)
 import List.Extra as List
 import Regex
@@ -38,7 +39,7 @@ view model =
 
         content =
             case model.pageState of
-                Loaded Page.Home ->
+                Loaded (Page.Home _)->
                     viewHome model
 
                 Loaded Page.Blank ->
@@ -71,7 +72,7 @@ view model =
                     viewChainAt model hash
 
                 Loaded Page.Chain2 ->
-                    viewHome model
+                    H.text "page not implemented"
 
                 Loaded Page.Contracts ->
                     viewContracts model

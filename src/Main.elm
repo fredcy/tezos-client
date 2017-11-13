@@ -17,7 +17,6 @@ import Msg exposing (Msg(Monitor, Now, RpcResponse, SetRoute, Tick, WindowResize
 import Page
 import Update exposing (update)
 import View exposing (view)
-import Request
 import Request.Block
 
 
@@ -53,7 +52,6 @@ init flags location =
             , contractTableState = Table.initialSort "contract"
             , peerTableState = Table.initialSort "node addr"
             , windowSize = Window.Size 400 400
-            , infiniteScroll = InfiniteScroll.init loadMore
             }
 
         -- set initial route based on location bar
@@ -63,7 +61,7 @@ init flags location =
         ( routedModel
         , Cmd.batch
             [ Request.Block.requestChainSummary routedModel.nodeUrl
-                |> Http.send (Result.map Request.ChainSummary >> RpcResponse)
+                |> Http.send (Result.map Msg.ChainSummary >> RpcResponse)
             , routeCmd
             , Window.size |> Task.perform WindowResized
             ]

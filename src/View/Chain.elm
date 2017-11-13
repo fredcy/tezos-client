@@ -32,6 +32,7 @@ viewChainSummary now windowSize blockSummaries =
                     , H.th [] [ H.text "baker" ]
                     ]
                 ]
+
         headerFooterAllowance =
             200
 
@@ -40,7 +41,7 @@ viewChainSummary now windowSize blockSummaries =
     in
         H.div
             [ HA.class "blockchain-container"
-            , HA.style [ ( "height", heightValue ), ("overflow", "scroll") ]
+            , HA.style [ ( "height", heightValue ), ( "overflow", "scroll" ) ]
             , InfiniteScroll.infiniteScroll Msg.InfiniteScroll
             ]
             [ H.table [ HA.class "blockchain" ]

@@ -1,4 +1,4 @@
-module Msg exposing (Msg(..))
+module Msg exposing (Msg(..), Response, ResponseData(..))
 
 import Http
 import InfiniteScroll
@@ -9,7 +9,6 @@ import Window
 import Api
 import Data.Chain as Chain
 import Data.Schema as Schema
-import Request
 import Route
 
 
@@ -27,7 +26,7 @@ type Msg
     | ClearErrors
     | Monitor String
     | Now Time
-    | RpcResponse Request.Response
+    | RpcResponse Response
     | SetTableState Table.State
     | SetTransactionTableState Table.State
     | SetContractTableState Table.State
@@ -36,3 +35,17 @@ type Msg
     | WindowResized Window.Size
     | InfiniteScroll InfiniteScroll.Msg
     | LoadMore InfiniteScroll.Direction
+
+
+type alias Response =
+    Result Http.Error ResponseData
+
+
+type ResponseData
+    = Blocks Chain.BlocksData
+    | BlockOperations Chain.BlockID Chain.BlockOperations
+    | Heads Chain.BlocksData
+    | Head Chain.Block
+    | AccountSummaries (List Chain.AccountSummary)
+    | TransactionSummaries String (List Chain.TransactionSummary)
+    | ChainSummary (List Chain.BlockSummary)

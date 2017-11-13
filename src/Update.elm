@@ -65,7 +65,11 @@ updatePage page msg model =
                 ( newModel, cmd, errorMaybe ) =
                     Request.handleResponse response model
             in
-                ( addErrorMaybe (Maybe.map HttpError errorMaybe) newModel, Cmd.map RpcResponse cmd )
+                ( newModel
+                    |> addErrorMaybe (Maybe.map HttpError errorMaybe)
+                    |> loadingDone
+                , Cmd.map RpcResponse cmd
+                )
 
         ( LoadSchema schemaName schemaMaybe, _ ) ->
             case schemaMaybe of
@@ -182,7 +186,7 @@ updatePage page msg model =
 
         ( Tick time, _ ) ->
             ( { model | now = Date.fromTime time }
-            , Request.Block.getHeads model.nodeUrl |> Http.send (Result.map Request.Heads >> RpcResponse)
+            , Request.Block.getHeads model.nodeUrl |> Http.send (Result.map Msg.Heads >> RpcResponse)
             )
 
         ( Now time, _ ) ->
@@ -203,7 +207,7 @@ updatePage page msg model =
                 , Cmd.batch
                     [ Task.perform Now Time.now
                     , Request.Block.requestChainSummary2 model.nodeUrl lengthToRequest
-                        |> Http.send (Result.map Request.ChainSummary >> RpcResponse)
+                        |> Http.send (Result.map Msg.ChainSummary >> RpcResponse)
                     ]
                 )
 
@@ -225,12 +229,20 @@ updatePage page msg model =
         ( WindowResized size, _ ) ->
             ( { model | windowSize = size }, Cmd.none )
 
-        ( InfiniteScroll scrollMsg, _ ) ->
-            let
-                ( infiniteScroll, cmd ) =
-                    InfiniteScroll.update InfiniteScroll scrollMsg model.infiniteScroll
-            in
-                ( { model | infiniteScroll = infiniteScroll }, cmd )
+        ( InfiniteScroll scrollMsg, page ) ->
+            case page of
+                Page.Home scrollState ->
+                    let
+                        ( scrollStateNew, cmd ) =
+                            InfiniteScroll.update InfiniteScroll scrollMsg scrollState
+
+                        pageState =
+                            Loaded (Page.Home scrollStateNew)
+                    in
+                        ( { model | pageState = Loaded (Page.Home scrollStateNew) }, cmd )
+
+                _ ->
+                    ( model, Cmd.none )
 
         ( LoadMore dir, _ ) ->
             let
@@ -239,9 +251,31 @@ updatePage page msg model =
 
                 cmd =
                     Request.Block.requestChainSummary2 model.nodeUrl lengthToRequest
-                        |> Http.send (Result.map Request.ChainSummary >> RpcResponse)
+                        |> Http.send (Result.map Msg.ChainSummary >> RpcResponse)
             in
                 ( model, cmd )
+
+
+{-| Update page state in model to indicate that data-loading done for infinite
+scroll is complete, allowing that mechanism to request more data.
+-}
+loadingDone : Model -> Model
+loadingDone model =
+    let
+        pageState =
+            case model.pageState of
+                Loaded (Page.Home scrollState) ->
+                    Loaded (Page.Home (InfiniteScroll.stopLoading scrollState))
+
+                _ ->
+                    model.pageState
+    in
+        { model | pageState = pageState }
+
+
+loadMore : InfiniteScroll.Direction -> Cmd Msg
+loadMore dir =
+    Task.perform identity (Task.succeed (Msg.LoadMore dir))
 
 
 {-| Determine Page for given Route. (TODO: The distinction between Route and
@@ -252,7 +286,7 @@ toPage : Route -> Page
 toPage route =
     case route of
         Route.Home ->
-            Page.Home
+            Page.Home (InfiniteScroll.init loadMore)
 
         Route.Block hash ->
             Page.Block hash
@@ -313,11 +347,14 @@ setRoute routeMaybe model =
             ( { model | pageState = Loaded Page.NotFound }, Cmd.none )
 
         Just Route.Home ->
-            ( { model | pageState = Loaded Page.Home }
-            , List.head model.chain.heads
-                |> Maybe.map (Request.getBranch 24 model >> Cmd.map RpcResponse)
-                |> Maybe.withDefault Cmd.none
-            )
+            let
+                lengthToRequest =
+                    min (List.length model.chain.blockSummaries) 24
+            in
+                ( { model | pageState = Loaded (Page.Home (InfiniteScroll.init loadMore)) }
+                , Request.Block.requestChainSummary2 model.nodeUrl lengthToRequest
+                    |> Http.send (Result.map Msg.ChainSummary >> RpcResponse)
+                )
 
         Just (Route.Block hash) ->
             ( { model | pageState = Loaded (Page.Block hash) }
@@ -330,7 +367,7 @@ setRoute routeMaybe model =
 
         Just Route.Heads ->
             ( { model | pageState = Loaded Page.Heads }
-            , Request.Block.getHeads model.nodeUrl |> Http.send (Result.map Request.Heads >> RpcResponse)
+            , Request.Block.getHeads model.nodeUrl |> Http.send (Result.map Msg.Heads >> RpcResponse)
             )
 
         Just (Route.ChainAt hash) ->
@@ -341,7 +378,7 @@ setRoute routeMaybe model =
         Just Route.Chain2 ->
             ( { model | pageState = Loaded Page.Chain2 }
             , Request.Block.requestChainSummary model.nodeUrl
-                |> Http.send (Result.map Request.ChainSummary >> RpcResponse)
+                |> Http.send (Result.map Msg.ChainSummary >> RpcResponse)
             )
 
         Just Route.Contracts ->
@@ -360,7 +397,7 @@ setRoute routeMaybe model =
         Just (Route.Account accountId) ->
             ( { model | pageState = Loaded (Page.Account accountId) }
             , Request.Block.requestTransactions model.nodeUrl accountId
-                |> Http.send (Result.map (Request.TransactionSummaries accountId) >> RpcResponse)
+                |> Http.send (Result.map (Msg.TransactionSummaries accountId) >> RpcResponse)
             )
 
         Just Route.Keys ->
@@ -413,7 +450,7 @@ getBlock model hash =
         Nothing ->
             -- request block and some predecessors in anticipation of user following the chain
             Request.Block.getChainStartingAt model.nodeUrl 4 hash
-                |> Http.send (Result.map Request.Blocks >> RpcResponse)
+                |> Http.send (Result.map Msg.Blocks >> RpcResponse)
 
         _ ->
             Cmd.none
@@ -436,7 +473,7 @@ getContractDetails nodeUrl contractIDs =
 getAccounts : Model -> Cmd Msg
 getAccounts model =
     Request.Block.requestAccounts model.nodeUrl
-        |> Http.send (Result.map Request.AccountSummaries >> RpcResponse)
+        |> Http.send (Result.map Msg.AccountSummaries >> RpcResponse)
 
 
 getKeys : Model -> Cmd Msg

@@ -31,7 +31,6 @@ type alias Model =
     , chain : Chain.Model
     , pageState : PageState
     , windowSize : Window.Size
-    , infiniteScroll : InfiniteScroll.Model Msg.Msg
 
     -- TODO move the fields below into some state for the specific pages?
     , tableState : Table.State

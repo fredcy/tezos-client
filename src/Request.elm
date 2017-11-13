@@ -1,34 +1,21 @@
-module Request exposing (Response, ResponseData(..), getBranch, handleResponse)
+module Request exposing (getBranch, handleResponse)
 
 import Http
 import InfiniteScroll
+import Task
 import Data.Chain as Chain
+import Msg exposing (Response, ResponseData(..))
 import Request.Block
 
 
-type alias Model base msg =
+type alias Model base =
     { base
         | chain : Chain.Model
         , nodeUrl : String
-        , infiniteScroll : InfiniteScroll.Model msg
     }
 
 
-type alias Response =
-    Result Http.Error ResponseData
-
-
-type ResponseData
-    = Blocks Chain.BlocksData
-    | BlockOperations Chain.BlockID Chain.BlockOperations
-    | Heads Chain.BlocksData
-    | Head Chain.Block
-    | AccountSummaries (List Chain.AccountSummary)
-    | TransactionSummaries String (List Chain.TransactionSummary)
-    | ChainSummary (List Chain.BlockSummary)
-
-
-handleResponse : Response -> Model base msg -> ( Model base msg, Cmd Response, Maybe Http.Error )
+handleResponse : Response -> Model base -> ( Model base, Cmd Response, Maybe Http.Error )
 handleResponse response model =
     case response of
         Ok responseData ->
@@ -42,7 +29,7 @@ handleResponse response model =
             ( model, Cmd.none, Just error )
 
 
-handleResponseData : ResponseData -> Model base msg -> ( Model base msg, Cmd Response )
+handleResponseData : ResponseData -> Model base -> ( Model base, Cmd Response )
 handleResponseData responseData model =
     case responseData of
         Heads blocksData ->
@@ -69,12 +56,8 @@ handleResponseData responseData model =
             )
 
         Head block ->
-            -- TODO
-            let
-                _ =
-                    Debug.log "head" block
-            in
-                ( model, Cmd.none )
+            -- TODO remove
+            ( model, Cmd.none )
 
         AccountSummaries summaries ->
             ( { model | chain = Chain.setAccountSummaries model.chain summaries }
@@ -87,10 +70,7 @@ handleResponseData responseData model =
             )
 
         ChainSummary blockSummaries ->
-            ( { model
-                | chain = Chain.loadBlockSummaries model.chain blockSummaries
-                , infiniteScroll = InfiniteScroll.stopLoading model.infiniteScroll
-              }
+            ( { model | chain = Chain.loadBlockSummaries model.chain blockSummaries }
             , Cmd.none
             )
 
@@ -99,7 +79,7 @@ handleResponseData responseData model =
 have some blocks stored, request only what is needed to get to some target
 length.
 -}
-getBranch : Int -> Model base msg -> Chain.BlockID -> Cmd Response
+getBranch : Int -> Model base -> Chain.BlockID -> Cmd Response
 getBranch desiredLength model blockhash =
     let
         branchList =
