@@ -13,7 +13,7 @@ import Table
 import Time exposing (Time)
 import Window
 import Api
-import Model exposing (Error(HttpError, OtherError), Model, PageState(Loaded), getPage)
+import Model exposing (Error(HttpError, OtherError), Model, PageState(Loaded))
 import Data.Schema as Schema exposing (SchemaData, SchemaName, collapseTrees)
 import Data.Chain as Chain exposing (BlockID, OperationID, decodeBlocks)
 import Data.Request exposing (URL)
@@ -27,7 +27,9 @@ import Route exposing (Route)
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    updatePage (getPage model.pageState) msg model
+    case model.pageState of
+        Loaded page ->
+            updatePage page msg model
 
 
 addError : Error -> Model -> Model
@@ -57,7 +59,7 @@ log msg =
 
 updatePage : Page -> Msg -> Model -> ( Model, Cmd Msg )
 updatePage page msg model =
-    case ( msg, page ) of
+    case ( log msg, page ) of
         ( RpcResponse response, _ ) ->
             let
                 ( newModel, cmd, errorMaybe ) =
@@ -445,23 +447,6 @@ getKeys model =
 getPeers : Model -> Cmd Msg
 getPeers model =
     Request.Block.getPeers model.nodeUrl |> Http.send LoadPeers
-
-
-updateMonitor : Decode.Value -> Model -> ( Model, Cmd Msg )
-updateMonitor data model =
-    let
-        blocksResult =
-            Decode.decodeValue decodeBlocks data
-
-        newModel =
-            case blocksResult of
-                Ok blocks ->
-                    { model | chain = Chain.updateMonitor model.chain blocks }
-
-                Err error ->
-                    { model | errors = OtherError error :: model.errors }
-    in
-        ( newModel, Cmd.none )
 
 
 {-| delayedSend is like Http.send except that it also introduces a delay before

@@ -1,4 +1,4 @@
-module Model exposing (Error(HttpError, OtherError), PageState(Loaded), Model, getPage)
+module Model exposing (Error(HttpError, OtherError), PageState(Loaded), Model)
 
 import Date exposing (Date)
 import Http
@@ -40,8 +40,3 @@ type alias Model =
     , contractTableState : Table.State
     , peerTableState : Table.State
     }
-
-
-getPage : PageState -> Page
-getPage (Loaded page) =
-    page
