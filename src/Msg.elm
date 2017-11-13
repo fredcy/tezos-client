@@ -25,8 +25,7 @@ type Msg
     | Tick Time
     | SetRoute (Maybe Route.Route)
     | ClearErrors
-    | Monitor Decode.Value
-    | Monitor2 String
+    | Monitor String
     | Now Time
     | RpcResponse Request.Response
     | SetTableState Table.State

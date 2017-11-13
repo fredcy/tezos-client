@@ -192,31 +192,18 @@ updatePage page msg model =
         ( ClearErrors, _ ) ->
             ( { model | errors = [] }, Cmd.none )
 
-        ( Monitor data, _ ) ->
+        ( Monitor _, _ ) ->
             let
-                ( newModel, cmd ) =
-                    updateMonitor data model
+                lengthToRequest =
+                    List.length model.chain.blockSummaries + 1
             in
-                ( newModel
+                ( model
                 , Cmd.batch
-                    [ cmd
-                    , Task.perform Now Time.now
-
-                    -- Wait a bit before asking for updated chain because of
-                    -- the race condition between RPC server and API server.
-                    , Request.Block.requestChainSummary model.nodeUrl
-                        |> delayedSend (2 * Time.second) (Result.map Request.ChainSummary >> RpcResponse)
+                    [ Task.perform Now Time.now
+                    , Request.Block.requestChainSummary2 model.nodeUrl lengthToRequest
+                        |> Http.send (Result.map Request.ChainSummary >> RpcResponse)
                     ]
                 )
-
-        ( Monitor2 _, _ ) ->
-            ( model
-            , Cmd.batch
-                [ Task.perform Now Time.now
-                , Request.Block.requestChainSummary model.nodeUrl
-                    |> Http.send (Result.map Request.ChainSummary >> RpcResponse)
-                ]
-            )
 
         ( SetTableState tableState, _ ) ->
             ( { model | tableState = tableState }, Cmd.none )

@@ -13,7 +13,7 @@ import WebSocket
 import Window
 import Data.Chain
 import Model exposing (Model, PageState(Loaded))
-import Msg exposing (Msg(Monitor2, Now, RpcResponse, SetRoute, Tick, WindowResized))
+import Msg exposing (Msg(Monitor, Now, RpcResponse, SetRoute, Tick, WindowResized))
 import Page
 import Update exposing (update)
 import View exposing (view)
@@ -75,7 +75,7 @@ subscriptions model =
     Sub.batch
         [ Time.every (10 * Time.minute) Tick
         , Time.every (30 * Time.second) Now
-        , WebSocket.listen "ws://api.ostez.com/ws/monitor" Monitor2
+        , WebSocket.listen "ws://api.ostez.com/ws/monitor" Monitor
         , Window.resizes WindowResized
         ]
 
