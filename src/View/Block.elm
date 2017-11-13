@@ -7,7 +7,7 @@ import Api
 import Data.Chain exposing (BlockID)
 import Model exposing (Model)
 import Route
-import Update exposing (Msg)
+import Msg exposing (Msg)
 import View.Field exposing (shortHash, formatCentiles)
 
 

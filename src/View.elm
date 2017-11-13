@@ -16,7 +16,7 @@ import Data.Michelson as Michelson
 import Model exposing (Error(HttpError), Model, PageState(Loaded))
 import Page
 import Route
-import Update exposing (Msg(ClearErrors, SchemaMsg))
+import Msg exposing (Msg(ClearErrors, SchemaMsg))
 import View.Page
 import View.Block
 import View.Accounts
@@ -107,7 +107,7 @@ viewHome : Model -> Html Msg
 viewHome model =
     H.div []
         [ H.h2 [] [ H.text "Newest blocks" ]
-        , View.Chain.view model.now model.chain
+        , View.Chain.view model.now model.windowSize model.chain
         ]
 
 

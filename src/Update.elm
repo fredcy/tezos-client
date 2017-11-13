@@ -1,48 +1,28 @@
-module Update exposing (update, Msg(..), setRoute, toPage)
+module Update exposing (update, setRoute, toPage)
 
 import Date
 import Dict
 import Json.Decode as Decode
 import Json.Decode.Pipeline as Decode
 import Http
+import InfiniteScroll
 import List.Extra as List
 import Process
 import Task
 import Table
 import Time exposing (Time)
+import Window
 import Api
 import Model exposing (Error(HttpError, OtherError), Model, PageState(Loaded), getPage)
 import Data.Schema as Schema exposing (SchemaData, SchemaName, collapseTrees)
 import Data.Chain as Chain exposing (BlockID, OperationID, decodeBlocks)
 import Data.Request exposing (URL)
+import Msg exposing (..)
 import Page exposing (Page)
 import Request
 import Request.Block
 import Request.Schema exposing (getSchema)
 import Route exposing (Route)
-
-
-type Msg
-    = LoadSchema SchemaName (Result Http.Error SchemaData)
-    | LoadParsedOperation OperationID (Result Http.Error Chain.ParsedOperation)
-    | SchemaMsg SchemaName Schema.Msg
-    | LoadContractIDs (Result Http.Error (List Chain.ContractID))
-    | LoadKeys (Result Http.Error (List Chain.Key))
-    | LoadPeers (Result Http.Error (List Chain.Peer))
-    | LoadContract Chain.ContractID (Result Http.Error Chain.Contract)
-    | LoadBlockOperations Chain.BlockID (Result Http.Error (List Api.OperationGroup))
-    | Tick Time
-    | SetRoute (Maybe Route)
-    | ClearErrors
-    | Monitor Decode.Value
-    | Monitor2 String
-    | Now Time
-    | RpcResponse Request.Response
-    | SetTableState Table.State
-    | SetTransactionTableState Table.State
-    | SetContractTableState Table.State
-    | SetPeerTableState Table.State
-    | SetQuery String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -65,9 +45,19 @@ addErrorMaybe errorMaybe model =
             model
 
 
+log : Msg -> Msg
+log msg =
+    case msg of
+        InfiniteScroll _ ->
+            msg
+
+        _ ->
+            Debug.log "msg" msg
+
+
 updatePage : Page -> Msg -> Model -> ( Model, Cmd Msg )
 updatePage page msg model =
-    case ( Debug.log "msg" msg, page ) of
+    case ( msg, page ) of
         ( RpcResponse response, _ ) ->
             let
                 ( newModel, cmd, errorMaybe ) =
@@ -242,6 +232,27 @@ updatePage page msg model =
 
         ( SetQuery queryString, _ ) ->
             ( { model | query = queryString }, Cmd.none )
+
+        ( WindowResized size, _ ) ->
+            ( { model | windowSize = size }, Cmd.none )
+
+        ( InfiniteScroll scrollMsg, _ ) ->
+            let
+                ( infiniteScroll, cmd ) =
+                    InfiniteScroll.update InfiniteScroll scrollMsg model.infiniteScroll
+            in
+                ( { model | infiniteScroll = infiniteScroll }, cmd )
+
+        ( LoadMore dir, _ ) ->
+            let
+                lengthToRequest =
+                    List.length model.chain.blockSummaries + 100
+
+                cmd =
+                    Request.Block.requestChainSummary2 model.nodeUrl lengthToRequest
+                        |> Http.send (Result.map Request.ChainSummary >> RpcResponse)
+            in
+                ( model, cmd )
 
 
 {-| Determine Page for given Route. (TODO: The distinction between Route and

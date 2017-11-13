@@ -8,7 +8,7 @@ import RemoteData exposing (RemoteData)
 import Table
 import Data.Chain exposing (ContractID, Contract)
 import Data.Michelson as Michelson
-import Update exposing (Msg(SetContractTableState))
+import Msg exposing (Msg(SetContractTableState))
 import View.Field exposing (shortHash, formatCentiles)
 import Route
 

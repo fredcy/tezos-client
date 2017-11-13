@@ -5,7 +5,7 @@ import Html as H exposing (Html)
 import Html.Attributes as HA
 import Table
 import Data.Chain as Chain exposing (TransactionSummary)
-import Update exposing (Msg(SetTransactionTableState))
+import Msg exposing (Msg(SetTransactionTableState))
 import View.Field as VF exposing (formatDate, shortHash)
 import Route
 

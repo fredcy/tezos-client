@@ -1,4 +1,4 @@
-module Request.Block exposing (getContract, getContractIDs, getChainStartingAt, getHeads, getKeys, getPeers, requestAccounts, requestChainSummary, requestTransactions)
+module Request.Block exposing (getContract, getContractIDs, getChainStartingAt, getHeads, getKeys, getPeers, requestAccounts, requestChainSummary, requestChainSummary2, requestTransactions)
 
 import Json.Encode as Encode
 import Json.Decode as Decode
@@ -98,3 +98,12 @@ requestTransactions nodeUrl accountHash =
 requestChainSummary : URL -> Http.Request (List Chain.BlockSummary)
 requestChainSummary nodeUrl =
     Http.get (nodeUrl ++ "/api/chainSummary") (Decode.list Chain.decodeBlockSummary)
+
+
+requestChainSummary2 : URL -> Int -> Http.Request (List Chain.BlockSummary)
+requestChainSummary2 nodeUrl length =
+    let
+        queryString =
+            "?length=" ++ toString length
+    in
+        Http.get (nodeUrl ++ "/api/chainSummary" ++ queryString) (Decode.list Chain.decodeBlockSummary)

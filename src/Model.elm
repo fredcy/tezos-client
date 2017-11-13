@@ -2,9 +2,12 @@ module Model exposing (Error(HttpError, OtherError), PageState(Loaded), Model, g
 
 import Date exposing (Date)
 import Http
+import InfiniteScroll
+import Window
 import Table
 import Data.Schema as Schema
 import Data.Chain as Chain
+import Msg
 import Page exposing (Page)
 
 
@@ -27,6 +30,8 @@ type alias Model =
     , now : Date
     , chain : Chain.Model
     , pageState : PageState
+    , windowSize : Window.Size
+    , infiniteScroll : InfiniteScroll.Model Msg.Msg
 
     -- TODO move the fields below into some state for the specific pages?
     , tableState : Table.State

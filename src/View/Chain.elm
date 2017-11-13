@@ -4,19 +4,21 @@ import Date exposing (Date)
 import Date.Distance
 import Html as H exposing (Html)
 import Html.Attributes as HA
+import InfiniteScroll
+import Window
 import Data.Chain as Chain
 import Route
-import Update exposing (Msg)
+import Msg exposing (Msg(InfiniteScroll))
 import View.Field exposing (formatDate, shortHash)
 
 
-view : Date -> Chain.Model -> Html Msg
-view now model =
-    viewChainSummary now model.blockSummaries
+view : Date -> Window.Size -> Chain.Model -> Html Msg
+view now windowSize model =
+    viewChainSummary now windowSize model.blockSummaries
 
 
-viewChainSummary : Date -> List Chain.BlockSummary -> Html Msg
-viewChainSummary now blockSummaries =
+viewChainSummary : Date -> Window.Size -> List Chain.BlockSummary -> Html Msg
+viewChainSummary now windowSize blockSummaries =
     let
         thead =
             H.thead []
@@ -30,10 +32,21 @@ viewChainSummary now blockSummaries =
                     , H.th [] [ H.text "baker" ]
                     ]
                 ]
+        headerFooterAllowance =
+            200
+
+        heightValue =
+            toString (windowSize.height - headerFooterAllowance) ++ "px"
     in
-        H.table [ HA.class "blockchain" ]
-            [ thead
-            , H.tbody [] (List.map (viewBlockSummary now) blockSummaries)
+        H.div
+            [ HA.class "blockchain-container"
+            , HA.style [ ( "height", heightValue ), ("overflow", "scroll") ]
+            , InfiniteScroll.infiniteScroll Msg.InfiniteScroll
+            ]
+            [ H.table [ HA.class "blockchain" ]
+                [ thead
+                , H.tbody [] (List.map (viewBlockSummary now) blockSummaries)
+                ]
             ]
 
 

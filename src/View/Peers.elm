@@ -7,7 +7,7 @@ import Http
 import RemoteData exposing (RemoteData)
 import Table
 import Data.Chain as Chain
-import Update exposing (Msg(SetPeerTableState))
+import Msg exposing (Msg(SetPeerTableState))
 import View.Field exposing (formatDate, shortHash)
 
 

@@ -5,7 +5,7 @@ import Html.Attributes as HA
 import Html.Events as HE
 import Table
 import Data.Chain exposing (AccountSummary)
-import Update exposing (Msg(SetTableState, SetQuery))
+import Msg exposing (Msg(SetTableState, SetQuery))
 import View.Field as VF
 import Route
 
