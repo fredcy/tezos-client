@@ -44,9 +44,16 @@ viewChainSummary now windowSize blockSummaries =
             , HA.style [ ( "height", heightValue ), ( "overflow", "scroll" ) ]
             , InfiniteScroll.infiniteScroll Msg.InfiniteScroll
             ]
-            [ H.table [ HA.class "blockchain" ]
-                [ thead
-                , H.tbody [] (List.map (viewBlockSummary now) blockSummaries)
+            [ H.div
+                -- This inner div is a kludge forcing the content to always
+                -- overflow the wrappig div, hence forcing a scrollbar, hence
+                -- allowing elm-infinite-scroll to work even if the content
+                -- doesn't fill the div.
+                [ HA.style [ ( "min-height", "101%" ) ] ]
+                [ H.table [ HA.class "blockchain" ]
+                    [ thead
+                    , H.tbody [] (List.map (viewBlockSummary now) blockSummaries)
+                    ]
                 ]
             ]
 

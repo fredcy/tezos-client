@@ -348,9 +348,12 @@ setRoute routeMaybe model =
 
         Just Route.Home ->
             let
+                blocksToShow =
+                    50
+
                 cmd =
-                    if List.length model.chain.blockSummaries < 24 then
-                        Request.Block.requestChainSummary2 model.nodeUrl 24
+                    if List.length model.chain.blockSummaries < blocksToShow then
+                        Request.Block.requestChainSummary2 model.nodeUrl blocksToShow
                             |> Http.send (Result.map Msg.ChainSummary >> RpcResponse)
                     else
                         Cmd.none
