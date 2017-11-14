@@ -60,9 +60,7 @@ init flags location =
     in
         ( routedModel
         , Cmd.batch
-            [ Request.Block.requestChainSummary routedModel.nodeUrl
-                |> Http.send (Result.map Msg.ChainSummary >> RpcResponse)
-            , routeCmd
+            [ routeCmd
             , Window.size |> Task.perform WindowResized
             ]
         )

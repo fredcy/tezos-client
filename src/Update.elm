@@ -59,7 +59,7 @@ log msg =
 
 updatePage : Page -> Msg -> Model -> ( Model, Cmd Msg )
 updatePage page msg model =
-    case ( log msg, page ) of
+    case ( msg, page ) of
         ( RpcResponse response, _ ) ->
             let
                 ( newModel, cmd, errorMaybe ) =
@@ -348,12 +348,15 @@ setRoute routeMaybe model =
 
         Just Route.Home ->
             let
-                lengthToRequest =
-                    min (List.length model.chain.blockSummaries) 24
+                cmd =
+                    if List.length model.chain.blockSummaries < 24 then
+                        Request.Block.requestChainSummary2 model.nodeUrl 24
+                            |> Http.send (Result.map Msg.ChainSummary >> RpcResponse)
+                    else
+                        Cmd.none
             in
                 ( { model | pageState = Loaded (Page.Home (InfiniteScroll.init loadMore)) }
-                , Request.Block.requestChainSummary2 model.nodeUrl lengthToRequest
-                    |> Http.send (Result.map Msg.ChainSummary >> RpcResponse)
+                , cmd
                 )
 
         Just (Route.Block hash) ->
