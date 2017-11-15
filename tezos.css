@@ -396,3 +396,11 @@ span.nonce {
 .footer {
     font-size: 80%;
 }
+
+.scroll-footer {
+    text-align: right;
+    margin-right: 15px;
+    font-size: 80%;
+    color: gray;
+    font-style: italic;
+}

@@ -39,8 +39,8 @@ view model =
 
         content =
             case model.pageState of
-                Loaded (Page.Home _)->
-                    viewHome model
+                Loaded (Page.Home scrollState)->
+                    viewHome scrollState model
 
                 Loaded Page.Blank ->
                     H.text ""
@@ -104,11 +104,11 @@ view model =
         View.Page.frame context content
 
 
-viewHome : Model -> Html Msg
-viewHome model =
+viewHome : InfiniteScroll.Model Msg -> Model -> Html Msg
+viewHome scrollState model =
     H.div []
         [ H.h2 [] [ H.text "Newest blocks" ]
-        , View.Chain.view model.now model.windowSize model.chain
+        , View.Chain.view model.now model.windowSize scrollState model.chain
         ]
 
 

@@ -12,14 +12,12 @@ import Msg exposing (Msg(InfiniteScroll))
 import View.Field exposing (formatDate, shortHash)
 
 
-view : Date -> Window.Size -> Chain.Model -> Html Msg
-view now windowSize model =
-    viewChainSummary now windowSize model.blockSummaries
-
-
-viewChainSummary : Date -> Window.Size -> List Chain.BlockSummary -> Html Msg
-viewChainSummary now windowSize blockSummaries =
+view : Date -> Window.Size -> InfiniteScroll.Model Msg -> Chain.Model -> Html Msg
+view now windowSize scrollState model =
     let
+        blockSummaries =
+            model.blockSummaries
+
         thead =
             H.thead []
                 [ H.tr []
@@ -34,28 +32,44 @@ viewChainSummary now windowSize blockSummaries =
                 ]
 
         headerFooterAllowance =
-            200
+            205
 
         heightValue =
             toString (windowSize.height - headerFooterAllowance) ++ "px"
     in
-        H.div
-            [ HA.class "blockchain-container"
-            , HA.style [ ( "height", heightValue ), ( "overflow", "scroll" ) ]
-            , InfiniteScroll.infiniteScroll Msg.InfiniteScroll
-            ]
+        H.div []
+            -- This outer div allows us to exclude the footer from the scrolling area.
             [ H.div
-                -- This inner div is a kludge forcing the content to always
-                -- overflow the wrappig div, hence forcing a scrollbar, hence
-                -- allowing elm-infinite-scroll to work even if the content
-                -- doesn't fill the div.
-                [ HA.style [ ( "min-height", "101%" ) ] ]
-                [ H.table [ HA.class "blockchain" ]
-                    [ thead
-                    , H.tbody [] (List.map (viewBlockSummary now) blockSummaries)
+                [ HA.class "blockchain-container"
+                , HA.style [ ( "height", heightValue ), ( "overflow", "scroll" ) ]
+                , InfiniteScroll.infiniteScroll Msg.InfiniteScroll
+                ]
+                [ H.div
+                    -- This inner div is a kludge forcing the content to always
+                    -- overflow the wrappig div, hence forcing a scrollbar, hence
+                    -- allowing elm-infinite-scroll to work even if the content
+                    -- doesn't fill the div.
+                    [ HA.style [ ( "min-height", "101%" ) ] ]
+                    [ H.table [ HA.class "blockchain" ]
+                        [ thead
+                        , H.tbody [] (List.map (viewBlockSummary now) blockSummaries)
+                        ]
                     ]
                 ]
+            , footer scrollState
             ]
+
+
+footer : InfiniteScroll.Model msg -> Html msg
+footer scrollState =
+    let
+        msg =
+            if InfiniteScroll.isLoading scrollState then
+                "loading ..."
+            else
+                "scroll for more"
+    in
+        H.div [ HA.class "scroll-footer" ] [ H.text msg ]
 
 
 viewBlockSummary : Date -> Chain.BlockSummary -> Html Msg
