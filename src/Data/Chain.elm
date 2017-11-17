@@ -63,7 +63,6 @@ type alias Block =
     , fitness : Fitness
     , timestamp : Timestamp
     , operations : Maybe (List (List OperationID))
-    , net_id : NetID
     , level : Level
     }
 
@@ -94,7 +93,6 @@ type SubOperation
 
 type alias ParsedOperation =
     { hash : OperationID
-    , net_id : NetID
     , branch : BlockID
     , operations : List SubOperation
     , source : Maybe SourceID
@@ -527,7 +525,6 @@ decodeBlock =
         |> Decode.optional "operations"
             (Decode.list (Decode.list Decode.string) |> Decode.map Just)
             Nothing
-        |> Decode.required "net_id" Decode.string
         |> Decode.required "level" Decode.int
 
 
@@ -541,8 +538,6 @@ decodeBlock2 =
         |> Decode.required "Fitness" (Decode.list Decode.int)
         |> Decode.required "Timestamp" decodeTimestamp
         |> Decode.hardcoded Nothing
-        -- ^ TODO ? operations
-        |> Decode.required "Network" Decode.string
         |> Decode.required "Level" Decode.int
 
 
