@@ -404,3 +404,17 @@ span.nonce {
     color: gray;
     font-style: italic;
 }
+
+.payload-message
+, .response-body
+{
+    white-space: pre;
+    font-family: Andale Mono, Courier New, monospace;
+    font-size: 80%;
+}
+
+.response {
+    white-space: pre-line;
+    font-family: Andale Mono, Courier New, monospace;
+    font-size: 80%;
+}

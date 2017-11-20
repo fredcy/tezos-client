@@ -11,42 +11,27 @@ type alias Script =
 
 
 type alias Code =
-    { code : Program
-
-    -- TODO : decode structure of the following
-    , argType : Decode.Value
-    , retType : Decode.Value
-    , storageType : Decode.Value
-    }
+    Decode.Value
 
 
 type alias Storage =
-    { storage : Decode.Value
-    , storageType : Decode.Value
-    }
+    Decode.Value
+
+
+
+-- TODO : parse new program representation, "Micheline"
 
 
 decodeScript : Decode.Decoder Script
 decodeScript =
     Decode.succeed Script
-        |> Decode.required "code" decodeCode
+        |> Decode.required "code" Decode.value
         |> Decode.required "storage" decodeStorage
-
-
-decodeCode : Decode.Decoder Code
-decodeCode =
-    Decode.succeed Code
-        |> Decode.required "code" decodeProgram
-        |> Decode.required "argType" Decode.value
-        |> Decode.required "retType" Decode.value
-        |> Decode.required "storageType" Decode.value
 
 
 decodeStorage : Decode.Decoder Storage
 decodeStorage =
-    Decode.succeed Storage
-        |> Decode.required "storage" Decode.value
-        |> Decode.required "storageType" Decode.value
+    Decode.value
 
 
 decodeProgram : Decode.Decoder Program

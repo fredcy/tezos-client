@@ -39,7 +39,7 @@ view model =
 
         content =
             case model.pageState of
-                Loaded (Page.Home scrollState)->
+                Loaded (Page.Home scrollState) ->
                     viewHome scrollState model
 
                 Loaded Page.Blank ->
@@ -562,11 +562,15 @@ viewContract contractId contracts =
                     )
                 ]
 
+        viewScript script =
+            H.div [ HA.class "program-as-value" ] [ H.text (toString script) ]
+
         viewProg scriptMaybe =
             scriptMaybe
                 |> Maybe.map
                     (\script ->
-                        viewProperty "program" (simplifyProgram1 script.code.code |> viewProgram)
+                        --viewProperty "program" (simplifyProgram1 script.code |> viewProgram)
+                        viewProperty "program" (viewScript script)
                     )
                 |> Maybe.withDefault (H.text "")
     in
@@ -727,9 +731,9 @@ viewFailure error =
         Http.BadPayload message response ->
             H.div [ HA.class "badpayload" ]
                 [ H.h4 [] [ H.text "Error: Bad Payload" ]
-                , H.pre [ HA.class "payload-message" ] [ H.text message ]
+                , H.div [ HA.class "payload-message" ] [ H.text message ]
                 , H.h5 [] [ H.text "Response" ]
-                , H.div [] [ H.text (toString response) ]
+                , H.div [ HA.class "response" ] [ H.text (toString response) ]
                 , H.h5 [] [ H.text "Body" ]
                 , viewResponseBody response.body
                 ]
@@ -740,7 +744,7 @@ viewFailure error =
 
 viewResponseBody : String -> Html Msg
 viewResponseBody body =
-    H.div [ HA.style [ ( "white-space", "pre" ) ] ] [ H.text body ]
+    H.div [ HA.class "response-body" ] [ H.text body ]
 
 
 viewError : String -> List Error -> Html Msg
