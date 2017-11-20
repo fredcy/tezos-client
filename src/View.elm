@@ -619,110 +619,113 @@ primCss prim =
         prim
 
 
-viewProgram : Michelson.Program -> Html Msg
-viewProgram program =
-    case program of
-        Michelson.IntT i ->
-            H.span [ HA.class "IntT" ] [ H.text (toString i) ]
 
-        Michelson.StringT s ->
-            H.span [ HA.class "StringT" ] [ H.text ("\"" ++ s ++ "\"") ]
+{- TODO
+   viewProgram : Michelson.Program -> Html Msg
+   viewProgram program =
+       case program of
+           Michelson.IntT i ->
+               H.span [ HA.class "IntT" ] [ H.text (toString i) ]
 
-        Michelson.PrimT p ->
-            H.span [ HA.class ("PrimT prim-" ++ primCss p) ] [ H.text p ]
+           Michelson.StringT s ->
+               H.span [ HA.class "StringT" ] [ H.text ("\"" ++ s ++ "\"") ]
 
-        Michelson.SeqT seq ->
-            H.div [ HA.class "SeqT" ]
-                [ H.text " { "
-                , H.div [ HA.class "sequence" ] (List.map viewProgram seq)
-                , H.text " } "
-                ]
+           Michelson.PrimT p ->
+               H.span [ HA.class ("PrimT prim-" ++ primCss p) ] [ H.text p ]
 
-        Michelson.PrimArgT p arg ->
-            H.span [ HA.class ("PrimArgT primarg primarg-" ++ primCss p) ]
-                [ H.span [ HA.class ("PrimT prim-" ++ primCss p) ] [ H.text p ]
-                , H.span [ HA.class ("primargarg primargarg-" ++ primCss p) ]
-                    [ viewProgram arg ]
-                ]
+           Michelson.SeqT seq ->
+               H.div [ HA.class "SeqT" ]
+                   [ H.text " { "
+                   , H.div [ HA.class "sequence" ] (List.map viewProgram seq)
+                   , H.text " } "
+                   ]
 
-        Michelson.EmptyT ->
-            H.span [ HA.class "EmptyT" ] [ H.text "{}" ]
+           Michelson.PrimArgT p arg ->
+               H.span [ HA.class ("PrimArgT primarg primarg-" ++ primCss p) ]
+                   [ H.span [ HA.class ("PrimT prim-" ++ primCss p) ] [ H.text p ]
+                   , H.span [ HA.class ("primargarg primargarg-" ++ primCss p) ]
+                       [ viewProgram arg ]
+                   ]
 
-
-simplifyProgram1 : Michelson.Program -> Michelson.Program
-simplifyProgram1 program =
-    combinePrimitives program
-        |> hoistSingletonLists
+           Michelson.EmptyT ->
+               H.span [ HA.class "EmptyT" ] [ H.text "{}" ]
 
 
-matchesCxR : Regex.Regex
-matchesCxR =
-    Regex.regex "^C([AD])+R$"
+   simplifyProgram1 : Michelson.Program -> Michelson.Program
+   simplifyProgram1 program =
+       combinePrimitives program
+           |> hoistSingletonLists
 
 
-combinePrimitives : Michelson.Program -> Michelson.Program
-combinePrimitives program =
-    let
-        simplifySeq item sofar =
-            case ( item, sofar ) of
-                ( Michelson.PrimT prim1, (Michelson.PrimT prim2) :: rest ) ->
-                    combinePrims prim1 prim2
-                        |> Maybe.map (\newprim -> Michelson.PrimT newprim :: rest)
-                        |> Maybe.withDefault (item :: sofar)
-
-                _ ->
-                    combinePrimitives item :: sofar
-
-        cxrLetters : String -> Maybe String
-        cxrLetters prim =
-            -- Extract letter(s) from middle of CxR primitive name. E.g.:
-            -- cxrLetters "CDAAR" == Just "DAA"
-            -- cxrLetters "DUP" == Nothing
-            Regex.find (Regex.AtMost 1) matchesCxR prim
-                |> List.head
-                |> Maybe.map .submatches
-                -- should be exactly one submatch
-                |> Maybe.andThen List.head
-                |> Maybe.withDefault Nothing
-
-        -- Try to combine two primitives into one.
-        combinePrims : String -> String -> Maybe String
-        combinePrims prim1 prim2 =
-            cxrLetters prim1
-                |> Maybe.andThen
-                    (\letters1 ->
-                        cxrLetters prim2
-                            |> Maybe.andThen
-                                (\letters2 ->
-                                    Just ("C" ++ letters1 ++ letters2 ++ "R")
-                                )
-                    )
-    in
-        case program of
-            Michelson.SeqT seq ->
-                Michelson.SeqT (List.foldr simplifySeq [] seq)
-
-            Michelson.PrimArgT prim arg ->
-                Michelson.PrimArgT prim (combinePrimitives arg)
-
-            _ ->
-                program
+   matchesCxR : Regex.Regex
+   matchesCxR =
+       Regex.regex "^C([AD])+R$"
 
 
-hoistSingletonLists : Michelson.Program -> Michelson.Program
-hoistSingletonLists program =
-    case program of
-        Michelson.SeqT [ singleton ] ->
-            hoistSingletonLists singleton
+   combinePrimitives : Michelson.Program -> Michelson.Program
+   combinePrimitives program =
+       let
+           simplifySeq item sofar =
+               case ( item, sofar ) of
+                   ( Michelson.PrimT prim1, (Michelson.PrimT prim2) :: rest ) ->
+                       combinePrims prim1 prim2
+                           |> Maybe.map (\newprim -> Michelson.PrimT newprim :: rest)
+                           |> Maybe.withDefault (item :: sofar)
 
-        Michelson.SeqT seq ->
-            Michelson.SeqT (List.map hoistSingletonLists seq)
+                   _ ->
+                       combinePrimitives item :: sofar
 
-        Michelson.PrimArgT prim arg ->
-            Michelson.PrimArgT prim (hoistSingletonLists arg)
+           cxrLetters : String -> Maybe String
+           cxrLetters prim =
+               -- Extract letter(s) from middle of CxR primitive name. E.g.:
+               -- cxrLetters "CDAAR" == Just "DAA"
+               -- cxrLetters "DUP" == Nothing
+               Regex.find (Regex.AtMost 1) matchesCxR prim
+                   |> List.head
+                   |> Maybe.map .submatches
+                   -- should be exactly one submatch
+                   |> Maybe.andThen List.head
+                   |> Maybe.withDefault Nothing
 
-        _ ->
-            program
+           -- Try to combine two primitives into one.
+           combinePrims : String -> String -> Maybe String
+           combinePrims prim1 prim2 =
+               cxrLetters prim1
+                   |> Maybe.andThen
+                       (\letters1 ->
+                           cxrLetters prim2
+                               |> Maybe.andThen
+                                   (\letters2 ->
+                                       Just ("C" ++ letters1 ++ letters2 ++ "R")
+                                   )
+                       )
+       in
+           case program of
+               Michelson.SeqT seq ->
+                   Michelson.SeqT (List.foldr simplifySeq [] seq)
+
+               Michelson.PrimArgT prim arg ->
+                   Michelson.PrimArgT prim (combinePrimitives arg)
+
+               _ ->
+                   program
+
+
+   hoistSingletonLists : Michelson.Program -> Michelson.Program
+   hoistSingletonLists program =
+       case program of
+           Michelson.SeqT [ singleton ] ->
+               hoistSingletonLists singleton
+
+           Michelson.SeqT seq ->
+               Michelson.SeqT (List.map hoistSingletonLists seq)
+
+           Michelson.PrimArgT prim arg ->
+               Michelson.PrimArgT prim (hoistSingletonLists arg)
+
+           _ ->
+               program
+-}
 
 
 viewFailure : Http.Error -> Html Msg
