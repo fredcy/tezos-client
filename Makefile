@@ -9,7 +9,8 @@ elm.js: $(SRC)
 
 ###
 
-NODE_URL = https://tezos.ostraca.org
+#NODE_URL = https://tezos.ostraca.org
+NODE_URL = http://rpc.ostez.com
 
 SITE = site
 

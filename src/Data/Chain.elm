@@ -525,10 +525,15 @@ decodeBlock =
         |> Decode.required "fitness" decodeFitness
         |> Decode.required "timestamp" decodeTimestamp
         |> Decode.optional "operations"
-            (Decode.list (Decode.list Decode.string) |> Decode.map Just)
+            (Decode.list (Decode.list decodeBlockOperation) |> Decode.map Just)
             Nothing
         |> Decode.required "net_id" Decode.string
         |> Decode.required "level" Decode.int
+
+
+decodeBlockOperation : Decode.Decoder String
+decodeBlockOperation =
+    Decode.field "hash" Decode.string
 
 
 {-| Decode block returned from new API.
