@@ -307,6 +307,10 @@ table.operations td ul {
     margin-left: 1em;
 }
 
+.primargs {
+    margin-left: 1em;
+}
+
 .primarg-DIP,
 .primarg-IF,
 .primarg-IF-LEFT,

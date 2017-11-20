@@ -569,8 +569,7 @@ viewContract contractId contracts =
             scriptMaybe
                 |> Maybe.map
                     (\script ->
-                        --viewProperty "program" (simplifyProgram1 script.code |> viewProgram)
-                        viewProperty "program" (viewScript script)
+                        viewProperty "program" (viewProgramArea script.code)
                     )
                 |> Maybe.withDefault (H.text "")
     in
@@ -619,37 +618,72 @@ primCss prim =
         prim
 
 
+viewProgramArea : Michelson.Program -> Html Msg
+viewProgramArea program =
+    H.div []
+        [ H.pre [] [ H.text (programToString 0 program) ]
 
-{- TODO
-   viewProgram : Michelson.Program -> Html Msg
-   viewProgram program =
-       case program of
-           Michelson.IntT i ->
-               H.span [ HA.class "IntT" ] [ H.text (toString i) ]
+        --, H.text (toString program)
+        ]
 
-           Michelson.StringT s ->
-               H.span [ HA.class "StringT" ] [ H.text ("\"" ++ s ++ "\"") ]
 
-           Michelson.PrimT p ->
-               H.span [ HA.class ("PrimT prim-" ++ primCss p) ] [ H.text p ]
+indent : Int -> String
+indent level =
+    String.repeat level "  "
 
-           Michelson.SeqT seq ->
-               H.div [ HA.class "SeqT" ]
-                   [ H.text " { "
-                   , H.div [ HA.class "sequence" ] (List.map viewProgram seq)
-                   , H.text " } "
-                   ]
 
-           Michelson.PrimArgT p arg ->
-               H.span [ HA.class ("PrimArgT primarg primarg-" ++ primCss p) ]
-                   [ H.span [ HA.class ("PrimT prim-" ++ primCss p) ] [ H.text p ]
-                   , H.span [ HA.class ("primargarg primargarg-" ++ primCss p) ]
-                       [ viewProgram arg ]
-                   ]
+programToString : Int -> Michelson.Program -> String
+programToString level program =
+    let
+        indent =
+            String.repeat level "  "
 
-           Michelson.EmptyT ->
-               H.span [ HA.class "EmptyT" ] [ H.text "{}" ]
+        progString =
+            case program of
+                Michelson.IntT i ->
+                    toString i
 
+                Michelson.StringT s ->
+                    "\"" ++ s ++ "\"" ++ "\n"
+
+                Michelson.SeqT seq ->
+                    "{\n" ++ ((List.map (programToString (level + 1)) seq) |> String.join "") ++ indent ++ "}\n"
+
+                Michelson.PrimT prim [] ->
+                    prim ++ "\n"
+
+                Michelson.PrimT prim args ->
+                    prim ++ "\n" ++ (args |> List.map (programToString (level + 1)) |> String.join "")
+    in
+        indent ++ progString
+
+
+viewProgram : Michelson.Program -> Html Msg
+viewProgram program =
+    case program of
+        Michelson.IntT i ->
+            H.span [ HA.class "IntT" ] [ H.text (toString i) ]
+
+        Michelson.StringT s ->
+            H.span [ HA.class "StringT" ] [ H.text ("\"" ++ s ++ "\"") ]
+
+        Michelson.SeqT seq ->
+            H.div [ HA.class "SeqT" ]
+                [ H.text " { "
+                , H.div [ HA.class "sequence" ] (List.map viewProgram seq)
+                , H.text " } "
+                ]
+
+        Michelson.PrimT p args ->
+            H.div [ HA.class ("PrimT prim-" ++ primCss p) ]
+                [ H.span [ HA.class ("prim") ] [ H.text p ]
+                , H.div [ HA.class ("primargs") ]
+                    (List.map viewProgram args)
+                ]
+
+
+
+{-
 
    simplifyProgram1 : Michelson.Program -> Michelson.Program
    simplifyProgram1 program =
