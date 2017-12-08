@@ -24,7 +24,9 @@ view model =
 view2 : Table.State -> List DelegationSummary -> Html Msg
 view2 tableState delegations =
     H.div [ HA.class "delegations-container" ]
-        [ Table.view config tableState delegations ]
+        [ Table.view config tableState delegations
+        , viewFooter
+        ]
 
 
 config : Table.Config DelegationSummary Msg
@@ -72,6 +74,14 @@ viewBlockHash : String -> Table.HtmlDetails msg
 viewBlockHash hash =
     Table.HtmlDetails [ HA.class "hash" ]
         [ H.a
-            [ Route.href (Route.Account hash) ]
+            [ Route.href (Route.Block hash) ]
             [ H.text (VF.shortHash hash) ]
+        ]
+
+
+viewFooter : Html msg
+viewFooter =
+    H.div [ HA.class "footer" ]
+        [ H.hr [] []
+        , H.p [] [ H.text "This displays one row for every delegation operation. It does not display default delegations for accounts." ]
         ]

@@ -454,3 +454,7 @@ span.nonce {
     font-family: Andale Mono, Courier New, monospace;
     font-size: 80%;
 }
+
+.delegations-container tr:nth-child(even) {
+    background-color: #f6f6f6;
+}

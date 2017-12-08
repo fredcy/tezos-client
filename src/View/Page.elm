@@ -60,9 +60,11 @@ viewNow now =
 links : List ( String, Route )
 links =
     [ ( "Home", Route.Home )
-    , ( "Heads", Route.Heads )
+
+    --, ( "Heads", Route.Heads )
     , ( "Accounts", Route.Accounts )
     , ( "Contracts", Route.Contracts )
+    , ( "Delegations", Route.Delegations )
     , ( "Keys", Route.Keys )
     , ( "Peers", Route.Peers )
     , ( "Schemas", Route.Schema )
