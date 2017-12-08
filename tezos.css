@@ -388,6 +388,10 @@ div.transactions-container table td.source {
     color: red;
 }
 
+div.delegations-container table td {
+    padding: .3em 1em;
+}
+
 table.blockchain th {
     padding: .3em 1em;
 }

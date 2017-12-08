@@ -25,6 +25,7 @@ type Route
     | Chain2
     | Accounts
     | Account AccountID
+    | Delegations
 
 
 route : Parser (Route -> a) a
@@ -48,6 +49,7 @@ route =
         , Url.map Chain2 (s "chain2")
         , Url.map Accounts (s "accounts")
         , Url.map Account (s "account" </> Url.string)
+        , Url.map Delegations (s "delegations")
         ]
 
 
@@ -106,6 +108,9 @@ routeToString route =
 
                 Account accountId ->
                     [ "account", accountId ]
+
+                Delegations ->
+                    [ "delegations" ]
     in
         "#/" ++ String.join "/" pieces
 

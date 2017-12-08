@@ -51,6 +51,7 @@ init flags location =
             , transactionTableState = Table.initialSort "time"
             , contractTableState = Table.initialSort "contract"
             , peerTableState = Table.initialSort "node addr"
+            , delegationsTableState = Table.initialSort "Source"
             , windowSize = Window.Size 400 400
             }
 

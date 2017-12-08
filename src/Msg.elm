@@ -31,10 +31,12 @@ type Msg
     | SetTransactionTableState Table.State
     | SetContractTableState Table.State
     | SetPeerTableState Table.State
+    | SetDelegationsTableState Table.State
     | SetQuery String
     | WindowResized Window.Size
     | InfiniteScroll InfiniteScroll.Msg
     | LoadMore InfiniteScroll.Direction
+    | LoadDelegations (Result Http.Error (List Chain.DelegationSummary))
 
 
 type alias Response =

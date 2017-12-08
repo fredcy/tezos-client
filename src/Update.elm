@@ -223,6 +223,9 @@ updatePage page msg model =
         ( SetPeerTableState tableState, _ ) ->
             ( { model | peerTableState = tableState }, Cmd.none )
 
+        ( SetDelegationsTableState tableState, _ ) ->
+            ( { model | delegationsTableState = tableState }, Cmd.none )
+
         ( SetQuery queryString, _ ) ->
             ( { model | query = queryString }, Cmd.none )
 
@@ -254,6 +257,14 @@ updatePage page msg model =
                         |> Http.send (Result.map Msg.ChainSummary >> RpcResponse)
             in
                 ( model, cmd )
+
+        ( LoadDelegations delegationsResponse, _ ) ->
+            case delegationsResponse of
+                Ok delegations ->
+                    ( { model | chain = Chain.loadDelegationSummaries model.chain delegations }, Cmd.none )
+
+                Err err ->
+                    ( { model | chain = Chain.loadDelegationSummariesError model.chain err }, Cmd.none )
 
 
 {-| Update page state in model to indicate that data-loading done for infinite
@@ -314,6 +325,9 @@ toPage route =
 
         Route.Account accountId ->
             Page.Account accountId
+
+        Route.Delegations ->
+            Page.Delegations
 
         Route.Keys ->
             Page.Keys
@@ -444,6 +458,11 @@ setRoute routeMaybe model =
                     , getSchema model.nodeUrl schemaQuery2 |> Http.send (LoadSchema schemaQuery2)
                     ]
                 )
+
+        Just Route.Delegations ->
+            ( { model | pageState = Loaded Page.Delegations }
+            , Request.Block.requestDelegations model.nodeUrl |> Http.send LoadDelegations
+            )
 
         Just route ->
             -- Handle those routes that require no command to get data

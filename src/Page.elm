@@ -25,3 +25,4 @@ type Page
     | Chain2
     | Accounts
     | Account AccountID
+    | Delegations

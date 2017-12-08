@@ -38,4 +38,5 @@ type alias Model =
     , transactionTableState : Table.State
     , contractTableState : Table.State
     , peerTableState : Table.State
+    , delegationsTableState : Table.State
     }

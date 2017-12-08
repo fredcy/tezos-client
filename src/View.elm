@@ -24,6 +24,7 @@ import View.Accounts
 import View.AccountTransactions
 import View.Chain
 import View.Contracts
+import View.Delegations
 import View.Field exposing (formatCentiles, formatDate, shortHash)
 import View.Peers
 
@@ -82,6 +83,9 @@ view model =
 
                 Loaded (Page.Account hash) ->
                     viewAccount model hash
+
+                Loaded Page.Delegations ->
+                    View.Delegations.view model
 
                 Loaded Page.Keys ->
                     viewKeys model.chain.keys

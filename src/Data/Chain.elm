@@ -1,4 +1,4 @@
-module Data.Chain exposing (AccountID, AccountSummary, Address, Base58CheckEncodedSHA256, Block, BlockID, BlockOperations, BlockSummary, BlocksData, Connection, Contract, ContractID, Fitness, Key, Model, Operation, OperationID, ParsedOperation, Peer, SourceID, SubOperation(..), Timestamp, TransactionSummary, addBlockOperations, blockNeedsOperations, blocksNeedingOperations, contractHasData, decodeAccountSummary, decodeBlock2, decodeBlockSummary, decodeBlocks, decodeContractIDs, decodeContractResponse, decodeKeys, decodePeers, decodeTransaction, getBranchList, init, loadBlockSummaries, loadBlocks, loadContract, loadContractError, loadContractIDs, loadContractIDsError, loadHeads, loadKeys, loadKeysError, loadParsedOperation, loadPeers, loadPeersError, loadingContract, loadingContractIDs, loadingKeys, loadingPeers, setAccountInfo, setAccountSummaries, updateMonitor)
+module Data.Chain exposing (AccountID, AccountSummary, Address, Base58CheckEncodedSHA256, Block, BlockID, BlockOperations, BlockSummary, BlocksData, Connection, Contract, ContractID, DelegationSummary, Fitness, Key, Model, Operation, OperationID, ParsedOperation, Peer, SourceID, SubOperation(..), Timestamp, TransactionSummary, addBlockOperations, blockNeedsOperations, blocksNeedingOperations, contractHasData, decodeAccountSummary, decodeBlock2, decodeBlockSummary, decodeBlocks, decodeContractIDs, decodeContractResponse, decodeDelegationSummary, decodeKeys, decodePeers, decodeTransaction, getBranchList, init, loadBlockSummaries, loadBlocks, loadContract, loadContractError, loadContractIDs, loadContractIDsError, loadDelegationSummaries, loadDelegationSummariesError, loadHeads, loadKeys, loadKeysError, loadParsedOperation, loadPeers, loadPeersError, loadingContract, loadingContractIDs, loadingKeys, loadingPeers, setAccountInfo, setAccountSummaries, updateMonitor)
 
 import Date exposing (Date)
 import Dict exposing (Dict)
@@ -202,6 +202,14 @@ type alias BlockSummary =
     }
 
 
+type alias DelegationSummary =
+    { source : String
+    , delegate : String
+    , timestamp : Timestamp
+    , blockHash : BlockID
+    }
+
+
 type alias Model =
     { heads : List BlockID
     , blocks : Dict BlockID Block
@@ -216,6 +224,7 @@ type alias Model =
     , account : Maybe AccountInfo
     , blockSummaries : List BlockSummary
     , blockOperationGroups : Dict BlockID (List Api.OperationGroup)
+    , delegations : RemoteData Http.Error (List DelegationSummary)
     }
 
 
@@ -234,6 +243,7 @@ init =
     , account = Nothing
     , blockSummaries = []
     , blockOperationGroups = Dict.empty
+    , delegations = RemoteData.NotAsked
     }
 
 
@@ -506,6 +516,16 @@ loadBlockSummaries model blockSummaries =
     { model | blockSummaries = blockSummaries }
 
 
+loadDelegationSummaries : Model -> List DelegationSummary -> Model
+loadDelegationSummaries model delegations =
+    { model | delegations = RemoteData.Success delegations }
+
+
+loadDelegationSummariesError : Model -> Http.Error -> Model
+loadDelegationSummariesError model error =
+    { model | delegations = RemoteData.Failure error }
+
+
 
 -- Decoders
 
@@ -776,3 +796,12 @@ decodeBlockSummary =
         |> Decode.required "Priority" Decode.int
         |> Decode.required "Baker" Decode.string
         |> Decode.required "OpCount" Decode.int
+
+
+decodeDelegationSummary : Decode.Decoder DelegationSummary
+decodeDelegationSummary =
+    Decode.succeed DelegationSummary
+        |> Decode.required "Source" Decode.string
+        |> Decode.required "Delegate" Decode.string
+        |> Decode.required "Timestamp" decodeTimestamp
+        |> Decode.required "BlockHash" Decode.string
