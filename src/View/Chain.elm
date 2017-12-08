@@ -3,6 +3,7 @@ module View.Chain exposing (view)
 import Array
 import Date exposing (Date)
 import Date.Distance
+import Dict exposing (Dict)
 import Html as H exposing (Html)
 import Html.Attributes as HA
 import InfiniteScroll
@@ -18,9 +19,6 @@ import View.Field exposing (formatDate, shortHash)
 view : Date -> Window.Size -> InfiniteScroll.Model Msg -> Chain.Model -> Html Msg
 view now windowSize scrollState model =
     let
-        blockSummaries =
-            model.blockSummaries
-
         thead =
             H.thead []
                 [ H.tr []
@@ -55,12 +53,37 @@ view now windowSize scrollState model =
                     [ HA.style [ ( "min-height", "101%" ) ] ]
                     [ H.table [ HA.class "blockchain" ]
                         [ thead
-                        , H.tbody [] (List.map (viewBlockSummary now) blockSummaries)
+                        , H.tbody [] (blockRows now model.blockSummaries)
                         ]
                     ]
                 ]
             , footer scrollState
             ]
+
+
+type alias ColorDict =
+    Dict String String
+
+
+{-| blockRows maps the list of ChainSummary values into HTML table rows. We use
+List.foldr rather than a simple List.map so that we can memoize the calculation
+of CSS color from baker id hash. [premature optimization?]  This memoization
+seems very clumsy but I don't see any other way to thread the color-dictionary
+to where it is needed.
+-}
+blockRows : Date -> List Chain.BlockSummary -> List (Html Msg)
+blockRows now blockSummaries =
+    let
+        reduce : Chain.BlockSummary -> ( ColorDict, List (Html Msg) ) -> ( ColorDict, List (Html Msg) )
+        reduce bs ( colorDict, rows ) =
+            let
+                ( colorDict2, row ) =
+                    viewBlockSummary now colorDict bs
+            in
+                ( colorDict2, row :: rows )
+    in
+        List.foldr reduce ( Dict.empty, [] ) blockSummaries
+            |> Tuple.second
 
 
 footer : InfiniteScroll.Model msg -> Html msg
@@ -75,30 +98,37 @@ footer scrollState =
         H.div [ HA.class "scroll-footer" ] [ H.text msg ]
 
 
-viewBlockSummary : Date -> Chain.BlockSummary -> Html Msg
-viewBlockSummary now bs =
-    H.tr [ HA.class "block" ]
-        [ H.td [] [ H.text (toString bs.level) ]
-        , H.td
-            [ HA.class "hash"
-            , HA.title bs.hash
-            ]
-            [ H.a [ Route.href (Route.Block bs.hash) ] [ H.text (shortHash bs.hash) ] ]
-        , H.td [ HA.class "timestamp" ]
-            [ H.text (formatDate bs.timestamp) ]
-        , H.td [ HA.class "age" ]
-            [ H.text (Date.Distance.inWords now bs.timestamp) ]
-        , H.td [ HA.class "operation-count" ]
-            [ H.text (toString bs.opCount) ]
-        , H.td [ HA.class "priority number" ]
-            [ H.text (toString bs.priority) ]
-        , H.td
-            [ HA.class "baker"
-            , HA.title bs.baker
-            , HA.style [ ( "color", bakerColor bs.baker ) ] |> Debug.log "style"
-            ]
-            [ H.text (shortHash bs.baker) ]
-        ]
+viewBlockSummary : Date -> ColorDict -> Chain.BlockSummary -> ( ColorDict, Html Msg )
+viewBlockSummary now colorDict bs =
+    let
+        ( colorDict2, color ) =
+            bakerColorMemo colorDict bs.baker
+
+        row =
+            H.tr [ HA.class "block" ]
+                [ H.td [] [ H.text (toString bs.level) ]
+                , H.td
+                    [ HA.class "hash"
+                    , HA.title bs.hash
+                    ]
+                    [ H.a [ Route.href (Route.Block bs.hash) ] [ H.text (shortHash bs.hash) ] ]
+                , H.td [ HA.class "timestamp" ]
+                    [ H.text (formatDate bs.timestamp) ]
+                , H.td [ HA.class "age" ]
+                    [ H.text (Date.Distance.inWords now bs.timestamp) ]
+                , H.td [ HA.class "operation-count" ]
+                    [ H.text (toString bs.opCount) ]
+                , H.td [ HA.class "priority number" ]
+                    [ H.text (toString bs.priority) ]
+                , H.td
+                    [ HA.class "baker"
+                    , HA.title bs.baker
+                    , HA.style [ ( "color", color ) ]
+                    ]
+                    [ H.text (shortHash bs.baker) ]
+                ]
+    in
+        ( colorDict2, row )
 
 
 saturations =
@@ -123,7 +153,7 @@ bakerColor bakerHash =
                 |> String.left 14
                 -- kept implicit numeric value in reasonable range
                 |> ParseInt.parseIntHex
-                -- should never fail, but it *is* a Result value so ...
+                -- should never fail here but it is a Result value so ...
                 |> Result.withDefault 0
 
         hue =
@@ -140,8 +170,19 @@ bakerColor bakerHash =
 
         lightness =
             Array.get (hash3 % Array.length lightnesses) lightnesses |> Maybe.withDefault 50
-
-        hsl =
-            "hsl(" ++ toString hue ++ "," ++ toString saturation ++ "%," ++ toString lightness ++ "%)"
     in
-        Debug.log "hsl" hsl
+        "hsl(" ++ toString hue ++ "," ++ toString saturation ++ "%," ++ toString lightness ++ "%)"
+
+
+bakerColorMemo : Dict String String -> String -> ( Dict String String, String )
+bakerColorMemo dict bakerHash =
+    case Dict.get bakerHash dict of
+        Just color ->
+            ( dict, color )
+
+        Nothing ->
+            let
+                color =
+                    bakerColor bakerHash
+            in
+                ( Dict.insert bakerHash color dict, color )
