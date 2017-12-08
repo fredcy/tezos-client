@@ -1,10 +1,13 @@
 module View.Chain exposing (view)
 
+import Array
 import Date exposing (Date)
 import Date.Distance
 import Html as H exposing (Html)
 import Html.Attributes as HA
 import InfiniteScroll
+import ParseInt
+import Sha256
 import Window
 import Data.Chain as Chain
 import Route
@@ -89,6 +92,56 @@ viewBlockSummary now bs =
             [ H.text (toString bs.opCount) ]
         , H.td [ HA.class "priority number" ]
             [ H.text (toString bs.priority) ]
-        , H.td [ HA.class "baker", HA.title bs.baker ]
+        , H.td
+            [ HA.class "baker"
+            , HA.title bs.baker
+            , HA.style [ ( "color", bakerColor bs.baker ) ] |> Debug.log "style"
+            ]
             [ H.text (shortHash bs.baker) ]
         ]
+
+
+saturations =
+    Array.fromList [ 35, 50, 65 ]
+
+
+lightnesses =
+    Array.fromList [ 35, 50, 65 ]
+
+
+{-| Generate a CSS color value (as a string) from the id hash of a baker.
+This follows the scheme of <https://github.com/zenozeng/color-hash>.
+-}
+bakerColor : String -> String
+bakerColor bakerHash =
+    let
+        hashInt =
+            String.dropLeft 3 bakerHash
+                -- skipped common "tz1" prefix
+                |> Sha256.sha256
+                -- could have been any hash to hex
+                |> String.left 14
+                -- kept implicit numeric value in reasonable range
+                |> ParseInt.parseIntHex
+                -- should never fail, but it *is* a Result value so ...
+                |> Result.withDefault 0
+
+        hue =
+            hashInt % 359
+
+        hash2 =
+            hashInt // 360
+
+        saturation =
+            Array.get (hash2 % Array.length saturations) saturations |> Maybe.withDefault 50
+
+        hash3 =
+            hash2 // Array.length saturations
+
+        lightness =
+            Array.get (hash3 % Array.length lightnesses) lightnesses |> Maybe.withDefault 50
+
+        hsl =
+            "hsl(" ++ toString hue ++ "," ++ toString saturation ++ "%," ++ toString lightness ++ "%)"
+    in
+        Debug.log "hsl" hsl

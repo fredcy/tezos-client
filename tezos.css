@@ -376,6 +376,10 @@ table.blockchain th {
     padding: .3em 1em;
 }
 
+table.blockchain tbody tr:nth-child(odd) {
+    background-color: #f6f6f6;
+}
+
 div.contracts table td
 , div.contracts table th
 {
