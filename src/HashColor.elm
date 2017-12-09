@@ -31,7 +31,7 @@ toColor : String -> String
 toColor hash =
     let
         hashInt =
-            Debug.log "toColor" hash
+            hash
                 |> Sha256.sha256
                 -- rehashed (could have been any hash to hex)
                 |> String.left 14
@@ -58,19 +58,15 @@ toColor hash =
         "hsl(" ++ toString hue ++ "," ++ toString saturation ++ "%," ++ toString lightness ++ "%)"
 
 
-toColorMemo : Model -> String -> ( Model, String )
+toColorMemo : Model -> String -> ( String, Model )
 toColorMemo dict hash =
     case Dict.get hash dict of
         Just color ->
-            let
-                _ =
-                    Debug.log "hit" hash
-            in
-                ( dict, color )
+            ( color, dict )
 
         Nothing ->
             let
                 color =
-                    toColor (Debug.log "miss" hash)
+                    toColor hash
             in
-                ( Dict.insert hash color dict, color )
+                ( color, Dict.insert hash color dict )

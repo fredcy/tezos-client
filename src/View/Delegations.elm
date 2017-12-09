@@ -59,7 +59,7 @@ config : List DelegationSummary -> Table.Config DelegationSummary Msg
 config delegations =
     let
         reduce hash model =
-            HashColor.toColorMemo model hash |> Tuple.first
+            HashColor.toColorMemo model hash |> Tuple.second
 
         colorHashPreload : HashColor.Model
         colorHashPreload =
@@ -96,7 +96,7 @@ viewIdHash hashColorModel hash =
         , HA.style
             [ ( "color"
               , HashColor.toColorMemo hashColorModel (canonIdHash hash)
-                    |> Tuple.second
+                    |> Tuple.first
               )
             ]
         ]
