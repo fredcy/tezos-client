@@ -1,4 +1,4 @@
-module Data.Chain exposing (AccountID, AccountSummary, Address, Base58CheckEncodedSHA256, Block, BlockID, BlockOperations, BlockSummary, BlocksData, Connection, Contract, ContractID, DelegationSummary, Fitness, Key, Model, Operation, OperationID, ParsedOperation, Peer, SourceID, SubOperation(..), Timestamp, TransactionSummary, addBlockOperations, blockNeedsOperations, blocksNeedingOperations, contractHasData, decodeAccountSummary, decodeBlock2, decodeBlockSummary, decodeBlocks, decodeContractIDs, decodeContractResponse, decodeDelegationSummary, decodeKeys, decodePeers, decodeTransaction, getBranchList, init, loadBlockSummaries, loadBlocks, loadContract, loadContractError, loadContractIDs, loadContractIDsError, loadDelegationSummaries, loadDelegationSummariesError, loadHeads, loadKeys, loadKeysError, loadParsedOperation, loadPeers, loadPeersError, loadingContract, loadingContractIDs, loadingKeys, loadingPeers, setAccountInfo, setAccountSummaries, updateMonitor)
+module Data.Chain exposing (AccountID, AccountSummary, Address, Base58CheckEncodedSHA256, Block, BlockID, BlockOperations, BlockSummary, BlocksData, Connection, Contract, ContractID, DelegationSummary, Fitness, Key, Model, Operation, OperationID, ParsedOperation, Peer, SourceID, SubOperation(..), Timestamp, TransactionSummary, addBlockOperations, blockNeedsOperations, blocksNeedingOperations, contractHasData, decodeAccountSummary, decodeBlock2, decodeBlockSummary, decodeBlocks, decodeContractIDs, decodeContractResponse, decodeDelegationSummary, decodeKeys, decodePeers, decodeTransaction, getBranchList, init, loadBlockSummaries, loadBlocks, loadContract, loadContractError, loadContractIDs, loadContractIDsError, loadDelegationSummaries, loadDelegationSummariesError, loadHeads, loadKeys, loadKeysError, loadParsedOperation, loadPeers, loadPeersError, loadingContract, loadingContractIDs, loadingDelegations, loadingKeys, loadingPeers, setAccountInfo, setAccountSummaries, updateMonitor)
 
 import Date exposing (Date)
 import Dict exposing (Dict)
@@ -514,6 +514,11 @@ loadContractError model contractId error =
 loadBlockSummaries : Model -> List BlockSummary -> Model
 loadBlockSummaries model blockSummaries =
     { model | blockSummaries = blockSummaries }
+
+
+loadingDelegations : Model -> Model
+loadingDelegations model =
+    { model | delegations = RemoteData.Loading }
 
 
 loadDelegationSummaries : Model -> List DelegationSummary -> Model

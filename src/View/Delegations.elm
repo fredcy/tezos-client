@@ -6,6 +6,7 @@ import Html.Events as HE
 import RemoteData
 import Table
 import Data.Chain exposing (DelegationSummary)
+import HashColor
 import Model exposing (Model)
 import Msg exposing (Msg(SetDelegationsTableState, DelegationsFilter))
 import Route
@@ -44,37 +45,61 @@ view2 tableState filter delegations =
     in
         H.div [ HA.class "delegations-container" ]
             [ H.input [ HA.placeholder "filter", HA.class "query", HE.onInput DelegationsFilter ] []
-            , Table.view config tableState delegationsFiltered
+            , Table.view (config delegationsFiltered) tableState delegationsFiltered
             , viewFooter
             ]
 
 
-config : Table.Config DelegationSummary Msg
-config =
-    Table.config
-        { toId = .source
-        , toMsg = SetDelegationsTableState
-        , columns =
-            [ idHashColumn "Account" .source
-            , idHashColumn "Delegate" .delegate
-            , Table.stringColumn "Timestamp" (.timestamp >> VF.formatDate)
-            , blockHashColumn "Block" .blockHash
-            ]
-        }
+canonIdHash : String -> String
+canonIdHash =
+    String.dropLeft 3
 
 
-idHashColumn : String -> (DelegationSummary -> String) -> Table.Column DelegationSummary msg
-idHashColumn name toHash =
+config : List DelegationSummary -> Table.Config DelegationSummary Msg
+config delegations =
+    let
+        reduce hash model =
+            HashColor.toColorMemo model hash |> Tuple.first
+
+        colorHashPreload : HashColor.Model
+        colorHashPreload =
+            (List.map (.source >> canonIdHash) delegations
+                ++ List.map (.delegate >> canonIdHash) delegations
+            )
+                |> List.foldl reduce HashColor.init
+    in
+        Table.config
+            { toId = .source
+            , toMsg = SetDelegationsTableState
+            , columns =
+                [ idHashColumn "Account" colorHashPreload .source
+                , idHashColumn "Delegate" colorHashPreload .delegate
+                , Table.stringColumn "Timestamp" (.timestamp >> VF.formatDate)
+                , blockHashColumn "Block" .blockHash
+                ]
+            }
+
+
+idHashColumn : String -> HashColor.Model -> (DelegationSummary -> String) -> Table.Column DelegationSummary msg
+idHashColumn name hashColorModel toHash =
     Table.veryCustomColumn
         { name = name
-        , viewData = \data -> viewIdHash (toHash data)
+        , viewData = \data -> viewIdHash hashColorModel (toHash data)
         , sorter = Table.increasingOrDecreasingBy toHash
         }
 
 
-viewIdHash : String -> Table.HtmlDetails msg
-viewIdHash hash =
-    Table.HtmlDetails [ HA.class "hash" ]
+viewIdHash : HashColor.Model -> String -> Table.HtmlDetails msg
+viewIdHash hashColorModel hash =
+    Table.HtmlDetails
+        [ HA.class "hash"
+        , HA.style
+            [ ( "color"
+              , HashColor.toColorMemo hashColorModel (canonIdHash hash)
+                    |> Tuple.second
+              )
+            ]
+        ]
         [ H.span
             [ HA.title hash ]
             [ H.text (VF.shortHash hash) ]

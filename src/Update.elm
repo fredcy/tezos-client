@@ -8,6 +8,7 @@ import Http
 import InfiniteScroll
 import List.Extra as List
 import Process
+import RemoteData
 import Task
 import Table
 import Time exposing (Time)
@@ -465,6 +466,7 @@ setRoute routeMaybe model =
         Just Route.Delegations ->
             ( { model
                 | pageState = Loaded Page.Delegations
+                , chain = Chain.loadingDelegations model.chain
                 , delegationsFilter = ""
               }
             , Request.Block.requestDelegations model.nodeUrl |> Http.send LoadDelegations
