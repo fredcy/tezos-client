@@ -37,6 +37,7 @@ type Msg
     | InfiniteScroll InfiniteScroll.Msg
     | LoadMore InfiniteScroll.Direction
     | LoadDelegations (Result Http.Error (List Chain.DelegationSummary))
+    | DelegationsFilter String
 
 
 type alias Response =

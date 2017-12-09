@@ -266,6 +266,9 @@ updatePage page msg model =
                 Err err ->
                     ( { model | chain = Chain.loadDelegationSummariesError model.chain err }, Cmd.none )
 
+        ( DelegationsFilter filter, _ ) ->
+            ( { model | delegationsFilter = filter }, Cmd.none )
+
 
 {-| Update page state in model to indicate that data-loading done for infinite
 scroll is complete, allowing that mechanism to request more data.
@@ -460,7 +463,10 @@ setRoute routeMaybe model =
                 )
 
         Just Route.Delegations ->
-            ( { model | pageState = Loaded Page.Delegations }
+            ( { model
+                | pageState = Loaded Page.Delegations
+                , delegationsFilter = ""
+              }
             , Request.Block.requestDelegations model.nodeUrl |> Http.send LoadDelegations
             )
 

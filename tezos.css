@@ -458,3 +458,7 @@ span.nonce {
 .delegations-container tr:nth-child(even) {
     background-color: #f6f6f6;
 }
+
+.delegations-container input {
+    margin: 0.8em;
+}
