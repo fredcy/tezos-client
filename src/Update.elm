@@ -414,7 +414,7 @@ setRoute routeMaybe model =
             )
 
         Just Route.Accounts ->
-            ( { model | pageState = Loaded Page.Accounts }
+            ( { model | pageState = Loaded Page.Accounts, query = "" }
             , getAccounts model
             )
 
