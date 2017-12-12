@@ -11,6 +11,7 @@ import ParseInt
 import Sha256
 import Window
 import Data.Chain as Chain
+import HashColor
 import Route
 import Msg exposing (Msg(InfiniteScroll))
 import View.Field exposing (formatDate, shortHash)
@@ -47,9 +48,10 @@ view now windowSize scrollState model =
                 ]
                 [ H.div
                     -- This inner div is a kludge forcing the content to always
-                    -- overflow the wrappig div, hence forcing a scrollbar, hence
-                    -- allowing elm-infinite-scroll to work even if the content
-                    -- doesn't fill the div.
+                    -- overflow the wrapping div, hence forcing a scrollbar,
+                    -- hence allowing elm-infinite-scroll to work even if the
+                    -- content doesn't fill the div. [I don't see the scroll bar
+                    -- on an iPad.]
                     [ HA.style [ ( "min-height", "101%" ) ] ]
                     [ H.table [ HA.class "blockchain" ]
                         [ thead
@@ -61,20 +63,16 @@ view now windowSize scrollState model =
             ]
 
 
-type alias ColorDict =
-    Dict String String
-
-
 {-| blockRows maps the list of ChainSummary values into HTML table rows. We use
 List.foldr rather than a simple List.map so that we can memoize the calculation
-of CSS color from baker id hash. [premature optimization?]  This memoization
+of CSS color from baker id hash. [premature optimization?] This memoization
 seems very clumsy but I don't see any other way to thread the color-dictionary
 to where it is needed.
 -}
 blockRows : Date -> List Chain.BlockSummary -> List (Html Msg)
 blockRows now blockSummaries =
     let
-        reduce : Chain.BlockSummary -> ( ColorDict, List (Html Msg) ) -> ( ColorDict, List (Html Msg) )
+        reduce : Chain.BlockSummary -> ( HashColor.Model, List (Html Msg) ) -> ( HashColor.Model, List (Html Msg) )
         reduce bs ( colorDict, rows ) =
             let
                 ( colorDict2, row ) =
@@ -98,11 +96,11 @@ footer scrollState =
         H.div [ HA.class "scroll-footer" ] [ H.text msg ]
 
 
-viewBlockSummary : Date -> ColorDict -> Chain.BlockSummary -> ( ColorDict, Html Msg )
+viewBlockSummary : Date -> HashColor.Model -> Chain.BlockSummary -> ( HashColor.Model, Html Msg )
 viewBlockSummary now colorDict bs =
     let
-        ( colorDict2, color ) =
-            bakerColorMemo colorDict bs.baker
+        ( color, colorDict2 ) =
+            String.dropLeft 3 bs.baker |> HashColor.toColorMemo colorDict
 
         row =
             H.tr [ HA.class "block" ]
@@ -129,60 +127,3 @@ viewBlockSummary now colorDict bs =
                 ]
     in
         ( colorDict2, row )
-
-
-saturations =
-    Array.fromList [ 35, 50, 65 ]
-
-
-lightnesses =
-    Array.fromList [ 35, 50, 65 ]
-
-
-{-| Generate a CSS color value (as a string) from the id hash of a baker.
-This follows the scheme of <https://github.com/zenozeng/color-hash>.
--}
-bakerColor : String -> String
-bakerColor bakerHash =
-    let
-        hashInt =
-            String.dropLeft 3 bakerHash
-                -- skipped common "tz1" prefix
-                |> Sha256.sha256
-                -- could have been any hash to hex
-                |> String.left 14
-                -- kept implicit numeric value in reasonable range
-                |> ParseInt.parseIntHex
-                -- should never fail here but it is a Result value so ...
-                |> Result.withDefault 0
-
-        hue =
-            hashInt % 359
-
-        hash2 =
-            hashInt // 360
-
-        saturation =
-            Array.get (hash2 % Array.length saturations) saturations |> Maybe.withDefault 50
-
-        hash3 =
-            hash2 // Array.length saturations
-
-        lightness =
-            Array.get (hash3 % Array.length lightnesses) lightnesses |> Maybe.withDefault 50
-    in
-        "hsl(" ++ toString hue ++ "," ++ toString saturation ++ "%," ++ toString lightness ++ "%)"
-
-
-bakerColorMemo : Dict String String -> String -> ( Dict String String, String )
-bakerColorMemo dict bakerHash =
-    case Dict.get bakerHash dict of
-        Just color ->
-            ( dict, color )
-
-        Nothing ->
-            let
-                color =
-                    bakerColor bakerHash
-            in
-                ( Dict.insert bakerHash color dict, color )
