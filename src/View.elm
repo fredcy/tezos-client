@@ -14,6 +14,7 @@ import RemoteData exposing (RemoteData)
 import Data.Chain as Chain exposing (BlockID, Block, Contract, ContractID, OperationID, ParsedOperation, SubOperation(..), getBranchList)
 import Data.Schema as Schema
 import Data.Michelson as Michelson
+import HashColor
 import Model exposing (Error(HttpError), Model, PageState(Loaded))
 import Page
 import Route
@@ -494,7 +495,6 @@ viewContracts model =
         [ H.h3 [] [ H.text "Contracts" ]
         , case model.chain.contractIDs of
             RemoteData.Success contractIDs ->
-                --View.Contracts.viewContractTable contractIDs model.chain.contracts
                 View.Contracts.view contractIDs model.chain.contracts model.contractTableState
 
             RemoteData.Loading ->
@@ -537,7 +537,13 @@ viewKeyList keys =
 
         tableRow key =
             H.tr []
-                [ H.td [] [ H.span [ HA.class "hash" ] [ H.text key.hash ] ]
+                [ H.td []
+                    [ H.span
+                        [ HA.class "hash"
+                        , HA.style [ ( "color", String.dropLeft 3 key.hash |> HashColor.toColor ) ]
+                        ]
+                        [ H.text key.hash ]
+                    ]
                 , H.td [] [ H.span [ HA.class "hash" ] [ H.text key.public_key ] ]
                 ]
     in

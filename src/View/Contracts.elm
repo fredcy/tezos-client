@@ -8,6 +8,7 @@ import RemoteData exposing (RemoteData)
 import Table
 import Data.Chain exposing (ContractID, Contract)
 import Data.Michelson as Michelson
+import HashColor
 import Msg exposing (Msg(SetContractTableState))
 import View.Field exposing (shortHash, formatCentiles)
 import Route
@@ -53,22 +54,34 @@ view contractIDs contractDataDict tableState =
             List.map makeView contractIDs
     in
         H.div [ HA.class "contracts" ]
-            [ Table.view config tableState contractViews ]
+            [ Table.view (config contractViews) tableState contractViews ]
 
 
-config : Table.Config ContractView Msg
-config =
-    Table.config
-        { toId = .hash
-        , toMsg = SetContractTableState
-        , columns =
-            [ contractHashColumn "contract" .hash
-            , tezColumn "balance (ꜩ)" .balance
-            , contractHashColumn "manager" .manager
-            , intColumn "counter" .counter
-            , intColumn "script size" .size
-            ]
-        }
+canonIdHash : String -> String
+canonIdHash =
+    String.dropLeft 3
+
+
+config : List ContractView -> Table.Config ContractView Msg
+config contracts =
+    let
+        reduce hash model =
+            HashColor.toColorMemo model hash |> Tuple.second
+
+        colorHashPreload =
+            List.map (.manager >> canonIdHash) contracts |> List.foldl reduce HashColor.init
+    in
+        Table.config
+            { toId = .hash
+            , toMsg = SetContractTableState
+            , columns =
+                [ contractHashColumn "contract" .hash
+                , tezColumn "balance (ꜩ)" .balance
+                , managerHashColumn "manager" colorHashPreload .manager
+                , intColumn "counter" .counter
+                , intColumn "script size" .size
+                ]
+            }
 
 
 contractHashColumn : String -> (ContractView -> String) -> Table.Column ContractView msg
@@ -77,6 +90,25 @@ contractHashColumn name toHash =
         hashDetails hash =
             Table.HtmlDetails [ HA.class "hash" ]
                 [ H.a [ Route.href (Route.Contract hash) ] [ H.text (shortHash hash) ] ]
+    in
+        Table.veryCustomColumn
+            { name = name
+            , viewData = \data -> hashDetails (toHash data)
+            , sorter = Table.increasingOrDecreasingBy toHash
+            }
+
+
+managerHashColumn : String -> HashColor.Model -> (ContractView -> String) -> Table.Column ContractView msg
+managerHashColumn name colorModel toHash =
+    let
+        hashDetails hash =
+            Table.HtmlDetails [ HA.class "hash" ]
+                [ H.a
+                    [ Route.href (Route.Contract hash)
+                    , HA.style [ ( "color", canonIdHash hash |> HashColor.toColorMemo colorModel |> Tuple.first ) ]
+                    ]
+                    [ H.text (shortHash hash) ]
+                ]
     in
         Table.veryCustomColumn
             { name = name
