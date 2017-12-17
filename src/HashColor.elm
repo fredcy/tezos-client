@@ -19,9 +19,8 @@ saturations =
 
 
 lightnesses =
-    --Array.fromList [ 35, 50, 65 ]
     -- tweak to make less light so it looks better against white background
-    Array.fromList [ 25, 40, 55 ]
+    Array.fromList [ 30, 45, 60 ]
 
 
 {-| Generate a CSS color value (as a string) from some hash-like string.
