@@ -19,6 +19,7 @@ view peersData tableState =
             RemoteData.Success peers ->
                 H.div [ HA.class "peers" ]
                     [ viewSortable peers tableState
+                    , viewActivePeers peers
                     , footer
                     ]
 
@@ -174,3 +175,41 @@ simplifyHost host =
             String.dropLeft (String.length prefix) host
         else
             host
+
+
+{-| Display `--peer` arguments that can be used when (re)starting
+tezos-node. These are active peers, sorted with most active first (based on
+received data).
+-}
+viewActivePeers : List Chain.Peer -> Html msg
+viewActivePeers peers =
+    let
+        -- Get peer connection string and received bytes (for sorting) from peer data.
+        peerInfoMaybe : Chain.Peer -> Maybe ( String, Int )
+        peerInfoMaybe peer =
+            peer.info.lastConnection
+                |> Maybe.andThen
+                    (\c ->
+                        if peer.info.state == "running" && c.addr.port_ /= 0 then
+                            Just
+                                ( "--peer=" ++ (c.addr.addr |> simplifyHost) ++ ":" ++ toString c.addr.port_
+                                , peer.info.stat.total_recv
+                                )
+                        else
+                            Nothing
+                    )
+
+        toPeerArg info =
+            "--peer=" ++ info.host ++ ":" ++ toString info.port_
+    in
+        H.div [ HA.style [ ( "white-space", "pre-wrap" ) ] ]
+            [ H.hr [] []
+            , peers
+                |> List.map peerInfoMaybe
+                |> List.filterMap identity
+                |> List.sortBy Tuple.second
+                |> List.reverse
+                |> List.map Tuple.first
+                |> String.join " "
+                |> H.text
+            ]
