@@ -579,7 +579,10 @@ viewContract contractId contracts =
             scriptMaybe
                 |> Maybe.map
                     (\script ->
-                        viewProperty "program" (viewProgramArea script.code)
+                        H.div []
+                            [ viewProperty "program" (viewProgramArea script.code)
+                            , viewProperty "storage" (viewProgramArea script.storage)
+                            ]
                     )
                 |> Maybe.withDefault (H.text "")
     in
@@ -651,19 +654,19 @@ programToString level program =
         progString =
             case program of
                 Michelson.IntT i ->
-                    toString i
+                    toString i ++ " "
 
                 Michelson.StringT s ->
-                    "\"" ++ s ++ "\"" ++ "\n"
+                    "\"" ++ s ++ "\"" ++ " "
 
                 Michelson.SeqT seq ->
-                    "{\n" ++ ((List.map (programToString (level + 1)) seq) |> String.join "") ++ indent ++ "}\n"
+                    "{\n" ++ ((List.map (programToString (level + 1)) seq) |> String.join "\n") ++ indent ++ "\n" ++ indent ++ "}\n"
 
                 Michelson.PrimT prim [] ->
-                    prim ++ "\n"
+                    prim
 
                 Michelson.PrimT prim args ->
-                    prim ++ "\n" ++ (args |> List.map (programToString (level + 1)) |> String.join "")
+                    prim ++ "\n" ++ (args |> List.map (programToString (level + 1)) |> String.join "\n")
     in
         indent ++ progString
 
