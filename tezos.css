@@ -1,6 +1,6 @@
 body {
     margin: 1em;
-    background-color: #fdf6e3;
+    background: linear-gradient(to right, #fdf6e3, #eee8d6);
 }
 
 .property-list {
